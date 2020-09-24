@@ -1,0 +1,35 @@
+\begin{algorithm}[t]
+    \DontPrintSemicolon
+    \KwData{Input document $\doc = \sent_1, \ldots, \sent_\docSize$, 
+          reference abstracts $R$, summary word budget $\wordbudget$.}
+   $\bsal_i \gets 0 \quad \forall i \in 1, \ldots, \docSize$ 
+   \tcp*{Initialize salience judgements to be $0$.}
+   $\extractSummary \gets [\;]$ 
+   \tcp*{Initialize summary as empty list.}
+
+   \While(\tcp*[f]{While summary word count $\le$ word budget.}){$\sum_{i=1}^\docSize \bsal_i \sentSize_i \le \wordbudget $}{
+%\tcc*[l]{Add the next best sentence to the summary if it will improve the ROUGE score otherwise no improvement can be made so break.}
+%
+%  ~ \\
+    $\hat{i} \gets {\argmax}_{\substack{ i \in \{1, \ldots, n\}, \\ y_i \ne 1 }} 
+        \textsc{Rouge}(\extractSummary + [\sent_i], R)$
+    \tcp*{Find next best extract.}
+
+%        
+%  ~ \\
+\eIf{$\textsc{Rouge}(\extractSummary + [ \sent_{\hat{i}} ], R ) > \textsc{Rouge}(\extractSummary, R)$}{
+            $\extractSummary \gets \extractSummary + [ \sent_{\hat{i}} ]$
+        \tcp*{Update extract and salience judgements.}
+        $\bsal_{\hat{i}} \gets 1$ 
+        }{ \textbf{break} \tcp*{No further improvements possible, so end.}}
+%        
+%    
+    }
+%    
+    \KwResult{Salience judgements $\bsals = \left[ \bsal_1, \ldots, \bsal_\docSize\right]$}
+    \caption{\textsc{OracleExtractSummaryLabels}}
+\label{alg:oraclesum}
+\end{algorithm}
+
+
+

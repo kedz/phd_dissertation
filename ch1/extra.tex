@@ -1,0 +1,703 @@
+
+~\\~\\
+
+Doing MT by parsing to/generating from a semantic interlingua, it turns out,
+is quite hard \cite{}. Doing MT with stastical models of co-occurence,
+alignment, and next word prediction, while not necessarily easy led to
+quantifiable gains in MT quality \cite{}. Similarly, in text summarization,
+a wide variety of stastical/machine learning models were applied to 
+contstructing extract summaries directly from the input text \cite{}.
+
+
+
+
+
+
+
+
+
+
+
+%One of the main
+%focai of NLG in the period from 1980-2000 was on \textbf{concept-to-text} generation,
+%but which is increasingly being referred to as \textbf{data-to-text} generation 
+%\cite{nlgrev}. 
+
+In the data-to-text regime, NLG algorithms generally receive some
+kind of data as input are tasked with producing an appropriate
+natural language utterance as output. 
+ The exact kind of  data expected as input can vary widely, from numerical
+ records \cite{} to semantic representations \cite{},  
+ and increasingly multi-modal
+ data like audio, images, or video \cite{}. 
+%semantic representation as input and are tasked with producing an 
+%appropriate natural language utterance as output. 
+ During the 1980s and 90s, generating from a semantic representation 
+ was the most prevalent approach, where semantic representations were often
+ concepts in a semantic net \cite{} or from some other semantic/grammatical
+foralism (e.g. Functional Unification Grammar \cite{}).
+Numerical data was also popular with NLG systems generating weather
+reports \cite{}, sports summaries \cite{}, and variants of data-journalism \cite{}.
+%but can also include 
+%numerical data as in the case of automatic forecast generators \cite{}. 
+
+%The field of NLG 
+%typically divided into two categories, (i) concept-to-text, or sometimes 
+%data-to-text, generation \cite{}, and (ii) text-to-text generation \cite{}.\footnote{A note about speech processing.}
+
+
+
+
+
+
+
+In particular text summarization, mapping a document or group
+of documents to a shorted summary, 
+
+With the growth of statistical machine learning techniques and large 
+text corpora
+driven NLP 
+
+Text-to-text generation 
+
+
+
+
+The last decade has led to remarkable breakthroughs in natural language
+generation (NLG) models, primarily through the combination of over-parameterized 
+neural network language models \cite{sutskever2014sequence,bahdanau2014neural,vaswani2017attention} combined
+with semi-supervised learning on increasingly large text collections
+crawled from the web \cite{radford2019language,lewis2019bart}. Indeed, nearly every sub-field of NLG has been 
+affected. Machine translation (MT) experienced a phase transition in quality
+\cite{wu2016google}; abstractive document summarization, formerly a relatively 
+niche area, exploded with activity (\cite{}, and numbers); fluent generation
+to and from arbitrary syntactic or semantic representations became possible
+\cite{vinyals2015grammar,konstas2017neural,novikova2017e2e,gardent2017webnlg,mille-etal-2018-first}; and most notably in
+the consciousness of the broader public, open eneded natural language
+generation threatened to topple democracy, help authors overcome 
+writer's block, and generate otherwise novel and (questionably) interesting
+prose \cite{radford2019language}.
+
+
+In this thesis, we focus on two broadly construed sub-problems for 
+conditional langauge generation, \textit{(i)} salience estimation and 
+\textit{(ii)} faithful generation.
+Colloquially, one can understand these problems as what to say, and how 
+to say it. Salience estimation, that is, selecting the most important
+information from a text document or document collection is a chief
+component of most text summarization algorithms. In this thesis, we 
+use two instantiations of text summarization, streaming and single document
+summarization, to study feature (\autoref{ch2}) and neural
+network based (\autoref{ch3}) salience estimation respectively. 
+
+In the work on faithful generation (\autoref{ch4}), 
+we study neural network models of language
+generation and how to ensure that the text they produce is faithful
+to the meaning they were intended to convey. As mentioned above, generating
+fluent text, while not a solved problem, has certainly become easier
+with the maturation of neural language generation models. Fluency is usually
+not the only import evaluation measure however. Language generation is often situated in a 
+large dialog modeling task, where an automated agent has some communicative 
+goal. We use such a goal oriented dialog generation to study faithful 
+generation.
+
+Before proceeding into the kernel of this thesis, we briefly introduce the 
+summarization and dialog generation tasks used throughout this work.
+
+
+\section{Text Summarization and Salience Estimation}
+The general text summarization task is, on its face, relatively straightforward.
+The primary goal is to reduce a large input text (or texts) into 
+the most essential pieces of information,
+and in so doing, reduce the amount of reading a human has to do to understand the
+collection.
+In various formats, summarization been studied by natural language 
+processing (NLP) researchers since at least the 1950's \cite{luhn1958automatic}.
+This makes automatic text summarization one of the longest-standing 
+application areas in the 
+field of natural language processing (NLP), with a history as deep 
+as some of the more foundational tasks, e.g. syntactic parsing 
+\cite{yngve1955syntax} or 
+part-of-speech tagging \cite{harris1962string}. 
+
+
+While there several ways of understanding the summarization literature,
+the field is broadly split into extractive and abstractive summarization
+methods, although like many dichotomies this distinction can be quite
+blurry in practive. Extractive summarization is usually characterized
+as constructing a summary from extracting text (i.e., copying and 
+pasting) from the input and arranging the extracted text into a summary,
+with minimal modification to the copied text. 
+
+
+Abstractive summarization on the otherhand encompasses a diverse array of 
+techniques for generating novel summary text, including sentence
+fusion \cite{}, editing \cite{}, word-by-word generation \cite{}, or
+mixtures of these techniques \cite{}.
+
+
+Extractive techniques often work well in domains where the text itself
+is meta-language describing something, e.g. news, which describes events,
+or scientific articles, which contain self-referential text about the paper
+contents \cite{}. In domains like fiction, extractive summarization is 
+more difficult
+as the language used in a summary is not found in the work being 
+summarized \cite{}.
+
+
+In theory, advances in abstractive summarization should alleviate the 
+input/summary language mismatch. In practice, modern neural abstractive
+summarization methods do a great deal of copying input source. They also
+typically avoid modeling content selection, sentence planning, and 
+surface realization \cite{} explicitly, producing a summary in an end-to-end
+differentable fashion. This leads to model inscrutability because it is
+not clear why any particular input content generated in the summary. 
+Additionally, these models tend to hallucinate information \cite{} 
+making them difficult to use in real applications. 
+
+We focus on extractive summarization in this thesis because it allows us to
+explicitly model content selection, without having the additional computational
+burden of generating summary text. 
+
+
+In any extractive summarization task, we must first determine the basic unit
+of text. In theory we could define the basic unit as the level of
+word, phrase, sentence, paragraph, chapter, etc. For the puroposes
+of this dissertation, we consider the sentence as the basic unit.
+Let us represent the set of sentences in a document or collection of 
+documents as $\mathcal{I}$.
+Summarizing $\mathcal{I}$ can formally be 
+thought of as solving the following combinatorial optimization problem: 
+\[ \max_{\mathcal{S} \subseteq \mathcal{I}} \operatorname{salience}(\mathcal{S}) 
+\textrm{~~~~s.t. } \operatorname{length}(\mathcal{S}) \le b \]
+where $\operatorname{length} : P(\mathcal{I}) \rightarrow \mathbb{N}$ measures the 
+length of summary (typically in bytes or words), $b \in \mathbb{N}$ is
+the length budget for the summary, 
+and 
+$\operatorname{salience} : P(\mathcal{I}) \rightarrow \mathbb{R}$ is a function
+quantifying the \emph{salience} of a summary $\mathcal{S}$.
+
+
+While there is extensive work on solving the search problem 
+implied by the $\max$ operator \cite{}, in the present work we focus 
+on methods for implementing the $\operatorname{salience}$ function, 
+relying on greedy or heuristic search for obtaining $\mathcal{S}$.  
+
+\subsection{Single Document Sentence Extractive Summarization}
+
+In the single document sentence extractive summarization task, the input 
+$\mathcal{I} = \{ s_1, s_2, \ldots, s_n \}$ is an ordered sequence of 
+sentences from a single document. The \textit{lead-3} baseline (i.e. selecting
+the first three sentences $\mathcal{S} = \{ s_1, s_2, s_3 \}$, is 
+embarrassingly effective in the news domain -- so much so that single 
+document summarization was abandoned for many years after proposed methods
+could not demonstrate significant improvement over it \cite{}. 
+\textit{Lead-3} is equivalent to $\operatorname{salience}(\mathcal{S}) = 
+\sum_{s \in \mathcal{S}} \operatorname{salience}(s)$,  $\operatorname{salience}(s_i) = |\mathcal{I}| - i - 1$, and  $b = 3$. Making:
+
+\[ \{s_1, s_2, s_3 \} = \operatorname{arg\;max}_{\mathcal{S} \subseteq \mathcal{I}} \operatorname{salience}(\mathcal{S}) \textrm{ s.t. } |\mathcal{S}| \le b 
+\]
+
+In \autoref{ch?} we study several neural network estimators of salience
+where $\operatorname{salience}(s, \mathcal{I}; \theta) = p(s\in\mathcal{S} | \mathcal{I}; \theta)$  
+where $p$ is a neural network with parameters $\theta$ 
+that compute the probability
+that a sentence $s$ is included in the summary $\mathcal{S}$ conditioned 
+on the document $\mathcal{I}$. 
+If  $\operatorname{salience}(\mathcal{S}, \mathcal{I}; \theta) = 
+  \sum_{s \in \mathcal{S}} \operatorname{salience}(s, \mathcal{I}; \theta) = 
+    \sum_{s \in \mathcal{S}}  p(s\in\mathcal{S} | \mathcal{I}; \theta),$
+    and $\pi(\mathcal{I}) = \{s_k, s_{k-1}, \ldots\}$ is the set 
+    of sentences, order by decreasing salience (i.e. $\operatorname{salience}(s_k, \mathcal{I}) \ge \operatorname{salience}(s_{k-1}, \mathcal{I}) \ge \ldots$)
+    then:
+
+    \[ \{s_k, s_{k-1}, s_{k-2} \} = \operatorname{arg\;max}_{\mathcal{S} \subseteq \mathcal{I}} \operatorname{salience}(\mathcal{S}) \textrm{ s.t. } |\mathcal{S}| \le b 
+\]
+
+%\[ \{s_ \]
+
+
+
+\subsection{Query Focused, Sentence Extractive, Document Stream Summarization}
+
+We also consider another summarization scenario where rather than 
+summarize a given document, we must summarize a stream of documents in 
+an online fashion. Let a document $\mathcal{I}^{(i)} = \{s_1^{(i)}, s_2^{(i)},
+\ldots, s_{|\mathcal{I}^{(i)}|}^{(i)} \}$ with the superscript $i$ 
+indicating the time the document/sentence was published to the document
+stream. Our salience function is now dependent on the \textit{system time} $t$
+and a query $q$:
+$\operatorname{salience}(s_j^{(i)}, q, \mathcal{I}^{(1)}, \mathcal{I}^{(2)}, \ldots \mathcal{I}^{(t)} )$ such that information value of a sentence $s_j^{(i)}$ is monotonically decreasing as system time increases: 
+\[ \operatorname{salience}(s_j^{(i)}, q, \mathcal{I}^{(1)}, \mathcal{I}^{(2)}, \ldots \mathcal{I}^{(t)} ) < \operatorname{salience}(s_j^{(i)}, q, \mathcal{I}^{(1)}, \mathcal{I}^{(2)}, \ldots \mathcal{I}^{(t+1)} )\]
+
+
+We aim to solve the following problem:
+\[
+    \max \operatorname{salience}( s_j^{(i))},t)
+\]
+
+We explore two methods of doing this. The first is 
+a salience biased clustering method where we process the stream in 
+hourly batches $\mathcal{B} = \{\mathcal{I}^{(i)}, \mathcal{I}^{(i+1)}, 
+\ldots \}$.
+In the second method, we learn a policy for summarizing documents in 
+a fully online manner, making sentence extraction decisions as a soon
+as a new document enters the stream.
+
+
+
+\subsection{Faithful Generation}
+
+
+Summarization is often difficult because in part we lack any formal 
+notions of semantics. Evaluation without this is shallow; Rouge or 
+Bleu may correlate with human judgements, but this provides no guarrantee 
+that an individual system output is correct. 
+
+
+This problem is likely to get worse as abstractive generation models improve
+in their fluency. Using automatic string overlap methods, ouputs like
+\begin{enumerate}
+    \item \textit{the game is available on Mac}
+    \item \textit{the game is not available on Mac}
+    \item \textit{the game is not not available on Mac}
+\end{enumerate}
+all look quite similar despite item 2 having the opposite meanings of 
+items 1 and 3. 
+
+In the final chapter of this work, 
+we study the problem of generating natural language 
+utterances from simple meaning representations (MR).  
+The MRs that we use describe the communicative goal 
+of a dialog agent. See the example MR in \autoref{somefig}. Here 
+the goal is to inform the user about a restaurant called the Fiddly Widget.
+
+We can evaluate utterances produced for a given MR similarly to summarization,
+comparing them with string overlap based metrics using human references.
+However, we can also evaluate them on their faithfulness to the MR. We
+argue that once a certain level of fluency has been acheived, this is the
+most crucial evaluation measure. 
+
+Semantic evaluation can be done manually but we can also approximate it 
+with a semantic parser. We experiment with both learned and rule based 
+semantic parsers. Using them for evaluation, and also in a self-training
+setup where a semantic parser is used to create synthetic training data
+(\autoref{}).
+
+
+Additionally, we study different ways of representing MR as inputs
+to a sequence-to-sequence models. That is, we examine different 
+ways of linearizing 
+
+
+
+
+\subsection{Contributions}
+
+To summarize, our completed and proposed contributions of this thesis are as 
+follows:
+\begin{enumerate}
+
+ \item Two novel feature-based models of sentence salience and an empirical
+    evaluation on a stream summarization task.
+% \item A novel approach to streaming summarization using a feature-based
+%     regression model of sentence salience and sentence selection using 
+%     exemplar-based clustering.
+
+% \item A novel approach to streaming summarization using the locally optimal
+%     learning to search (LOLS) algorithm.
+
+ \item Several novel deep learning architectures for word and sentence 
+   salience, a thorough evaluation of the linguistic and
+   structural features critical to learning in the SDS task across a 
+   variety of genres, and adaptation to a news MDS task. 
+
+
+ \item A novel training regime for generative models of text, 
+     called faithful generation, to ensure that the generated text does
+     not misrepresent the conditioning input. We develop faithful generation
+     models for both the data-to-text and text-to-text (i.e. summarization)
+     settings.
+
+ \item A novel method of combining salience estimation based extractive 
+     summarization with abstractive generation in the faithful generation
+    paradigm.    
+
+%An experimental evaluation of several existing and novel deep learning
+%   architectures for word and sentence salience with 
+%A study on the design, strengths, and limitations of deep learning 
+%     models for content selection at the sentence and word level in 
+%     single document summarization. 
+
+% \item An experimental study of extractive content selection algorithms
+%     as input to abstractive summarization model.
+
+% \item A novel approach to generating text that is faithful to some
+%     structured information in a database.
+
+\end{enumerate}
+
+
+
+
+
+
+
+
+
+
+
+
+~\\~\\
+
+
+
+
+
+
+
+
+
+In this thesis we focus on advances to two summarization subtasks:
+\textit{(i)} identifying the most import content for inclusion in the summary, 
+and \textit{(ii)}
+rendering that content in such a way as to not misrepresent the original 
+input. We refer to the former as \textbf{\textit{salience estimation}} and the latter
+as \textbf{\textit{faithful generation}}. 
+
+
+
+
+\subsubsection{Extractive vs. Abstractive Summarization}
+
+
+\subsubsection{Streaming Summarization}
+
+\subsection{Faithful and Controllable Text Generation}
+
+
+\subsection{Salience Estimation in Deep Learning Summarization Models}
+
+The success of this ``deep learning revolution'' follow on the earlier
+trend in applied statistical and machine learning modeling leading to successes
+over more lingusitically motivated approaches. Frederick Jelinek, working on 
+early speech recognition models at IBM, is often quoted, 
+``Every time I fire a linguist, my performance goes up.''\footnote{give source} An interesting part of this trend has been a relative homogenization 
+of model designs, converging, as of mid-2020, primarily around 
+the Transformer-based conditional language models \cite{bart,gpt}. Whether
+you are working in MT, summarization, or other generation areas, the models
+all look pretty similar, suggesting having a high capacity model and 
+lots of data to learn from is better than building in task specific 
+inductive biases or human derived intuitions.
+
+
+One of goals of this thesis is to highlight the shortcomings of this paradigmn.
+The first chapter explores two machine learning models for predicting
+the importance of text with respect to a query, using modular components
+to model salience and redundancy.
+The second and third chapters in particular examine in detail deep neural
+network models applied to salience prediction and generation.
+In the former, simply relying on lots of data leads to the model 
+learning fairly brittle notions of salience, primarily utilizing artifiacts
+of the dataset, particulary layout biases in the newswire domain, to
+identify important information. In the latter case we find that the 
+model is prone to hallucinations and the importance of content 
+planning for better generation quality.
+
+
+
+
+
+
+
+
+
+
+
+Everyday we ask friends and colleagues to do it, to tell us about books, 
+newspaper articles, and other complex texts, and, without more than a 
+moment's reflection, they are able to compress their experience
+into succinct natural language statements that describe the
+subject of our request.
+The ease with which we summarize belies the difficulty of
+writing programs that do so, and so it would appear that 
+the robust
+ability to create summaries is, as of 2018, a uniquely human capability.
+This partially explains summarization's allure to the artificial intelligence (AI)
+research community, which has in one way or another, attempted to aggregate
+and naturally compress text data since at least the 1950's 
+\cite{luhn1958automatic}.
+This makes automatic text summarization one of the longest-standing 
+application areas in the 
+field of natural language processing (NLP), with a history as deep 
+as some of the more foundational tasks, e.g. syntactic parsing 
+\cite{yngve1955syntax} or 
+part-of-speech tagging \cite{harris1962string}. 
+
+While there are many variants, 
+the general summarization task is 
+to reduce a large input text into its most essential pieces of information,
+and in doing so reduce the amount of reading a human has to do. 
+In this thesis we focus on advances to two summarization subtasks:
+\textit{(i)} identifying the most import content for inclusion in the summary, 
+and \textit{(ii)}
+rendering that content in such a way as to not misrepresent the original 
+input. We refer to the former as \textbf{\textit{salience estimation}} and the latter
+as \textbf{\textit{faithful generation}}. 
+
+\textbf{Salience Estimation} Our completed and proposed methods of salience estimation cover a range of
+techniques including regression, clustering, learning-to-search,
+and deep neural networks. 
+We experimentally verify the utility of our approaches
+across a variety of summarization tasks including stream summarization,
+single-document summarization, and multi-document summarization.
+The general research goal here is to develop flexible models for 
+identifying
+important words, phrases, and sentences that are likely to serve as 
+representative members of the larger text in which they are found.
+
+In extractive summarization, 
+where the summary is constructed by copying and pasting phrases or sentences 
+from the input text, salience estimation can be used directly to create
+a summary. For example, a simple method of sentence extractive summarization
+would be to order the input sentences by decreasing salience and select the
+top few sentences for the summary. In most cases, salience is not the only
+consideration for summary inclusion; redundancy, discourse coherence, fluency,
+and many other metrics of text quality can and have been used as content
+selection criteria. These measures are largely independent of salience 
+(with the notable exception of redundancy) and so we do not explore them in 
+detail here. The details of our completed and proposed work on 
+salience estimation can be found
+in sections \ref{sec:feature_salience} and \ref{sec:deep_learning_salience}.
+
+In \autoref{sec:feature_salience} we develop two feature-based models of 
+sentence
+salience and evaluate them in a relatively novel stream 
+summarization crisis-monitoring scenario
+\cite{starbird2013working,aslam2015trec,aslam2016trec}. In this task, a user is interested
+in tracking information about a disaster event (e.g. a hurricane). The
+user provides a text based query describing the event 
+(e.g. ``Hurricane Sandy'') to the summarization model. 
+The model must then 
+monitor a stream of news articles, extracting important sentences in the 
+document stream and present them to the user. The information must be 
+highly salient to the query event, as well as novel and timely to the user 
+-- we do not want to bombard the user with irrelevant or repeated information,
+and our methods cannot take so long  that the extracted
+information is out of date.
+  
+We develop and compare several deep learning based models of word and 
+sentence salience in \autoref{sec:deep_learning_salience} and evaluate them 
+primarily on
+sentence extractive single document summarization (SDS). 
+We perform this evaluation across
+a variety of genres including news, personal narratives, and medical journal
+articles. Intuitively, the goal here is to summarize a single news article, 
+short story, or research paper by selecting a subset of the input sentences
+to serve as the summary. We also explore adaptation of these algorithms to 
+the sentence extractive multi-document summarization (MDS) task, 
+where there is much less training data.
+In this task, an extractive summarization model is given a set of related 
+documents 
+(typically ten), and must select a subset of the sentences to use as the summary of
+the document set.
+
+\paragraph{Faithful Generation} Finally, section~\ref{sec:faithful_generation} describes our proposed 
+contributions to
+abstractive summarization, i.e. methods that produce novel 
+summary text using a generative model. 
+Research in abstractive summarization is increasing, in part due to
+the success of general purpose sequence-to-sequence transduction models 
+for machine translation (MT) that have been ported to the summarization task.
+The ability of abstractive models to generate fluent 
+summaries is impressive. However, they are also especially prone 
+to generating generic statements and hallucinated facts that are not grounded 
+by evidence in the input. %This seems to be a well known problem among 
+%researchers working
+%in generation, but it has not received much direct attention in the literature.
+We are interested in this problem from both the perspectives of selecting
+the right evidence in the input for generation, a task for which we enlist
+our salience estimation methods, and also certifying that a generated text
+conforms to knowledge represented in the input or possessed by the model
+\textit{a priori}. For the latter goal, we propose to model generation as a two player
+game, where one player, the generator, is tasked with producing a text
+utterance describing a piece of evidence (either text or table data);
+the second player, the recognizer, %change this name
+evaluates the plausibility of the utterance with respect to the evidence.
+This overall regime will constitute our proposed method called
+ faithful generation.
+%to be outlined in more detail in \autoref{sec:faithful_generation}. 
+We propose 
+evaluation both on an abstractive SDS task \cite{volske2017tl}, 
+as well as, two data-to-text generation 
+test beds \cite{lebret2016neural,novikova2017e2e}.
+
+
+
+
+
+%Salience estimation can also be used to guide \textbfit{abstractive 
+%summarization} techniques, i.e. methods that produce novel
+%summary text using a generative model. These types of models 
+%must (at the very least) implicitly select important content for conditioning 
+%their
+%generative process. We propose a salience estimation component to 
+%explicitly model this selection process in addition to a generative model 
+%training regime which we briefly describe presently. (NOTE-TO-SELF: reorder this transition you dumb dumb.)
+%
+%Research in abstractive summarization is increasing, in part due to
+%the success of general purpose sequence-to-sequence transduction models 
+%in machine translation (MT) that have been ported to the summarization task.
+%The ability of abstractive models to generate relatively fluent and 
+%meaningful summaries is impressive. However, they are also especially prone 
+%to generating generic statements that are not grounded by evidence in the 
+%input. This seems to be a well known problem among researchers working
+%in generation, but it has not received much attention in the literature.
+%We are interested in this problem from both the perspectives of selecting
+%the right evidence in the input for generation, a task for which we enlist
+%our salience estimation methods, and also certifying that a generated text
+%conforms to knowledge represented in the input or possesed by the model
+%apriori. For the latter goal, we propose to model generation as a two player
+%game, where one player, the generator, is tasked with producing a text
+%utterance describing a piece of evidence (either text or structured data);
+%the second player, the recognizer, %change this name
+%evaluates the plausibility of the utterance with respect to the evidence.
+%This overall regime will consitute our method of faithful generation,
+%to be outlined in more detail in \autoref{sec:faithful_generation}. We propose 
+%evaluation both on an SDS task, as well as, two data-to-text generation 
+%test beds \citep{lebret2016neural,novikova2017e2e}.
+
+\subsection{Contributions}
+
+To summarize, our completed and proposed contributions of this thesis are as 
+follows:
+\begin{enumerate}
+
+ \item Two novel feature-based models of sentence salience and an empirical
+    evaluation on a stream summarization task.
+% \item A novel approach to streaming summarization using a feature-based
+%     regression model of sentence salience and sentence selection using 
+%     exemplar-based clustering.
+
+% \item A novel approach to streaming summarization using the locally optimal
+%     learning to search (LOLS) algorithm.
+
+ \item Several novel deep learning architectures for word and sentence 
+   salience, a thorough evaluation of the linguistic and
+   structural features critical to learning in the SDS task across a 
+   variety of genres, and adaptation to a news MDS task. 
+
+
+ \item A novel training regime for generative models of text, 
+     called faithful generation, to ensure that the generated text does
+     not misrepresent the conditioning input. We develop faithful generation
+     models for both the data-to-text and text-to-text (i.e. summarization)
+     settings.
+
+ \item A novel method of combining salience estimation based extractive 
+     summarization with abstractive generation in the faithful generation
+    paradigm.    
+
+%An experimental evaluation of several existing and novel deep learning
+%   architectures for word and sentence salience with 
+%A study on the design, strengths, and limitations of deep learning 
+%     models for content selection at the sentence and word level in 
+%     single document summarization. 
+
+% \item An experimental study of extractive content selection algorithms
+%     as input to abstractive summarization model.
+
+% \item A novel approach to generating text that is faithful to some
+%     structured information in a database.
+
+\end{enumerate}
+
+
+
+
+%The first two contributions focus broadly on estimating content importance
+%or salience for various summarization tasks and domains. They further
+%can be broken down into traditional feature-based models (the first two 
+%contributions) and deep learning models (the third contribution).
+%The last two contributions focus on generating text from previously 
+%selected content, with the fourth contribution studying the case where
+%selected content consists of extracted sentences and words from an input
+%document, and the final contribution focuses on generating text that is 
+%faithful to some structured information. 
+
+Together, these contributions
+provide a wide array of experiments and  methodology for identifying summary worthy information and 
+generating text that respects truth statements about that information.
+The hope is that these methods will lead to more reliable summaries
+without sacrificing the expressiveness of the generation algorithm. 
+In the next section (\autoref{sec:feature_salience}) 
+we describe completed work on feature-based approaches to sentence salience estimation. 
+In section~\ref{sec:deep_learning_salience}, we describe completed and ongoing
+ work on deep neural network models
+of salience estimation. We describe our planned approaches to faithful 
+generation in section \ref{sec:faithful_generation}. 
+Section~\ref{sec:research_plan} describes our research plan, before 
+we finally conclude.
+
+
+
+
+
+
+%Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat \cite{ref1}. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur \cite{ref2}. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat \cite{ref1}. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur
+%
+%\section{Footnotes: Two ways of adding to your text}
+%
+%Here is an example of how to use footnotes. It is possible to write footnotes directly in the text itself \footnote{By using footnote command and writing your note in the curly brackets}. Or it is possible to mark the location of a foot note with footnote mark command\footnotemark \, then you can write the footnote in its own line for ease of reading. 
+%
+%\footnotetext{You then use footnotetext command and then write you note in as if you are using regular footnote command as we did previously.}
+%
+%\section{Other section of first chapter}
+%
+%Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat \cite{ref1}. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariaturLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat \cite{ref1}. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariaturLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat \cite{ref1}. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur
+%
+%Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat \cite{ref1}. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariaturLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat \cite{ref1}. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur
+%
+%Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat \cite{ref1}. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariaturLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat \cite{ref1}. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur
+%
+%Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat \cite{ref1}. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur
+%
+%
+%% This is a figure
+%\begin{figure}
+%	\includegraphics[width=\textwidth]{figures/exampleFigure.png}
+%	\caption{This is an example Figure.}
+%	\label{Figure in Chapter 1}
+%\end{figure}
+%
+%
+%Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat \cite{ref1}. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur \cite{ref2}. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum \cite{ref3}.
+%
+%Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat \cite{ref1}. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur \cite{ref2}. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+%
+%Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat \cite{ref1}. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur \cite{ref2}. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+%
+%Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat \cite{ref1}. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur \cite{ref2}. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+%
+%Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat \cite{ref1}. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur \cite{ref2}. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+%
+%Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat \cite{ref1}. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur \cite{ref2}. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+%
+%% This is a table
+%%If you are having issues with \midline use \hline insteadn and remove booktabs package from thesis.tex
+%
+%\begin{table}
+%\caption{This is an example Table.}
+%\begin{center}
+%\begin{tabular}{ccc}
+%x & f(x) & g(x) \\
+%%\hline
+%\midrule
+%1 & 6 & 4  \\
+%2 & 6 & 3  \\
+%3 & 6 & 2  \\
+%4 & 6 & 2  \\
+%\label{Table in Chapter 1}
+%\end{tabular}
+%\end{center}
+%\end{table}

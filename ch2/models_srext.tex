@@ -1,0 +1,317 @@
+
+\subsubsection{\srext~Extractor}
+
+\citet{nallapati2017summarunner} proposed
+a sentence extractor, which we refer to as the \srext~Extractor,
+that factorizes the salience estimates into contributions 
+from five different sources, which we refer to as \saliencefactors.
+The \saliencefactors~take into account interactions between 
+contextual sentence embeddings and document embeddings or summary embeddings,
+as well as sentence position embeddings.
+
+In order to construct the contextual sentence embeddings, document 
+embeddings, and summary embeddings, the \srext~extractor first runs 
+a \bidirectional~\gru~over the sentence 
+embeddings created by the sentence encoder (visually depicted in \autoref{fig:sr1}), 
+
+\input{ch2/figures/models_sr1.tex}
+
+%\input{ch2/figures/models_sr_partial.tex}
+
+\noindent \textit{(Fig.~\ref{fig:sr1}.a) Forward and Backward \gru~Outputs}
+\begin{align}
+    \srrHid_0 &= \zeroEmb, \quad \srlHid_{\docSize + 1} = \zeroEmb, \\
+    \forall i : \;\; i \in \{1,\ldots,\docSize\}&\nonumber \\
+    \srrHid_i &= \fgru(\sentEmb_i, \srrHid_{i-1}; \srRRNNParams), \\
+    \srlHid_i &= \fgru(\sentEmb_i, \srlHid_{i+1}; \srLRNNParams),
+\end{align}
+where $\srrHid_i,\srlHid_i \in \reals^{\srRNNDim}$ and $\srRRNNParams$ and $\srLRNNParams$ are the forward and backward \gru~parameters respectively.
+
+
+
+%\footnote{\citet{nallapati2017summarunner}
+%    use an RNN sentence encoder with 
+%this extractor architecture; in this work we pair the \srext~extractor
+%with different encoders. }% 
+    The \gru~output is
+concatenated and run through a feed-forward layer to obtain 
+a contextual sentence embedding representation $\srHid_i \in \reals^{\srRepDim}$, 
+
+
+\vspace{10pt}
+\noindent \textit{(Fig.~\ref{fig:sr1}.b) Contextual Sentence Embeddings} 
+\begin{align}
+    \forall i : \;\; i \in \{1,\ldots,\docSize\}&\nonumber \\
+\srHid_i  & = \relu\left(\srSentBias + \srSentWeight \left[ \begin{array}{c} \srrHid_i \\ \srlHid_i  \end{array} \right]  \right),
+\end{align}
+
+where $\srSentWeight \in \reals^{\srRepDim \times 2\srRNNDim}$ and $\srSentBias \in \reals^{\srRepDim}$ are learned parameters.
+
+To construct the document embedding $\srDocEmb$, the forward and backward 
+\gru~outputs are concatenated and averaged before running through a different 
+\feedforward~layer,
+%and another \feedforward~layer to obtain contextual sentence embeddings
+%$\srHid_i \in \reals^{{\color{red}???}}$, depicted visually in the schematic in \autoref{fig:sr1}, and defined by the following equations,
+
+\vspace{10pt}
+\noindent\textit{(Fig~\ref{fig:sr1}.c) Document Embedding}
+\begin{align}
+\srDocEmb  & = \tanh\left(\srDocBias + \srDocWeight \left(\frac{1}{\docSize}\sum_{i=1}^{\docSize} \left[ \begin{array}{c} \srrHid_i \\ \srlHid_i  \end{array} \right] \right) \right)
+%    \srHid_i & = \left[ \begin{array}{c} \srrHid \\ \srlHid  \end{array} \right] 
+\end{align}
+where $\srDocWeight \in \reals^{\srRepDim \times 2\srRNNDim}$ and $\srDocBias \in \reals^{\srRepDim}$ are learned parameters.
+
+%\input{ch2/figures/models_sr1.tex}
+
+
+%%\noindent where $\srrHid, \srlHid \in \reals^{\srRNNDim}$, 
+%    $\srHid \in \reals^{2\srRNNDim}$, and $\srRRNNParams, \srLRNNParams$
+%are the parameters for the forward and backward \gru~respectively.
+
+
+
+Additionally, an iterative representation of the extract summary at step $i$,
+ $\srSum_i$, is constructed by summing the $i-1$ contextual sentence 
+embeddings weighted by their salience estimates,
+
+\vspace{10pt}
+   \noindent \textit{(Fig.~\ref{fig:sr2}) Summary Embeddings}
+\begin{align}
+\srSum_1 & = \zeroEmb, \\
+\srSum_i & = \tanh\left(\sum_{j=1}^{i-1} \psal_j \cdot \srHid_j\right).
+\end{align}
+where $\psal_j= p\left(\bsal_j=1|\bsal_1,\ldots,\bsal_{j-1},\sentEmb_1, \ldots, \sentEmb_\docSize\right)$ are previously computed salience estimates for
+sentences $\sent_1,\ldots,\sent_{i-1}$.
+
+\input{ch2/figures/models_sr2.tex}
+
+
+Each salience estimate $\psal_i$ is calculated as the sum of five \saliencefactors~run through a logistic sigmoid function (depicted in \autoref{fig:sr4}),
+
+\vspace{10pt}
+    \noindent \textit{(Fig.~\ref{fig:sr4}) Salience Estimates}
+\begin{align}
+  \psal_i =  p(\bsal_i=1|\bsal_1,\dots,\bsal_{i-1},\sentEmb_1,\ldots,\sentEmb_\docSize)
+         & = 
+        \sigma\left(\srContentFactor_i 
+        + \srSalienceFactor_i + \srNoveltyFactor_i
+    + \srFinePositionFactor_i + \srCoarsePositionFactor_i   \right).
+\end{align}
+
+\input{ch2/figures/models_sr4.tex}
+
+
+%\input{ch2/figures/models_sr1.tex}
+
+
+\begin{wrapfigure}{r}{0.50\textwidth}
+    \fbox{\begin{minipage}{0.50\textwidth}
+      \begin{center}
+          \input{ch2/figures/models_sr3.tex}
+                \end{center}
+                  \caption{Schematic of \srext~factors for computing salience 
+                  estimates.}
+                  \label{fig:srfactors}
+          \end{minipage}}
+\end{wrapfigure}
+Each \saliencefactors~for content, centrality, and novelty are computed
+%~$\phi_i^{(\cdot)}$ is computed 
+via the following equations for all $i \in \{1,\ldots,\docSize\}$,
+
+\vspace{10pt}
+\noindent \textit{(Fig.~\ref{fig:srfactors}.a) Content Factor} 
+\begin{align}
+    \srContentFactor_i &=\srContentWeight \srHid_i, 
+\end{align}
+\vspace{10pt}   \noindent \textit{(Fig.~\ref{fig:srfactors}.b) Centrality\footnote{\citet{nallapati2017summarunner} refer to this as the salience factor, but we rename it here to avoid confusion with the model's final predictions which we call salience estimates.} Factor}
+\begin{align}
+    \srSalienceFactor_i & = \srHid_i^T\srSalienceWeight \srDocEmb, 
+\end{align}
+\vspace{10pt} \noindent \textit{(Fig.~\ref{fig:srfactors}.c) Novelty Factor}
+\begin{align}
+    \srNoveltyFactor_i &= -\srHid_i^T \srNoveltyWeight \srSum_i, \label{eq:srnov} 
+\end{align}
+where $\srContentWeight \in \reals^{\srRepDim}$, $\srSalienceWeight,\srNoveltyWeight \in \reals^{\srRepDim \times \srRepDim}$ are learned parameters.
+
+Finally, there are two factors for the fine and coarse-grained position,
+
+\vspace{10pt} 
+\noindent\textit{%(\ref{fig:srfactors}.d) 
+Fine-grained Position Factor}
+\begin{align}
+       \srFinePositionFactor& = \srFinePositionWeight \srFinePositionEmb_i, 
+\end{align}
+\vspace{10pt} \textit{%(\ref{fig:srfactors}.e)
+Coarse-grained Position Factor}
+\begin{align}
+           \srCoarsePositionFactor& = \srCoarsePositionWeight \srCoarsePositionEmb_i, 
+\end{align}
+where $\srFinePositionEmb_i$ and $\srCoarsePositionEmb_i$ are embeddings associated with the sentence position and sentence position quartile of the $i$-th 
+sentence (e.g., sentence $s_7$ in a document with 12 sentences, would have 
+embeddings $\srFinePositionEmb_7$ and $\srCoarsePositionEmb_2$ corresponding
+to the seventh sentence position and $2^\textrm{nd}$ sentence position
+quartile respectively).
+Both $\srFinePositionWeight, \srCoarsePositionWeight \in \reals^{\srPosDim}$, and $\srFinePositionEmb_1,\ldots,\srFinePositionEmb_\docSizeMax,\srCoarsePositionEmb_1,\ldots,\srCoarsePositionEmb_4 \in \reals^{\srPosDim}$ are learned parameters of the \srext~extractor, and $\docSizeMax\in\naturals$ is the maximum
+document size in sentences (when handling unusually long documents, sentences
+with positions greater than $\docSizeMax$ are all mapped to $\srFinePositionEmb_\docSizeMax$).
+
+The complete set of parameters for the \srext~extractor is 
+\[\xParams = \left\{\srRRNNParams,\srLRNNParams,\srSentWeight,\srSentBias,
+\srDocWeight,\srDocBias, \srContentWeight, \srSalienceWeight, \srNoveltyWeight,
+\srFinePositionWeight, \srCoarsePositionWeight, \srFinePositionEmb_1,\ldots,\srFinePositionEmb_{\docSizeMax}, \srCoarsePositionEmb_1,\ldots,\srCoarsePositionEmb_4,\right\}. \]
+In our experiments, we set $\srRNNDim=300$, $\srRNNDim=100$, $\srPosDim=16$,
+and $\docSizeMax={\color{red}???}$. Dropout with drop probability of $.25$
+is applied to the \gru~outputs $\srrHid_i$ and $\srlHid_i$, as well as 
+the contextual sentence embeddings $\srHid_i$ for all $i \in \{1,\ldots,\docSize\}$.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%%A contextual representation of each sentence, $\srHid_i$, is then obtained by 
+%%concatening the forward and backward \gru~outputs and running them
+%%through a feed forward layer with a $\relu$~activation,
+%%\begin{align}
+%%\textit{(Contextual Sentence Embedding)} & \nonumber \\
+%%\srHid_i  & = \relu\left(\srSentBias + \srSentWeight \left[ \begin{array}{c} \srrHid_i \\ \srlHid_i  \end{array} \right]  \right)
+%%\end{align}
+%
+%
+%
+%
+%~\\~\\~\\~\\
+%\pagebreak
+%
+%iof the previous RNN outputis weighted by their extraction
+%probabilities. 
+%
+%
+%In Equation~\ref{eq:srnov}, $g_i$ is an iterative summary representation 
+%computed as the
+%sum of the previous $z_{<i}$ weighted by their extraction probabilities,
+%\begin{align}
+%g_i & = \sum_{j=1}^{i-1} p(y_j=1|y_{<j},h) \cdot z_j.
+%\end{align}
+%
+%
+%A representation of the whole document is made by 
+%averaging contextual sentence embeddings,  
+%\begin{align}
+%\textit{(Document Embedding)} & \nonumber \\
+%\srDocEmb  & = \tanh\left(\srDocBias + \srDocWeight \left(\frac{1}{\docSize}\sum_{i=1}^{\docSize} \srHid_i \right) \right)
+%\end{align}
+%
+%
+%Extraction predictions are made using 
+%the RNN output at the $i$-th step, the document representation, and 
+%$i$-th version of the summary representation, along with factors for 
+%sentence location in the document. The use of the iteratively constructed
+%summary representation creates a dependence of $y_i$ on all $y_{<i}$.
+%See \autoref{fig:extractors}.d for a graphical layout.
+%%and \autoref{app:srextractor} for details.
+%
+%Like the
+%RNN~extractor it starts with a bidrectional GRU over the sentence 
+%embeddings 
+%\begin{align}
+%    \rxhid_0 &= 0 \\
+%    \rxhid_i &= \fgru(\sentEmb_i, \rxhid_{i-1}; \overrightarrow{\chi}) \\
+%   \lxhid_{\docSize + 1} &= 0 \\
+%    \lxhid_i &= \fgru(\sentEmb_i, \lxhid_{i+1}; \overleftarrow{\chi})
+%\end{align}
+%
+%It then creates a representation
+%of the whole document $q$ by passing the averaged GRU output states through
+%a fully connected layer: 
+%\begin{align}
+%q = \tanh\left(b_q + W_q\frac{1}{\docSize}\sum_{i=1}^{\docSize} [\rxhid_i; \lxhid_i] \right)
+%\end{align}
+%A concatentation of the GRU outputs at each step
+%are passed through a separate fully connected layer to create a 
+%sentence representation $z_i$, where
+%\begin{align}
+%    \xhid_i &= \relu\left(b_z + W_z [\rxhid_i; \lxhid_i]\right).
+%\end{align}
+%The extraction probability is then determined by contributions from five 
+%sources:
+%\begin{align}
+%    \textit{content} &\quad a^{(con)}_i=W^{(con)} z_i, \\
+%    \textit{salience}&\quad a^{(sal)}_i = z_i^TW^{(sal)} q, \\
+%    \textit{novelty}&\quad a^{(nov)}_i = -z_i^TW^{(nov)} \tanh(g_i), \label{eq:srnov} \\
+%    \textit{position}&\quad a^{(pos)}_i = W^{(pos)} l_i, \\
+%    \textit{quartile}&\quad a^{(qrt)}_i = W^{(qrt)} r_i,
+%\end{align}
+%where $l_i$ and $r_i$ are embeddings associated with the $i$-th sentence
+%position and the quarter of the document containing sentence $i$ respectively.
+%In Equation~\ref{eq:srnov}, $g_i$ is an iterative summary representation 
+%computed as the
+%sum of the previous $z_{<i}$ weighted by their extraction probabilities,
+%\begin{align}
+%g_i & = \sum_{j=1}^{i-1} p(y_j=1|y_{<j},h) \cdot z_j.
+%\end{align}
+%Note that the presence of this term induces dependence of each 
+%$\bsal_i$ to 
+%all $\bsal_{<i}$ similarly to the Cheng \& Lapata extractor.
+%
+%The final extraction probability is the logistic sigmoid of the
+%sum of these terms plus a bias,
+%\begin{align}
+%    p(y_i=1|y_{<i}, h) &= \sigma\left(\begin{array}{l}
+%      a_i^{(con)} + a_i^{(sal)} + a_i^{(nov)} \\
+%  + a_i^{(pos)}  + a_i^{(qrt)} + b \end{array}\right).
+%\end{align}
+%The weight matrices $W_q$, $W_z$, $W^{(con)}$, $W^{(sal)}$, $W^{(nov)}$, $W^{(pos)}$,
+%$W^{(qrt)}$ and bias terms $b_q$, $b_z$, and $b$ are learned parameters;
+%The GRUs have separate learned parameters.
+%The hidden layer size of the GRU is 300 for each direction $z_i$, $q$, and $g_i$ have 100 dimensions. The position and quartile embeddings are 16 dimensional each.
+%Dropout with drop probability .25 is applied to the GRU outputs and to $z_i$.
+%%?
+%%?
+%%?
+%
+%Note that in the original paper, the SummaRunner extractor was paired 
+%with
+%an \textit{RNN} sentence encoder, but in this work we experiment with a variety
+%of sentence encoders.
+%%?
+%
+%
+%
+%%?A document representation $q$ is created by passing the 
+%%?averaged RNN output through a fully connected layer.
+%%?
+%%?Given the RNN output $z_t$ at the step $t$, the following scores are created:
+%%?\begin{enumerate}[nolistsep,noitemsep]
+%%?\item a content score $W^{(con)}z_t$,
+%%?\item a salience score $z_t^TW^{(sal)}q$,
+%%?\item a novely score $-z_t^TW^{(nov)}\tanh(g_t)$,
+%%?\end{enumerate}
+%%?where $g_t = \sum_{i=1}^{t-1} p(y_i=1|y_{<i}, h_{<i}) \cdot z_i$.
+%%?These scores are summed along with a bias term and a bias for sentence 
+%%?position and the quarter of the document\hal{what does ``the quarter of the document'' mean? sentence position quartile?} and fed through a sigmoid activation
+%%?to compute $p(y_t=1|y_{<t}, h_{<t})$.
+%
+%
+%\paragraph{Proposed Sentence Extractors}
+%We propose two sentence extractor models that 
+%make a stronger conditional independence 
+%assumption $p(\bsal|\sentEmb)=\prod_{i=1}^\docSize p(\bsal_i|\sentEmb)$,
+%essentially making independent predictions conditioned on $\sentEmb$.
+%%In theory, our models should \hal{why should they?} perform worse because of this, however, as
+%%we later show, this is not the case empirically.
+%
+%

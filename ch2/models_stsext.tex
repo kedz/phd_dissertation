@@ -1,0 +1,158 @@
+\subsubsection{\sts~Extractor} 
+
+One shortcoming of the RNN extractor is that long range
+information from one end of the document may not easily be able to affect 
+extraction probabilities of sentences at the other end. 
+Our second proposed model, the \sts~extractor mitigates this problem with an 
+attention 
+mechanism commonly
+used for neural machine translation \citep{bahdanau2014neural} and 
+abstractive summarization \citep{see2017get}. 
+The sentence embeddings produced by the sentence encoder are first
+encoded by a \bidirectional~\gru, which produces left and right
+partial contextual sentence embeddings, 
+
+\input{ch2/figures/models_stsext1.tex}
+
+ \vspace{10pt}   \noindent \textit{(Fig.~\ref{fig:stsext1}.a) Encoder Left and Right Partial Contextual Sentence Embeddings}
+\begin{align}
+        % eta_0 = 0 
+        \stsextREncHid_0  = \zeroEmb, & \quad 
+        \stsextLEncHid_{\docSize + 1}  = \zeroEmb, \\
+\forall i : \;\; i \in \{1,\ldots,\docSize\}& \nonumber \\
+\stsextREncHid_i & = \fgru\left(
+            \sentEmb_i, \stsextREncHid_{i-1}; 
+            \stsextREncParams\right), \\
+\stsextLEncHid_i &= \fgru\left(
+            \sentEmb_i, \stsextLEncHid_{i+1}; 
+            \stsextLEncParams\right),
+\end{align}
+where $\stsextREncHid_i,\stsextLEncHid_i \in \reals^{\stsextRNNDim}$ and 
+$\stsextREncParams$ and $\stsextLEncParams$ are the forward and backward encoder \gru~parameters respectively. The encoder contextual sentence embeddings
+are then formed by simply concatenating the encoder left and right 
+partial contextual embeddings,
+
+\vspace{10pt} \noindent \textit{(Fig.~\ref{fig:stsext1}.b) Encoder Contextual Sentence Embedding}
+\begin{align}
+        % eta_i = [eta_i,>, eta_i,<]   
+\forall i : \;\; i \in \{1,\ldots,\docSize\} & \nonumber \\
+        \stsextEncHid_i & = \left[\begin{array}{c}
+            \stsextREncHid_i\\ 
+            \stsextLEncHid_i\end{array}\right] 
+\end{align}
+
+
+
+
+The final output of each encoder \gru~initializes a separate decoder \gru~which is then run over the sentence embeddings a second time, 
+
+
+\vspace{10pt} \noindent  \textit{(Fig.~\ref{fig:stsext2}.a) Decoder Left and Right Partial Contextual Sentence Embeddings}
+\begin{align}
+        % zeta_0 = eta_n
+\stsextRDecHid_0 & = \fgru\left(\stsextSent_>,   \stsextREncHid_\docSize; \stsextRDecParams\right),\\ 
+\stsextLDecHid_{\docSize+1} & = \fgru\left(\stsextSent_<, \stsextLEncHid_1;\stsextLDecParams\right),\\ 
+    \forall i : \;\; i \in \{1,\ldots,\docSize\}& \nonumber\\
+        % zeta_i = gru(h_i, zeta_i-1; \chi_zeta)  
+        \stsextRDecHid_i & = \fgru(
+            \sentEmb_i,  \stsextRDecHid_{i-1}; 
+            \stsextRDecParams), \\
+        % zeta_i = gru(h_i, zeta_i+1; chi_zeta)
+        \stsextLDecHid_i & = \fgru(
+            \sentEmb_i,  \stsextLDecHid_{i+1}; 
+            \stsextLDecParams) 
+\end{align}
+where $\stsextSent_>$ and $\stsextSent_<$ are special ``begin decoding'' input
+embeddings for the forward and backward decoder respectively, 
+$\stsextRDecHid_i, \stsextLDecHid_i \in \reals^{\stsextRNNDim}$, 
+and $\stsextRDecParams$ and $\stsextLDecParams$ are the parameters for the
+forward and backward decoder \gru s respectively.
+%
+
+The decoder left and right partial contextual sentence embeddings ($\stsextRDecHid_i$ and $\stsextLDecHid_i$) are then
+concatenated to form the decoder contextual sentence embeddings,
+
+
+\vspace{10pt} \noindent \textit{(Fig.~\ref{fig:stsext2}.b) Decoder Contextual Sentence Embeddings} 
+\begin{align}
+    \forall i : \;\; i \in \{1,\ldots,\docSize\}& \nonumber \\
+        \stsextDecHid_i & = \left[\begin{array}{c}
+            \stsextRDecHid_i\\ 
+            \stsextLDecHid_i\end{array}\right].
+\end{align}
+
+
+
+\input{ch2/figures/models_stsext2.tex}
+\input{ch2/figures/models_stsext3.tex}
+
+
+\FloatBarrier
+
+
+Each decoder contextual sentence embedding $\stsextDecHid_i$ then attends
+to the encoder contextual sentence embeddings $\stsextEncHid_1,\ldots,
+\stsextEncHid_\docSize$, to produce an attention-weighted encoder sentence
+embedding $\stsextAttnHid_i$,
+    
+\vspace{10pt} \noindent \textit{(Fig.~\ref{fig:stsext3}.a) Attention Weights}
+\begin{align}
+    \forall i : \;\; i \in \{1,\ldots,\docSize\}&\nonumber \\
+    \stsextAttn_{i,j} & = 
+        \frac{\exp \left(\stsextDecHid_i \cdot  \stsextEncHid_j \right)}{
+            \sum_{j^\prime=1}^{\docSize}\exp\left(  
+                \stsextDecHid_i \cdot  \stsextEncHid_{j^\prime} \right)},
+\end{align}
+\vspace{10pt} \noindent \textit{(Fig.~\ref{fig:stsext3}.b) Attention-weighted Encoder Sentence Embeddings} 
+\begin{align}
+    \forall i : \;\; i \in \{1,\ldots,\docSize\}& \nonumber \\
+    \stsextAttnHid_i & = 
+        \sum_{j=1}^{\docSize} \alpha_{i,j} \left[\begin{array}{c}
+            \stsextREncHid_j\\ 
+            \stsextLEncHid_j\end{array}\right].
+\end{align}
+
+The attention-weighted encoder sentence embeddings and the decoder 
+contextual sentence embedding are then concatenated and fed through a 
+\feedforward~layer to produce the $i^\textrm{th}$ contextual sentence
+embedding $\stsextHid_i$, which is itself fed through a final 
+\feedforward~layer to compute the $i^\textrm{th}$ salience estimate
+$\psal_i = p(\bsal_i=1|\sentEmb_1,\ldots,\sentEmb_\docSize)$,
+
+\vspace{10pt}   \noindent \textit{(Fig.~\ref{fig:stsext3}.c) Contextual Sentence Embedding} 
+\begin{align}
+    \forall i : \;\; i \in \{1,\ldots,\docSize\} & \nonumber\\
+    \stsextHid_i &= \relu\left(\stsextHidWeight \left[\begin{array}{c}
+        \stsextAttnHid_i \\ 
+        \stsextDecHid_i \end{array}\right] 
+        + \stsextHidBias \right),
+\end{align}
+\vspace{10pt} \noindent \textit{(Fig.~\ref{fig:stsext3}.d) Salience Estimate}
+\begin{align}
+    \forall i : \;\; i \in \{1,\ldots,\docSize\} & \nonumber\\
+\psal_i =    p(\bsal_i=1|\sentEmb_1, \ldots,\sentEmb_\docSize)& = 
+            \sigma\left(\stsextPredWeight \stsextHid_i + \stsextPredBias  
+            \right).
+\end{align}
+where $\stsextHidWeight \in \reals^{\stsextHidDim \times 3\stsextRNNDim}$,
+$\stsextHidBias \in \reals^{\stsextHidDim}$, 
+$\stsextPredWeight \in \reals^{1 \times \stsextHidDim}$, and
+$\stsextPredBias \in \reals$ are model parameters.
+The complete set of \stsext~extractor parameters is 
+\[\xParams = \left\{ \stsextREncParams, \stsextLEncParams,
+        \stsextRDecParams, \stsextLDecParams, \stsextHidWeight, \stsextHidBias, \stsextPredWeight, \stsextPredBias, \right\}. \]
+        In our experiments, we set $\stsextRNNDim=300$, $\stsextHidDim=100$.
+        Dropout with drop probability of 0.25 is applied to $\stsextREncHid_i,
+        \stsextLEncHid_i, \stsextRDecHid_i, \stsextLDecHid_i$, and $\stsextHid_i$ for all $i \in \{1,\ldots,\docSize\}$.
+
+%?
+%?
+%?
+%?sentence into a query vector which attends to the encoder output. The
+%?attention weighted encoder output and the decoder $\gru$ output are concatenated
+%?and fed into a multi-layer perceptron to compute the extraction probability.
+%?See \autoref{fig:extractors}.b for a graphical layout.
+%?%and \autoref{app:s2sextractor} for details.
+%?
+%?
+%?

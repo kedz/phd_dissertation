@@ -1,0 +1,197 @@
+
+\input{ch2/figures/models_clext.tex}
+
+
+\subsubsection{\clext~Extractor}
+% We consider two recent state-of-the-art extractors.
+%\hal{if you're hurting for space, you could probably describe these both in one paragraph, leaving off the stuff about what they use as encoders, etc., and really just making the point that they use $y<i$ to predict $yi$}
+
+%\paragraph{Cheng \& Lapata Extractor} 
+The \clext~extractor \citep{cheng2016neural} 
+%is built around a 
+%\sequencetosequence~model over the sentence embeddings
+% The first, proposed by 
+%\citet{cheng2016neural}, %, which we refer to as the Cheng \& Lapata Extractor,
+is built around a somewhat idiosyncratic 
+\unidirectional~\sequencetosequence~model. A schematic outlining the 
+structure of the encoder and closely following the subsequent 
+equations can be found in \autoref{fig:clext}.
+
+The encoder is fairly standard. The initial state is initialized to
+a zero embedding, and each sentence embedding $\sentEmb_i$ is fed into 
+the encoder, to obtain the final encoder hidden state $\xEncHid_\docSize \in \reals^\xhidSize$ . That is,
+\begin{align}
+    \textit{(a) Extractor -- Encoder} & \nonumber \\
+    \xEncHid_0 & = \zeroEmb \\
+    \forall i : \;\; i \in \{1,\ldots,\docSize\}&\nonumber\\
+    \xEncHid_i &= \fgru(\sentEmb_i, \xEncHid_{i-1};\clEncParams).
+\end{align}
+
+%The decoder departs from the typical \sequencetosequence~setup.
+The initial decoder hidden state $\xDecHid_0 \in \reals^{\xhidSize}$ is 
+initialized with the last encoder hidden state, $\xEncHid_\docSize$.
+The inputs
+to decoder step $i$, for $i >1$, are the salience gated $(i-1)^\textrm{th}$ sentence embeddings,
+\begin{align}
+    \textit{(b) Salience Gated Sentence Embeddings}&\nonumber\\
+    \forall i: \;\; i \in \{2,\dots,\docSize\}& \nonumber\\
+    \salSentEmb_{i-1} & = \xweight_{i-1}\sentEmb_{i-1},
+\end{align}
+where the salience gate is 
+% p_i = p(y_i|y_1,...,y_i-1,h_1,...,h_n) %
+$\xweight_i = p(\bsal_i|\bsal_1,\ldots,\bsal_{i-1},
+                        \sentEmb_1,\ldots,\sentEmb_\docSize)$, is the
+                        salience estimate computed for sentence $\sent_{i-1}$.
+                        For the first decoder step (i.e. $i=1$), since there is no $\xweight_0$, $\salSentEmb_0$ is a special learned parameter.
+
+
+
+The extractor decoder outputs are then computed as,
+%
+%The initial decoder hidden state $\xDecHid_0 \in \reals^{\xhidSize}$ is then 
+%initialized with the last encoder hidden state, 
+%$\xEncHid_\docSize$. The inputs to the decoder \gru~are the same 
+%sentence embeddings fed into the encoder but weighted and delayed by one time step so
+%that the $i^\textrm{th}$ step decoder hidden state $\xDecHid_i$ is dependent
+%on the previous decoder hidden state and the $(i-1)^\textrm{th}$ sentence
+%embedding $\sentEmb_{i-1}$. Formally, we have:
+\begin{align}
+    \textit{(c) Extractor -- Decoder} & \nonumber \\
+    \xDecHid_0  &= \xEncHid_\docSize  \\
+    \forall i : \;\; i \in \{1,\ldots,\docSize\}&\nonumber\\
+    %\xDecHid_1 &= \fgru(\sentEmb_0, \xDecHid_{\docSize};\clDecParams) \\
+   \xDecHid_i &= \fgru(\salSentEmb_{i-1}, \xDecHid_{i-1};\clDecParams). \label{eq:cl1} 
+\end{align}
+Note in \autoref{eq:cl1} that 
+the decoder side \gru~input is the sentence embedding from the previous time
+step, $\sentEmb_{i-1}$, weighted by its probability of extraction, $p_{i-1}$, 
+from the 
+previous step, inducing dependence of each output $\bsal_i$ on all previous 
+outputs $\bsal_1,\ldots,\bsal_{i-1}$.
+
+
+The contextual sentence embeddings $\xPredHid_i$ are then computed by concatenating
+the encoder and decoder outputs $\xEncHid_i$ and $\xDecHid_i$ and running
+them through a \feedforward~layer with $\relu$ activation,
+\begin{align}
+\textit{(d) Contextual Sentence Embeddings} & \nonumber\\
+    \forall i : \;\; i \in \{1,\ldots,\docSize\}&\nonumber \\
+\xPredHid_i &= \relu\left(\xpWeight^{(1)} \left[\begin{array}{c}\xEncHid_i \\ \xDecHid_i \end{array}\right] + \xpBias^{(1)} \right).
+\end{align}
+
+
+
+The actual salience
+estimate for sentence $\sent_i$ is then computed by feeding $\xPredHid_i$
+through another \feedforward~layer with logistic sigmoid activation,
+%where $\sentEmb_0 \in \reals^{\sentDim}$ can be thought of as a special
+%``begin decoding'' sentence embedding that is a learned parameter of the 
+%extractor. The weights $\xweight_{i-1} = p(\bsal_{i-1}|\bsal_1,\ldots,\bsal_{i-2},
+%\sentEmb_1,\ldots,\sentEmb_\docSize)$ are the probabilities of extracting the
+%$(i-1)^\textrm{th}$ sentence under the model. The actual prediction 
+%probabilities are computed by running the $i^\textrm{th}$ encoder and decoder 
+%hidden states through 
+%a ``prediction head,'' that is,  a two layer feed forward netork, defined
+%as follows,
+\begin{align}
+    \textit{(e) Salience Estimates} & \nonumber\\
+    \forall i : \;\; i \in \{1,\ldots,\docSize\}& \nonumber \\
+ p_i = p(\bsal_i =1|\bsal_1,\ldots,\bsal_{i-1}, \sentEmb_1,\ldots,\sentEmb_\docSize) &= \sigma\left(\xpWeight^{(2)}\xPredHid_i + \xpBias^{(2)}  \right).
+\end{align}
+
+The contextual embedding and salience estimate layers have parameters are $\xpWeight^{(1)} \in \reals^{\xpHidSize \times 2 \xhidSize}$, $\xpBias^{(1)} \in \reals^{\xpHidSize}$, $\xpWeight^{(2)} \in \reals^{1 \times \xpHidSize}$, and $\xpBias^{(2)}\in \reals$.
+The entire set of learned parameters for the \clext~extractor are
+\[
+    \chi = \left\{ 
+    \clEncParams, \clDecParams,
+    \salSentEmb_0,
+    \xpWeight^{(1)}, \xpBias^{(1)}, \xpWeight^{(2)}, \xpBias^{(2)}\right\}.
+\]
+The hidden layer dimensionality of the \gru~and the contextual embedding layer
+is 
+$\xhidSize = 300$ and $\xpHidSize=100$, respectively.
+{\color{red}Dropout with drop probability .25 is applied to the \gru~outputs
+($\xEncHid_i$ and $\xDecHid_i$),   and to $\xPredHid_i$.}
+
+%TODO
+%Note that in the original paper, the Cheng \& Lapata extractor was paired 
+%with
+%a \textit{CNN} sentence encoder, but in this work we experiment with a variety
+%of sentence encoders.
+
+
+%~\\~\\~\\
+%
+%On the decoder side, the same sentence 
+%embeddings are fed as input to the decoder and decoder outputs are used to
+%predict each $y_i$. The decoder input is weighted by the previous extraction
+%probability, inducing the dependence of $y_i$ on $y_{<i}$.
+%
+%
+%\begin{align}
+%\textit{(Extractor -- Decoder}) & \\
+%    \xDecHid_0  &= \xEncHid_\docSize  \\
+%    \xDecHid_1 &= \fgru(\sentEmb_*, \xDecHid_{\docSize};\clDecParams) \\
+%%    \rdxhid_i &= \fgru(p_{i-1} \sentEmb_{i-1},  \rdxhid_{i-1};\chi_d) \label{eq:cl1}\\
+%   \xDecHid_i &= \fgru(p_{i-1} \cdot \sentEmb_{i-1}, \xDecHid_{i-1};\clDecParams) \label{eq:cl1} \\
+%\textit{(Extractor -- Prediction Head)} & \\
+%o_i &= \relu\left(U \cdot \left[\begin{array}{c}\xhid_i \\ \rdxhid_i \end{array}\right] + u \right)\\
+% p_i = p(\bsal_i&=1|\bsal_{<i}, \sentEmb_1,\ldots,\sentEmb_\docSize) = \sigma\left(V\cdot o_i + v  \right) 
+%\end{align}
+%w
+%
+%
+%First, each sentence embedding\footnote{\citet{cheng2016neural} used an CNN sentence encoder with 
+%this extractor architecture; in this work we pair the Cheng \& Lapata extractor
+%with several different encoders.} is
+%fed into an encoder side RNN, with the final encoder state passed to the
+%first step of the decoder RNN. On the decoder side, the same sentence 
+%embeddings are fed as input to the decoder and decoder outputs are used to
+%predict each $y_i$. The decoder input is weighted by the previous extraction
+%probability, inducing the dependence of $y_i$ on $y_{<i}$.
+%See \autoref{fig:extractors}.c for a graphical layout of the extractor.
+%%and \autoref{app:clextractor} for details.
+%
+%
+%The basic architecture is a unidirectional
+%sequence-to-sequence
+%model defined as follows:
+%\begin{align}
+%    \xhid_0 & = 0 \\
+%    \xhid_i &= \fgru(\sentEmb_i, \xhid_{i-1};\chi_e) \\
+%    \rdxhid_1 &= \fgru(\sentEmb_*, \xhid_{\docSize};\chi_d) \\
+%    \rdxhid_i &= \fgru(p_{i-1} \sentEmb_{i-1},  \rdxhid_{i-1};\chi_d) \label{eq:cl1}\\
+%%    \decExtHidden_i &= \gru_{dec}(p_{i-1} \cdot \sentvec_{i-1}, \decExtHidden_{i-1}) \label{eq:cl1} \\
+%o_i &= \relu\left(U \cdot \left[\begin{array}{c}\xhid_i \\ \rdxhid_i \end{array}\right] + u \right)\\
+% p_i = p(\bsal_i&=1|\bsal_{<i}, \sentEmb_1,\ldots,\sentEmb_\docSize) = \sigma\left(V\cdot o_i + v  \right) 
+%\end{align}
+%where $\sentEmb_*$ is a learned ``begin decoding'' sentence embedding
+%(see \autoref{fig:extractors}.c).
+%Each GRU has separate learned 
+%parameters; $U, V$ and $u, v$ are learned weight and bias parameters.
+%Note in Equation~\ref{eq:cl1} that 
+%the decoder side GRU input is the sentence embedding from the previous time
+%step weighted by its probabilitiy of extraction ($p_{i-1}$) from the 
+%previous step, inducing dependence of each output $y_i$ on all previous 
+%outputs $y_{<i}$.
+%The hidden layer size of the GRU is 300 and the MLP hidden layer
+%size is 100. 
+%Dropout with drop probability .25 is applied to the GRU outputs and to $a_i$.
+%
+%Note that in the original paper, the Cheng \& Lapata extractor was paired 
+%with
+%a \textit{CNN} sentence encoder, but in this work we experiment with a variety
+%of sentence encoders.
+
+
+
+%?, but are delayed by one step and 
+%?weighted by their prediction probability, i.e. at decoder step $t$,
+%?$p(\slabel[t-1]|\slabel[<t-1], \sentEmb[<t-1]) \cdot \sentEmb[t-1]$\hal{why did you switch from $i$ to $t$?}
+%?is fed into the decoder\hal{i don't udnerstand what this means. what op is $\cdot$?}. The decoder output at step $t$ is concatenated 
+%?to the encoder output step $t$ and fed through a multi-layer perceptron
+%?with one hidden layer and sigmoid unit output computing the $t$-th
+%?extraction probability $p(\slabel[t]|\slabel[<t], \sentEmb[<t])$. \textcolor{red}{See Figure 2.c. for a graphical view. Full model details are presented in ??}.
+%?
+
+

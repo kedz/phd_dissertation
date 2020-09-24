@@ -1,0 +1,408 @@
+\section{Introduction}
+
+\Salienceestimation, that is, the prediction of 
+the importance or relevance of a unit of text, is a critical step
+for any \textsummarization~algorithm \citep{nenkova2011automatic}. Since the size of 
+the desired output summary is constrained to be much smaller than the original
+document or documents being summarized, it is necessary to prioritize 
+some information over others when deciding the content of  the summary. Estimating the \salience~of various units of text (i.e., words, phrases, sentences, etc.) enables summarization algorithms to perform this 
+prioritization.
+
+ There is no universally agreed upon 
+definition of salience, so its estimation starts on rather shakey 
+epistemological ground. What is most \salient~will vary significantly from 
+reader to reader,
+and depend largely on their particular information need and/or prior knowledge
+\citep{jones1999automatic}.
+In this chapter, we focus on a supervised learning scenario, where 
+the training corpus consists of a single document paired with a human reference abstract summary prepared
+by a domain expert. In this setting,  we can rely on a data-driven definition
+of \salience;
+information that the domain expert has put in the summary is most salient.
+By matching units of text in the input document to corresponding text units
+in the summary, we label the document text units with a binary judgement of
+\salience~(see \autoref{sec:labelgen} for details). 
+
+If we set the basic unit of text to be a single sentence and we obtain binary
+\salience~judgements in the manner described above, we can model
+sentence extractive single document summarization as a sequence labeling 
+task \citep{conroy2001}. In this formulation, a document is a sequence of 
+sentences, and the task objective is to predict the salience judgment
+for each sentence. In the simplest of settings, the actual \extract~summary
+can be formed by concatenating the sentences labeled as \salient.
+%with the goal of labeling each unit with one of two labels: \emph{\extract}, this
+%unit is \salient~and should be added to the extract summary, or \ignore, this 
+%text unit is of low or zero \salience~and 
+%text should be discarded from the summary. 
+
+
+We refer to the probability of a sentence being labeled as \salient~as the 
+\salience~estimate.  Historically, most \machinelearning~based methods for salience estimation
+have use \featurebased~representations of text units to make 
+\salience~estimates. Typically, these features make use of word level 
+frequency data \cite{a,b,c}, information theoretic notions
+of suprisal or topicallity \cite{x,y}, as well as position based features
+(e.g., is the unit of text in the beginning, middle, or end of the document?)
+\cite{position},
+which are often correlated with human judgements of salience.
+
+
+The field of summarization has not been unaffected by the recent popularization of \deeplearning~based models in \naturallanguageprocessing.
+\Deeplearning~models
+have demonstrated empirical successes, achieving state-of-the-art 
+performance in both \extractive~\citep{somepeople} and \abstractive~summarization 
+settings \citep{someothers}. \Deeplearning~models also naturally allow for learning
+hierarchical representations of word, sentence, and document
+level contexts when performing end-to-end training on the summarization 
+task.
+However, exactly what kind of information is captured in these representations
+and how that information effects downstream salience estimation has not 
+been experimentally verified. 
+
+
+In this chapter, we systematically compare several supervised 
+\deeplearning~models of sentence extractive single document summarization.
+As in prior work, we model a document hierarchically: a document is 
+a sequence of sentences and a sentence is a sequence of words. 
+Each summarization model consists of three layers or modules: 
+\begin{enumerate}
+    \item The word
+embedding layer, which maps sequences of words to sequences of fixed 
+dimensional embeddings. 
+\item The \sentenceencoder~layer, which
+maps sequences of word embeddings to a sentence embedding. 
+\item The 
+\sentenceextractor~layer, which maps sequences of sentence embeddings to
+a sequence of \salience~judgements.
+\end{enumerate}
+
+We systematically compare three different architectures for the \sentenceencoder~and four different \sentenceextractor~architectures. Additionally, 
+we also measure the effect of using fixed pretrained embeddings versus 
+fine-tuning embeddings while training the rest the of model. 
+Various configurations of \encoder~and \extractor~modules correspond to
+both prior works as well as novel summarization models. While prior works 
+have primarily used \autoregressive~\sentenceextractor~architectures, we propose two
+\nonautoregressive~\sentenceextractor s.
+We evaluate these
+models across a range of domains including large and small news domains,
+as well as personal stories, meetings, and medical research articles. 
+
+
+
+Additionally, we systematically ablate the inputs to models during 
+training to better understand what surface level features are being 
+used to make predictions. Words are tagged with a \partofspeech~tagger
+and different word classes are replaced with special \emph{unknown} tokens.
+We can then compare performance of the summarization model with and without
+access to specific classes of word features (e.g., nouns or verbs). To 
+ablate the implicit effects of sentence position, we compare models
+trained on the original document to the same model trained on documents
+with shuffled sentence order. By removing content and position features,
+we can see their relative impact in the decrease in \rouge~scores on the 
+test set. Moreover, these ablations give us a more intuitive understanding
+of how models will behave in novel environments. For example, if we know
+position is an important feature for a model, using it on data that is
+not position biased will likely result in poor performance.
+
+
+Our main results  reveal:
+\begin{enumerate}
+ \item Sentence position bias dominates the learning signal for news summarization, though
+not for other domains. Summary quality
+for news is only slightly degraded when content words are omitted from sentence embeddings.
+\item Word embedding averaging is as good or better than either RNNs or CNNs for sentence
+embedding across all domains.
+\item  Pre-trained word embeddings are as good, or
+better than, learned embeddings in five of six
+datasets.
+\item Non auto-regressive sentence extraction performs as good or better than auto-regressive
+extraction in all domains.
+\end{enumerate}
+
+Taken together, these and other results in the paper suggest that we are over-estimating the ability of deep learning models to learn robust and
+meaningful content features for summarization. In
+one sense, this might lessen the burden of applying neural network models of content to other domains; one really just needs in-domain word embeddings. However, if we want to learn something
+other than where the start of the article is, we will
+need to design other means of sentence representation, and possibly external knowledge representations, better suited to the summarization task.
+
+%In the next sections, we formally define the extractive summarization 
+%problems, and our proposed models for solving this problem. We then
+%d
+
+%\pagebreak
+
+
+%?Before formally defining our summarization problem, and models, 
+%?
+%?
+%?Ablations include position (i.e., sentence order is
+%?`shuffled) and word classes (i.
+%?
+%?Words are 
+%?represented with embeddings. A \sentenceencoder~a neural network that
+%?maps a sequence of sentence 
+%?
+%?
+%?
+%?
+%?
+%?
+%?However, the exact nature of the useful signals encoded in these representations has not been verified beyond high level motivations for architecture
+%?design choices.
+%?
+%?
+%?%In \featurebased~\machinelearning~models of \salienceestimation,
+%?%When modeling extractive summarization as a sequence labeling problem
+%?Historically, \salienceestimation~has been explicitly modeled 
+%?as part of the larger summarization task (c.f. \cite{somebody}). Under
+%?some extractive approaches, \salienceestimation~amounts to the entirety of the summarization
+%?process \cite{something}.
+%?
+%?In practice most supervised \machinelearning~approaches estimate
+%?
+%?
+%?In practice most supervised \featurebased~\machinelearning~approaches resort 
+%?to approximating \salience~with some proxy feature. Common proxies typically work from
+%?term frequency information \cite{a,b,c} or information theoretical notions
+%?of suprisal or topicallity \cite{x,y}, essentially words that occur frequently
+%?in the input document but infrequently in some background corpus (which
+%?is itself a proxy for a reader's prior knowledge).
+%?
+%?
+%?
+%?%Naturally, there is no universal definition of \salience, as 
+%?%what is most important will vary significantly from reader to reader,
+%?%depending largely on the reader's information need and/or prior knowledge
+%?%of the information being summarized. To make 
+%?%
+%?
+%?%Typically, i
+%?
+%?
+%?While \salienceestimation~has historically been modeled explicitly
+%?(e.g., \cite{somebody}), with the move to end-to-end 
+%?\deeplearning~approaches, it is often
+%?assumed to be happening implicitly in a model's hidden layers.
+%?
+%?
+%?Both extractive and abstractive \deeplearning~summarization models have 
+%?demonstrated empiracle success with state-of-the-art performance on automatic 
+%?metrics like \rouge \cite{rouge}. 
+%?The success of the \deeplearning~approach partially stems from the ability to 
+%?flexibly and hierarchically learn word, sentence, and document representations.
+%?However, the exact nature of the useful signals encoded in these 
+%?representations has not been verified beyond high level 
+%?motivations for architecture design choices.
+%?
+%?
+%?
+%?
+%?
+%?%representation learning, it is unclear what signals they are extracting
+%?%from the data to make predictions.
+%?
+%?
+%?%However, it is not well understood how \deeplearning~models perform salience estimation with only word, sentence, or document embedding
+%?%based features as input. 
+%?
+%?
+%?
+%?Increasingly, deep neural 
+%?network models are being used to perform sentence extractive summarization 
+%?tasks. While these models are very flexible and allow for easy hierarchical 
+%?representation learning, it is unclear what signals they are extracting
+%?from the data to make predictions.
+%?In this section, we describe our completed experiments teasing out the 
+%?importance
+%?of different neural network designs for sentence level salience estimation
+%?\cite{kedzie2018deep}. 
+%?In particular, we experiment with several methods for encoding a sequence
+%?of word embeddings into a sentence embedding, and then in turn, mapping
+%?a sequence of sentence embeddings to sentence salience predictions. We 
+%?introduce several simplifications to existing models in the literature, and
+%?show their effectiveness on an SDS task across news, personal narratives,
+%?workplace meetings, and medical journal article genres.
+%?
+%?We also perform several diagnostic experiments 
+%?and find impediments to learning robust models of 
+%?sentence salience. In particular, the sentence position implicitly 
+%?encoded in the models dominates the learning signal. While sentence position
+%?is certainly an important feature in news, not all domains or tasks 
+%?will share this feature;
+%? we would also like to be able to design
+%?models that make their salience decisions primarily on lexical or
+%?topical content.
+%?
+%?We believe that the sentence embedding representation is too coarse to
+%?make significant use of lexical information in the presence of less noisy
+%?position features, even when position is only implicitly represented by 
+%?the model.
+%?To that end, we propose a new deep learning based SDS model that directly 
+%?estimates individual word level salience scores, and a simple sentence 
+%?selection and margin loss framework for learning. In this model,
+%?we augment the word embeddings (which only capture shallow lexical semantics)
+%?with embeddings representing other word features. Our initial experiments
+%?suggest that document frequency, and information theoretic accounts of 
+%?surprisal (e.g. topic signatures) are also useful for the summarization task. 
+%?We expect to show less dependence on the position features using
+%?the same ablation diagnostics we applied to our sentence level salience 
+%?models. 
+%?While previous work has estimated word importance using these features
+%?in a linear model 
+%?\cite{hong2014improving}, they were only able to take limited advantage of 
+%?context features, i.e. taking a weighted average of word features to
+%?the left and right. By contrast,
+%? in our proposed model we can combine rich
+%?document specific contextual features, e.g. \textsc{Elmo} embeddings 
+%?\cite{peters2018deep}, in conjunction with these word features.
+%?
+%?Additionally, we plan to adapt this word level salience model to a news MDS task;
+%?if it is less dependent on sentence position, it should be more amenable 
+%?to MDS where lexical centrality to the document cluster is possibly
+%?the dominant learning signal.  
+%?%We concluded this section with proposed domain adaptation experiments for
+%?%modifying the word importance model to work on a news MDS task. 
+%?The MDS version of the model will use an importance score aggregation step
+%?where word level scores accrue additional importance across documents 
+%?using an attention mechanism.
+%?
+%?
+%?In the next subsections we first briefly cover related work on sentence
+%?and word level salience estimation before covering the 
+%?completed sentence level
+%?and proposed word level salience estimation experiments.
+%?%are the
+%?%This
+%?%work describes impedements to learning and word and sentence representations
+%?%in deep learning models of extractive summarization, and led to 
+%?%a recent publication \cite{kedzie2018deep}. Based on these limitations,
+%?%we propose extensions to the word level representations and explicitly model
+%?%word level salience scores as a means to performing sentence extractive
+%?%summarization. While the finished and proposed work focuses on single document
+%?%summarization, we also propose an extension of the word level salience
+%?%estimation model that we hope will generalize to the multi-document
+%?%summarization context.
+%?
+%?
+%?
+%?
+%?
+%?%\hal{i feel like you can restructure the intro to focus on you stuff, rather than focusing on how it relates to other people's stuff. just lead with context selection is important for generation, summarization, etc., and is a key compontent both in extractive *and* abstractive techniques. then go to the third paragraph about what you do. you can then relate back to deep learning predictions in the related work section.}
+%?
+%?%While there has a been a recent flurry of work on abstractive summarization
+%?%\cite{paulus,see,chenglapata,nallapati},
+%?%these papers treat this problem as a pure sequence to sequence 
+%?%transduction task. Admittedly, this view allows us to apply very powerful, 
+%?%general-purpose deep learning archictures to generate summaries.
+%?%At the same time, it obscures a principal subtask in summarization, the 
+%?%process of selecting the most salient units of meaning in the source material,
+%?%i.e. the key ingredients in the final summary, a process which we 
+%?%broadly refer to as content selection \cite{possiblyMcKeownAndNenkova}.
+%?
+%?%As is also the case in other NLP tasks, it is not immediately obvious how a
+%?%deep learning model is making its predictions, or what correlations 
+%?%are being exploited. There is a concerning and growing list of papers that 
+%?%find models functioning as mere nearest neighbors search 
+%?%\cite{liang,danqichen}, exploiting annotator artifacts 
+%?%\cite{recentNaaclPapersOnSNLI}, or open to adversarial exploitation \cite{findExampleYouNoMemoryDumbDumb}. 
+%?%These lines of research are critical for finding model shortcomings, and over
+%?%time, guiding improvements in technique. Unfortunately,
+%?%to the best of our knowledge, there has been
+%?%no such undertaking for the summarization task. 
+%?
+%?
+%?%\kathy{content selection is very different for generation than for summarization.
+%?%I think you need to initially say that content selection for generation is sentence
+%?%selection. Note that you could be criticized even here as some people may say that
+%?%summarization should be phrase selection (although it rarely is)}
+%?%\kathy{I have also reworded definition of content selection for NLG.}
+%?Content selection is a central component in many natural language generation
+%?%problems, 
+%?tasks,
+%?where, given a generation goal, the system must determine which information
+%?%i.e. given some context, determine which information
+%?should be expressed in the output text \cite{gatt2018survey}.
+%?In summarization, content selection is usually accomplished through sentence (and,
+%?occasionally, phrase) extraction.
+%?Despite being a key component of both
+%?extractive and abstractive summarization systems, it is is not well
+%?understood how deep learning models perform content selection with only word and 
+%?sentence
+%?embedding based features as input.
+%?%\hal{i'm not sure what this sentence means, especially the part after ``using'', CK: addressed it, does it work now?}.
+%?%\hal{well understood as a task or in specific models?} 
+%?Non-neural network approaches often use frequency and information theoretic measures as proxies
+%?for content salience \cite{hong2014improving}, but these are not explicitly %\hal{directly? explicitly?} 
+%?used in most neural network summarization systems.
+%?%\hal{maybe instead of recent work say nn systems?}.
+%?% changed wording
+%?
+%?%\hal{there are lots of widows/orphans throughout that need to be cleaned up.}
+%?
+%?In this paper, we seek to better understand how deep learning models of 
+%?%summarization are performing content selection across a variety of domains.
+%?summarization perform content selection across multiple domains (\S~\ref{sec:datasets}): news, personal stories,
+%?meetings, and medical articles (for which we collect a new corpus).\footnote{Data preprocessing and implementation code can be found here: \url{https://github.com/kedz/nnsum/tree/emnlp18-release}}
+%?%no new paragraph needed here
+%?We analyze
+%?several recent sentence extractive neural network architectures, 
+%?specifically considering the design choices for sentence encoders (\S~\ref{sec:senc})
+%?and sentence extractors (\S~\ref{sec:sext}). We compare Recurrent Neural Network (RNN) and Convolutional Neural
+%?Network (CNN) based sentence representations to the 
+%?simpler approach of word embedding averaging to understand the gains 
+%?derived from more sophisticated architectures.
+%?We also question the necessity of auto-regressive sentence extraction 
+%?(i.e. using previous predictions to inform future predictions), 
+%?which previous approaches have used (\S~\ref{sec:related}),
+%?and propose two alternative models that extract sentences independently.
+%?%
+%?%We compare these architectures against
+%?%a simpler approach based on averaging of word embeddings in order to understand
+%?%the gains derived from more sophisticated architectures.
+%?%
+%?%\kathy{I would find it better to introduce approach here. I've added an
+%?%extra sentence above. Because your experiments reveal the tidbits below by 
+%?%contrasting past approaches with your simple approach which uses embedding
+%?%averages}
+%?%
+%?%
+%?%\kathy{You use some strong words, one of which is ``worrying''. I think it
+%?%may be better toned down. After all, reviewers may be Lapata or Nallapati}
+%?%\kathy{Also, I think it should be pumchier with all learned things itemized.
+%?%For example:
+%?%~
+%?%KM2: Minor changes below
+%?\\[-0.5em]
+%?
+%?\noindent
+%?Our main results (\S~\ref{sec:exps}) reveal:
+%?\begin{enumerate} %[noitemsep]
+%?\item Sentence position bias dominates the learning signal for news summarization, though not for
+%?    other domains.\footnote{This is a known bias 
+%?    in news summarization \cite{nenkova2005automatic}.}
+%?        %\hal{be consistent on domain/genre. also maybe you should say above what domains you consider?}. 
+%?Summary quality for news is only slightly degraded when content words
+%?are omitted from sentence embeddings. %\hal{this sounds like you remove content words and the summary is still as good. clearly not what's meant. i hope :P.}
+%?\item Word embedding averaging is as good or better than either RNNs or CNNs for sentence embedding across all domains.
+%?\item Pre-trained word embeddings are as good, or better than, learned embeddings in five of six datasets.%\hal{you were specific in the other ones, be specific here too if possible}
+%?\item Non auto-regressive sentence extraction performs as good or better 
+%?     than auto-regressive extraction in all
+%?    domains.
+%? %   Representation of previously selected summary content does not improve overall summary content. \hal{i think this one might be hard to parse for non-experts. maybe ``explicitly reprsenting prev...''}
+%?\end{enumerate} 
+%?
+%?\noindent
+%?Taken together, these and other results in the paper suggest that we are 
+%?over-estimating the ability of deep learning models to learn robust and 
+%?meaningful content features for summarization.  
+%?In one sense, this might lessen the burden of applying neural network models
+%?of  content to other domains; one really just needs in-domain word embeddings.
+%?However, if we want to learn something other than where the start of 
+%?the article is, we will need to design other means of sentence representation,
+%?and possibly external knowledge representations, better suited to the summarization task.
+%?
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "dlextsum.emnlp18"
+%%% End:

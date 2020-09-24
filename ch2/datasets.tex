@@ -1,0 +1,106 @@
+
+
+\section{Datasets}
+\label{sec:datasets}
+
+We perform our experiments across six corpora from varying domains to 
+understand how different biases within each domain can affect content 
+selection. The corpora come from the news domain
+(CNN-DailyMail, New York Times, DUC), personal narratives domain (Reddit),
+workplace meetings (AMI), and medical journal articles (PubMed). See 
+\autoref{tab:data} for dataset statistics.
+
+
+\paragraph{CNN-DailyMail} We use the preprocessing and training, validation, 
+and test splits
+of \citet{see2017pointer}.
+This corpus is a mix of news on different topics including politics,
+sports, and entertainment.
+
+\paragraph{New York Times}The New York Times (NYT) corpus \citep{sandhaus2008new} contains
+ two types of abstracts for a subset of its articles. The first summary is
+an archival abstract and the 
+second is a shorter online teaser meant to entice a viewer of the webpage to
+click to read more. From this collection, we take all articles that have 
+a concatenated summary length of at least 100 words.
+We create training, validation, and test splits by partitioning on dates;
+we use the year 2005 as the validation data, with training and test partitions
+including documents before and after 2005 respectively.
+
+\paragraph{DUC} We use the single document summarization data from the 2001
+and 2002
+Document Understanding Conferences (DUC) \citep{over2002introduction}. We split the 2001 data into training
+and validation splits and reserve the 2002 data for testing.
+
+\input{ch2/tables/table_data.tex}
+
+\paragraph{AMI} The AMI corpus \citep{carletta2005ami} 
+is a collection of real and staged office meetings
+annotated with text transcriptions, along with abstractive
+summaries. We use the official prescribed train, validation, and test
+splits as rescribed by the dataset authors.
+
+\paragraph{Reddit} \citet{ouyang2017crowd} collected a corpus of personal 
+    stories shared
+ on Reddit\footnote{\url{www.reddit.com}} along with multiple extractive 
+ and abstractive summaries. We randomly split this data using roughly three and five percent of the data for validation and testing respectively.
+
+\paragraph{PubMed}{We created a corpus of 25,000 randomly sampled
+    medical journal articles from the PubMed Open Access 
+    Subset.\footnote{\url{https://www.ncbi.nlm.nih.gov/pmc/tools/openftlist/}}
+    We only included articles if they were at least 1,000 words long and 
+    had an abstract of at least 50 words in length.
+We used the article abstracts as the ground truth human summaries.}
+
+\subsection{Ground Truth Extract Summaries}
+\label{sec:labelgen}
+Since the datasets above typically only have reference abstract 
+summaries,\footnote{\color{red}Mention exceptions here.} 
+we do not explicitly have document/salience
+judgement pairs $(\doc, \bsals)$ with which to train a model. In order to obtain 
+$\bsals$,
+we first construct a ``ground truth'' reference extract summary $\extractSummary \subseteq \doc$ by greedily
+selecting sentences $\sent_i \in \doc$ that maxmimize the \rouge~score 
+\citep{lin2004rouge} with respect to the reference abstract summaries.
+We then construct the label vector, $\bsals = \left[\bsal_1,\ldots,\bsal_\docSize \right]$, by assigning positive salience
+judgements to those sentences in the extract summary, 
+\[
+    \bsal_i = \begin{cases} 
+        1  & \textrm{if $\sent_i \in \extractSummary$} \\ 
+        0 & \textrm{otherwise.} \end{cases} 
+\]
+
+
+\input{ch2/figures/oraclesum.tex}
+
+The algorithm for constructing the extract summary and salience judgements
+from a document and reference abstractive summaries is presented
+in \autoref{alg:oraclesum}. It begins by initializing all salience judgements
+to zero, $\bsals = \zeroEmb$, and the extract summary $\extractSummary$
+to an empty list (lines 1-2). It then repeatedly selects the next sentence 
+$\sent_{\hat{i}}$ from the remaining sentences $\sent_j \notin \extractSummary$ 
+such that adding $\sent_{\hat{i}}$ to $\extractSummary$ maximally 
+improves the marginal \rouge~score (lines 3-9). 
+If adding $\sent_{\hat{i}}$ yields
+improvement, $\extractSummary$ is updated, and $\bsal_{\hat{i}}$ is 
+set to $1$ (lines 6-7). The algorithm terminates when size of extract summary, $\sum_{i=1}^\docSize \bsal_i \sentSize_i$, excedes the word budget $\wordbudget$ (line 3) or adding an additional sentence to $\extractSummary$ does not
+improve the \rouge~score (line 5). 
+In our experiments, we choose to specifically optimize for the \rouge-1 recall (i.e. unigram recall) rather than 
+\rouge-2 recall similarly to other optimization based approaches to summarization 
+\citep{sipos2012large,durrett2016learning} which found this to
+be the easier target to learn.
+
+
+
+
+
+
+
+
+%?Since we do not typically have ground truth extract summaries from which to
+%?create the labels $\slabel_i$, we construct gold label sequences 
+%?by greedily optimizing ROUGE-1, using the algorithm in \autoref{app:oracle}.
+%?
+%?
+%?
+

@@ -1,0 +1,163 @@
+\begin{tikzpicture}[
+  dep/.style ={
+    ->,line width=0.3mm
+  },
+  hid/.style 2 args={
+    rectangle split,
+    rectangle split horizontal,
+    draw=#2,
+    rectangle split parts=#1,
+    fill=#2!20,
+    minimum width=5mm,
+    minimum height=5mm,
+    outer sep=2mm},
+  mlp/.style 2 args={
+    rectangle split,
+    rectangle split horizontal,
+    draw=#2,
+    rectangle split parts=#1,
+    fill=#2!20,
+    outer sep=2mm},
+  sal/.style={
+    circle, 
+    minimum width=8mm,
+    outer sep=2mm,
+    draw=#1, 
+    fill=#1!20},
+]
+
+  \def\stepsize{3}%
+  \def\lvlbase{0}%
+  \def\lvlheight{3}%
+
+        \node[hid={3}{ctxemb}] (ctx_i) 
+            at (\stepsize *1 , \lvlbase + -2*\lvlheight) {};    
+        \node at (\stepsize*1, \lvlbase + -2*\lvlheight) 
+            {$\srHid_i$}; 
+
+        \node[hid={1}{factor}] (content_i) 
+            at (\stepsize *2, \lvlbase + -2*\lvlheight) {};    
+        \node at (\stepsize*2, \lvlbase + -2*\lvlheight) 
+            {$\srContentFactor_i$}; 
+
+        \draw[dep] (ctx_i) to (content_i);
+    \draw[rectangle,draw=black,dotted] 
+        (\stepsize*0.5,\lvlbase -1.6*\lvlheight) -- 
+        (\stepsize*2.25, \lvlbase -1.6*\lvlheight) -- 
+        (\stepsize*2.25, \lvlbase - 2.3*\lvlheight) --
+        (\stepsize*0.5, \lvlbase -2.3*\lvlheight) --
+        (\stepsize*0.5, \lvlbase -1.6*\lvlheight) ;
+%
+
+    \node[align=left,anchor=north east] 
+        at (\stepsize * 2.25,\lvlbase + -1.6*\lvlheight) 
+            {\textit{(a) Content Factor}};
+
+        \node[hid={3}{ctxemb}] (ctx_i) 
+            at (\stepsize *1 , \lvlbase + -2.75*\lvlheight) {};    
+        \node at (\stepsize*1, \lvlbase + -2.75*\lvlheight) 
+            {$\srHid_i$}; 
+
+        \node[hid={1}{factor}] (salience_i) 
+            at (\stepsize *2, \lvlbase + -3*\lvlheight) {};    
+        \node at (\stepsize*2, \lvlbase + -3*\lvlheight) 
+            {$\srSalienceFactor_i$}; 
+        \node[hid={3}{doc}] (doc) 
+            at (\stepsize *1, \lvlbase + -3.25*\lvlheight) {};    
+        \node at (\stepsize*1, \lvlbase + -3.25*\lvlheight) 
+            {$\srDocEmb$}; 
+
+        \draw[dep] (ctx_i.east) to (salience_i);
+        \draw[dep] (doc.east) to (salience_i);
+
+    \draw[rectangle,draw=black,dotted] 
+        (\stepsize*0.5,\lvlbase -2.4*\lvlheight) -- 
+        (\stepsize*2.25, \lvlbase -2.4*\lvlheight) -- 
+        (\stepsize*2.25, \lvlbase - 3.5*\lvlheight) --
+        (\stepsize*0.5, \lvlbase -3.5*\lvlheight) --
+        (\stepsize*0.5, \lvlbase -2.4*\lvlheight) ;
+
+    \node[align=left,anchor=north east] 
+        at (\stepsize * 2.25,\lvlbase + -2.4*\lvlheight) 
+            {\textit{(b) Centrality Factor}};
+
+        \node[hid={3}{ctxemb}] (ctx_i) 
+            at (\stepsize *1 , \lvlbase + -4.0*\lvlheight) {};    
+        \node at (\stepsize*1, \lvlbase + -4.0*\lvlheight) 
+            {$\srHid_i$}; 
+
+        \node[hid={1}{factor}] (salience_i) 
+            at (\stepsize *2, \lvlbase + -4.25*\lvlheight) {};    
+        \node at (\stepsize*2, \lvlbase + -4.25*\lvlheight) 
+            {$\srNoveltyFactor_i$}; 
+        \node[hid={3}{sum}] (doc) 
+            at (\stepsize *1, \lvlbase + -4.5*\lvlheight) {};    
+        \node at (\stepsize*1, \lvlbase + -4.5*\lvlheight) 
+            {$\srSum_i$}; 
+
+        \draw[dep] (ctx_i.east) to (salience_i);
+        \draw[dep] (doc.east) to (salience_i);
+
+
+    \draw[rectangle,draw=black,dotted] 
+        (\stepsize*0.5,\lvlbase -3.6*\lvlheight) -- 
+        (\stepsize*2.25, \lvlbase -3.6*\lvlheight) -- 
+        (\stepsize*2.25, \lvlbase - 4.75*\lvlheight) --
+        (\stepsize*0.5, \lvlbase -4.75*\lvlheight) --
+        (\stepsize*0.5, \lvlbase -3.6*\lvlheight) ;
+
+    \node[align=left,anchor=north east] 
+        at (\stepsize * 2.25,\lvlbase + -3.6*\lvlheight) 
+            {\textit{(c) Novelty Factor}};
+
+
+
+%?        \node[hid={3}{ctxemb}] (ctx_i) 
+%?           at (\stepsize *1 , \lvlbase + -5.4*\lvlheight) {};    
+%?        \node at (\stepsize*1, \lvlbase + -5.4*\lvlheight) 
+%?            {$\srFinePositionEmb_i$}; 
+%?
+%?        \node[hid={1}{yellow}] (content_i) 
+%?            at (\stepsize *2, \lvlbase + -5.4*\lvlheight) {};    
+%?        \node at (\stepsize*2, \lvlbase + -5.4*\lvlheight) 
+%?            {$\srFinePositionFactor_i$}; 
+%?
+%?        \draw[dep] (ctx_i) to (content_i);
+%?    \draw[rectangle,draw=black,dotted] 
+%?        (\stepsize*0.5,\lvlbase -4.6*\lvlheight -0.25 *\lvlheight) -- 
+%?        (\stepsize*2.25, \lvlbase -4.6*\lvlheight - 0.25*\lvlheight) -- 
+%?        (\stepsize*2.25, \lvlbase - 5.3*\lvlheight-0.25*\lvlheight) --
+%?        (\stepsize*0.5, \lvlbase -5.3*\lvlheight - 0.25*\lvlheight) --
+%?        (\stepsize*0.5, \lvlbase -4.6*\lvlheight - 0.25*\lvlheight) ;
+%?
+%?    \node[align=left,anchor=north east] 
+%?        at (\stepsize * 2.25,\lvlbase + -4.85*\lvlheight) 
+%?            {\textit{(d) Fine-grained}\\[-7pt]\textit{\phantom{(d) }Position Factor}};
+%?
+%?        \node[hid={3}{ctxemb}] (ctx_i) 
+%?           at (\stepsize *1 , \lvlbase + -5.4*\lvlheight-0.8*\lvlheight) {};    
+%?        \node at (\stepsize*1, \lvlbase + -5.4*\lvlheight-0.8*\lvlheight) 
+%?            {$\srCoarsePositionEmb_i$}; 
+%?
+%?        \node[hid={1}{yellow}] (content_i) 
+%?            at (\stepsize *2, \lvlbase + -5.4*\lvlheight-0.8*\lvlheight) {};    
+%?        \node at (\stepsize*2, \lvlbase + -5.4*\lvlheight-0.8*\lvlheight) 
+%?            {$\srCoarsePositionFactor_i$}; 
+%?
+%?        \draw[dep] (ctx_i) to (content_i);
+%?    \draw[rectangle,draw=black,dotted] 
+%?        (\stepsize*0.5,\lvlbase -4.6*\lvlheight -1.05 *\lvlheight) -- 
+%?        (\stepsize*2.25, \lvlbase -4.6*\lvlheight - 1.05*\lvlheight) -- 
+%?        (\stepsize*2.25, \lvlbase - 5.3*\lvlheight-1.05*\lvlheight) --
+%?        (\stepsize*0.5, \lvlbase -5.3*\lvlheight - 1.05*\lvlheight) --
+%?        (\stepsize*0.5, \lvlbase -4.6*\lvlheight - 1.05*\lvlheight) ;
+%?
+%?    \node[align=left,anchor=north east] 
+%?        at (\stepsize * 2.25,\lvlbase + -4.85*\lvlheight-0.8*\lvlheight) 
+%?            {\textit{(e) Coarse-grained}\\[-7pt]\textit{\phantom{(d) }Position Factor}};
+
+
+
+
+\end{tikzpicture}
+

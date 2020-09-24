@@ -1,0 +1,178 @@
+\begin{figure}[b]
+    \fbox{\begin{minipage}{\textwidth}
+\center
+\scalebox{0.75}{
+\begin{tikzpicture}[
+  dep/.style ={
+    ->,line width=0.3mm
+  },
+  hid/.style 2 args={
+    rectangle split,
+    draw=#2,
+    rectangle split parts=#1,
+    fill=#2!20,
+    minimum width=5mm,
+    minimum height=5mm,
+    outer sep=2mm},
+  mlp/.style 2 args={
+    rectangle split,
+    rectangle split horizontal,
+    draw=#2,
+    rectangle split parts=#1,
+    fill=#2!20,
+    outer sep=2mm},
+  sal/.style={
+    circle, 
+    minimum width=8mm,
+    outer sep=2mm,
+    draw=#1, 
+    fill=#1!20},
+]
+
+  \def\stepsize{1.5}%
+  \def\lvlbase{0}%
+  \def\lvlheight{3}%
+ 
+  \def\stepsize{1.5}%
+  \def\lvlbase{0}%
+  \def\lvlheight{3}%
+
+
+        \node[hid={3}{ctxemb}] (ctx_1) 
+            at (\stepsize *6 , \lvlbase + -5*\lvlheight) {};    
+        \node at (\stepsize*6, \lvlbase + -5*\lvlheight) 
+            {$\srHid_1$}; 
+
+        \node[sal={sal}] (p_1) 
+            at (\stepsize *7 , \lvlbase + -5*\lvlheight) {};    
+        \node at (\stepsize*7, \lvlbase + -5*\lvlheight) 
+            {$\psal_1$}; 
+
+        \node[hid={3}{ctxemb}] (ctx_2) 
+            at (\stepsize *8 , \lvlbase + -5*\lvlheight) {};    
+        \node at (\stepsize*8, \lvlbase + -5*\lvlheight) 
+            {$\srHid_2$}; 
+
+        \node[sal={sal}] (p_2) 
+            at (\stepsize *9 , \lvlbase + -5*\lvlheight) {};    
+        \node at (\stepsize*9, \lvlbase + -5*\lvlheight) 
+            {$\psal_2$}; 
+
+
+        \node[hid={3}{sum}] (summary_3) 
+            at (\stepsize *9 , \lvlbase + -4*\lvlheight) {};    
+        \node at (\stepsize*9, \lvlbase + -4*\lvlheight) 
+            {$\srSum_{i}$}; 
+
+
+            \node at (\stepsize *9 , \lvlbase + -3.65*\lvlheight) {\textit{Summary Embedding}};
+
+        \node[hid={3}{ctxemb}] (ctx_n) 
+            at (\stepsize *11 , \lvlbase + -5*\lvlheight) {};    
+        \node at (\stepsize*11, \lvlbase + -5*\lvlheight) 
+            {$\srHid_{i-1}$}; 
+
+        \node[sal={sal}] (p_n) 
+            at (\stepsize *12 , \lvlbase + -5*\lvlheight) {};    
+        \node at (\stepsize*12, \lvlbase + -5*\lvlheight) 
+            {$\psal_{i-1}$}; 
+
+        \node at (\stepsize*10, \lvlbase + -5*\lvlheight) {\Large $\cdots$};
+
+
+
+
+
+        \draw[dep] (ctx_1.north) to (summary_3.south);
+        \draw[dep] (p_1.north) to (summary_3.south);
+
+        \draw[dep] (ctx_2.north) to (summary_3.south);
+        \draw[dep] (p_2.north) to (summary_3.south);
+
+        \draw[dep] (ctx_n.north) to (summary_3.south);
+        \draw[dep] (p_n.north) to (summary_3.south);
+
+
+
+
+
+
+
+
+
+
+
+
+
+%        \node[hid={3}{yellow}] (ctx_1) 
+%            at (\stepsize *4 , \lvlbase + -5*\lvlheight) {};    
+%        \node at (\stepsize*4, \lvlbase + -5*\lvlheight) 
+%            {$\srHid_1$}; 
+%        \node[hid={3}{yellow}] (ctx_2) 
+%            at (\stepsize *5 , \lvlbase + -5*\lvlheight) {};    
+%        \node at (\stepsize*5, \lvlbase + -5*\lvlheight) 
+%            {$\srHid_2$}; 
+%
+%
+%
+
+%    \foreach \start [count=\stop from 2] in {1,...,2} {
+%        \draw[dep] ($ (rrnn_\start.east) - (0,0.3)$) 
+%            -- ($ (rrnn_\stop.west) - (0,0.3) $);
+%        \draw[dep] ($(lrnn_\stop.west) + (0,0.3)$) 
+%            -- ($ (lrnn_\start.east) + (0,0.3)   $);
+%    }
+
+%    \draw[rectangle,draw=black,dotted] 
+%        (\stepsize*-2.5,\lvlbase + 3.5*\lvlheight) -- 
+%        (\stepsize*3.5, \lvlbase + 3.5*\lvlheight) -- 
+%        (\stepsize*3.5, \lvlbase + 2.7*\lvlheight) --
+%        (\stepsize*-2.5, \lvlbase + 2.7*\lvlheight) --
+%        (\stepsize*-2.5, \lvlbase + 3.5*\lvlheight) ;
+%
+%    \node[align=left,anchor=north west] 
+%        at (\stepsize * -2.5,\lvlbase + 3.5*\lvlheight) 
+%        {\textit{Salience Estimates}};
+%
+%    \draw[rectangle,draw=black,dotted] 
+%        (\stepsize*-2.5,\lvlbase + 2.6*\lvlheight) -- 
+%        (\stepsize*3.5, \lvlbase + 2.6*\lvlheight) -- 
+%        (\stepsize*3.5, \lvlbase + 1.8*\lvlheight) --
+%        (\stepsize*-2.5, \lvlbase + 1.8*\lvlheight) --
+%        (\stepsize*-2.5, \lvlbase + 2.6*\lvlheight) ;
+%
+%    \node[align=left,anchor=north west] 
+%        at (\stepsize * -2.5,\lvlbase + 2.6*\lvlheight) 
+%        {\textit{Contextual Sentence Embeddings}};
+%
+%    \draw[rectangle,draw=black,dotted] 
+%        (\stepsize*-2.5,\lvlbase + 0.5*\lvlheight) -- 
+%        (\stepsize*3.5, \lvlbase + 0.5*\lvlheight) -- 
+%        (\stepsize*3.5, \lvlbase + -0.50*\lvlheight) --
+%        (\stepsize*-2.5, \lvlbase + -0.50*\lvlheight) --
+%        (\stepsize*-2.5, \lvlbase + 0.5*\lvlheight) ;
+%
+%    \node[align=left,anchor=north west] 
+%        at (\stepsize * -2.5,\lvlbase + 0.5*\lvlheight) 
+%        {\textit{Sentence Embeddings}\\\textit{(Sentence Encoder Output)}};
+%
+%
+%    \draw[rectangle,draw=black,dotted] 
+%        (\stepsize*-2.5,\lvlbase + 1.7*\lvlheight) -- 
+%        (\stepsize*3.5, \lvlbase + 1.7*\lvlheight) -- 
+%        (\stepsize*3.5, \lvlbase + 0.6*\lvlheight) --
+%        (\stepsize*-2.5, \lvlbase + 0.6*\lvlheight) --
+%        (\stepsize*-2.5, \lvlbase + 1.7*\lvlheight) ;
+%
+%
+%    \node[align=left,anchor=north west] 
+%        at (\stepsize * -2.5,\lvlbase + 1.7*\lvlheight) 
+%        {\textit{Forward and Backward Partial}\\\textit{Contexual Sentence Embeddings}};
+
+\end{tikzpicture}}
+
+        \caption{\srext~iterative summary embeddings.}
+        \label{fig:sr2}
+
+\end{minipage}}
+\end{figure}

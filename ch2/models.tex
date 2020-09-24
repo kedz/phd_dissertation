@@ -1,0 +1,390 @@
+\section{Models}
+
+We implement our salience estimation model $\model(\bsals|\doc;\params)$ 
+hierarchically following the analogous structure of the documents we are 
+modeling.  Every model $\model$ proposed in this chapter consists of three modules
+or layers: \textit{(i)} the word embedding layer, \textit{(ii)} the sentence
+encoder layer, and \textit{(iii)} the sentence extractor layer. 
+The word embedding layer maps the words in a sentence to a sequence of 
+word embeddings. The sentence encoder layer similarly maps sequences of 
+word embeddings to a sentence embedding. Finally, the sentence extractor 
+maps sequences of sentence embeddings to sequence of \salience~labels.
+
+Choosing
+an architecture for each of the modules defines the model. We define several
+architectures for the sentence encoder and extractor layers and show how
+particular settings of each correspond to prior summarization models proposed 
+by \citet{cheng2016neural} and \citet{nallapati2017summarunner}. 
+Additionally, we propose two novel sentence extractor layers, 
+and in experiments 
+consider all combinations of sentence encoder/extractor pairings.
+%combinations of these components as well. 
+In the next subsections, we 
+describe each layer in more detail, and conclude ths section showing
+how certain configurations of each layers maps to previously proposed or
+novel \salience~estimation models and how the models generate an extract 
+summary at test time (which we refer to as inference).
+
+\subsection{Word Embedding Layer}
+
+    The word embedding layer, $\embLayer(\cdot\,;\Lambda) : \wordVocab^* \rightarrow \mathbb{R}^{* \times \embDim}$ maps a sequence of words $\sent_i = \word_{i,1},\ldots,
+\word_{i,\sentSize_i}$ to a sequence of word embeddings $\wordEmb_i = \wordEmb_{i,1},
+\ldots, \wordEmb_{i,\sentSize_i} \in \mathbb{R}^{\sentSize_i \times \embDim}$
+where the sole parameter $\Lambda \in \mathbb{R}^{|\wordVocab| \times \embDim}$ 
+is a $\embDim$-dimensional embedding matrix and $\wordEmb_{i,j} = \Lambda_{\word_{i,j}}$ is the word embedding for word $\word_{i,j}$.
+$\Lambda$ is initialized prior to training the full model with 
+embeddings obtained using the unsupervised Global Vector (GloVe) embedding 
+method on a large collection of text \citep{pennington2014glove}. 
+Additionally, $\Lambda$ can be held fixed during training or updated 
+with other model parameters. We use $\embDim = 200$-dimensional embeddings
+in our models.
+
+
+
+
+
+
+
+%For a typical deep learning model of sentence extractive 
+%summarization there are two main design decisions:
+%%At a high level, all the models considered in this paper share the same two part structure: 
+%\textit{a)}  the choice of \textit{sentence encoder} 
+%which maps each sentence $\sent_i$
+%%(treated as a sequence of word embeddings) 
+%to an embedding $\sentEmb_i$, 
+%%\hal{notation class, you used $d$ already for number of sentences} 
+%and 
+%\textit{b)} the choice of \textit{sentence extractor} 
+%which maps a sequence of sentence embeddings 
+%$\sentEmb = \sentEmb_1,\ldots, \sentEmb_{\docSize}$  
+%to a sequence of extraction
+%decisions $\bsal = \bsal_1,\ldots,\bsal_{\docSize}$.
+%%and predicts which sentences to extract to produce the 
+%%extract summary. 
+%
+
+
+\input{ch2/figures/sentence-encoders}
+
+
+
+
+
+
+
+
+\subsection{Sentence Encoders} \label{sec:senc}
+
+    The sentence encoder layer, \sentEncFuncDef~maps a sequence of word 
+    embeddings $\wordEmb_i = \wordEmb_{i,1},\ldots, \wordEmb_{i,\sentSize_i}$ 
+    to a $\sentDim$-dimensional embedding representation of sentence $\sent_i$.
+    The set of associated parameters, $\sentEncParams$, depends on the exact 
+    architecture for implementing the encoder. We experiment with three 
+    architectures for mapping sequences of word embeddings to a fixed length 
+    vector: averaging, \recurrentneuralnetwork s, and 
+    \convolutionalneuralnetwork s. We describe each variant now, and also 
+    briefly discuss the tradeoffs associated with each architecture. Schematics
+    of each encoder architecture can be found in 
+    \autoref{fig:sentenceEncoders}.
+
+
+\subsubsection{Averaging Sentence Encoder} 
+
+    Under the averaging encoder, a sentence embedding $\sentEmb_i \in 
+    \reals^{\sentDim}$ is simply the average of its word embeddings,
+    \begin{align} 
+    \sentEmb_i & = \sentEnc(\wordEmb_i;\sentEncParams) =  
+        \frac{1}{\sentSize_i} \sum_{j=1}^{\sentSize_i} \wordEmb_{i,j}.
+    \end{align}
+    There are no parameters associated with this encoder (i.e. 
+    $\sentEncParams = \emptyset$). The size of the sentence embedding is simply
+$\sentDim = \embDim = 200$. Dropout with drop probability 0.25 is applied to each word embedding $\wordEmb_{i,j}$ during training.
+
+\subsubsection{\RecurrentNeuralNetwork~Sentence Encoder} 
+
+    When using the \recurrentneuralnetwork~encoder we apply both forward 
+    and backward \recurrentneuralnetwork s over the word embedding sequences
+    produced by the embedding layer. To obtain the actual sentence embedding, 
+    we concate the final output step of
+    the forward and backward networks. 
+    For the actual recurrence function, we use the 
+    \gatedrecurrentunit~\citep{cho2014gru}. 
+    \input{ch2/models_gru_def.tex}
+
+    Under the \recurrentneuralnetwork~encoder, a sentence embedding 
+    $\sentEmb_i$ is then defined as
+    \begin{align} 
+        \sentEmb_i 
+        = \sentEnc\Big(\wordEmb_i; \sentEncParams\Big) & = \left[
+                \rSentEmb_{i,\sentSize_i}, \lSentEmb_{i,1}
+            \right] \\
+            %\textit{(Forward RNN~encoder)} \nonumber\\
+            \rSentEmb_{i,0}  &= \zeroEmb, \\ 
+            \lSentEmb_{i,\sentSize_i + 1} &= \zeroEmb, \\
+            \forall j \in \{1,\ldots,\sentSize_i\}& \nonumber \\  
+           \rSentEmb_{i,j} & = 
+                \fgru(\wordEmb_{i,j}, \rSentEmb_{i,j-1}; \rSentGRUParams), \\
+%                 \textit{(Backward RNN~encoder)} \nonumber & \\
+%     \lSentEmb_{i,\sentSize_i + 1} & = \zeroEmb, \\
+%            \forall j \in \{1,\ldots,\sentSize_i\}& \nonumber \\  
+           \lSentEmb_{i,j} &= 
+                \fgru(\wordEmb_{i,j},\lSentEmb_{i,j+1};\lSentGRUParams ),
+    %%\lSentVec_i &= \lgru(w_i, \lSentVec_{i+1}) 
+    \end{align}
+    where $[\cdots]$ is the vector concatenation operator and
+    $\rSentGRUParams$ and $\lSentGRUParams$ are distinct parameters for 
+    the forward and backward \recurrentneuralnetwork s respectively. 
+    Collectively the set of parameters for the \recurrentneuralnetwork~sentence
+    encoder is $\sentEncParams = \left\{ \rSentGRUParams, \lSentGRUParams
+    \right\}$. We use $\hidDim=300$ dimensional hidden layers for each \gru, 
+    making the size of the sentence embedding $\sentDim=2\hidDim=600$.
+    Dropout with drop probability $0.25$ is applied to \gru~outputs $\rSentEmb_{i,j}$ and $\lSentEmb_{i,j}$ for 
+$j \in \{1,\ldots,\sentSize_i\}$ during training.
+
+
+
+
+\subsubsection{\ConvolutionalNeuralNetwork~Sentence Encoder} 
+
+The \convolutionalneuralnetwork~sentence encoder uses a series of 
+convolutional feature maps to encode each sentence. This encoder is similar
+to the convolutional architecture of \citet{kim2014convolutional} used for 
+text classification tasks. It performs a series of ``one-dimensional'' 
+convolutions over word embeddings. The \kernelwidth~$\ckernelWidth \in 
+\naturals$ of a feature map determines the number of contiguous words that a 
+feature map is sensitive to. For $\ckernelWidth=3$, for example, the feature 
+map would function as a trigram feature detector essentially. 
+We denote a single convolutional feature map of kernel width 
+$\ckernelWidth$ as $\ckernel_\ckernelWidth : \reals^{*\times \embDim} \rightarrow \reals$ with
+\begin{align}
+    \ckernel_\ckernelWidth(\wordEmb_i;\upsilon,\beta)  & 
+= \max_{j \in \{ 
+    1 - \left\lfloor \frac{\ckernelWidth}{2} \right\rfloor, 
+    \ldots, \sentSize_i +  
+    \left\lfloor \frac{\ckernelWidth}{2} \right\rfloor - \ckernelWidth + 1 \}}
+  \relu\left( \cBias + \cMatrix^T \left[ \begin{array}{c} \wordEmb_{i,j}\\ \wordEmb_{i,j+1} \\ \vdots \\ \wordEmb_{i,j+k-1} \end{array} \right] \right),
+\end{align}
+where $\relu(x) = \max(0, x)$ is the rectified linear unit \citep{relu},
+$\left\lfloor\cdot\right\rfloor$ is the floor operator,
+and $\cMatrix \in \reals^{1 \times \ckernelWidth \embDim}$
+and $\cBias \in \reals$ are parameters. Note that we use a ``zero-padded'' 
+convolution \cite{cnnarithmatic}. That is, the $\max$ operator ranges
+over  $j \in \left\{1 - \left\lfloor \frac{\ckernelWidth}{2} \right\rfloor, \ldots, 
+    \sentSize_i +  \left\lfloor \frac{\ckernelWidth}{2} \right\rfloor - \ckernelWidth + 1
+\right\}$ instead of $\left\{1,\ldots,\sentSize_i - \ckernelWidth + 1\right\}$, and $\wordEmb_{i,j} = \zeroEmb$ for
+$j < 1$ and $j > \sentSize_i$. Padded convolutions help
+alleviate the problem of reduced receptive fields on the boundaries 
+of the sequence. See \autoref{fig:paddedconv} for a visual example.
+
+The final sentence embedding $\sentEmb_i$ is 
+a concatenation of many convolutional feature maps ranging over muliple kernel widths with each filter having its own distinct sets of parameters.
+Let $\ckernelWidths = \{\ckernelWidth_1, \ldots, \ckernelWidth_m \} \subset \naturals$ be the set of the sentence encoder's
+$m$ kernel widths, and $\cFeatureMaps_\ckernelWidth \in \naturals$ be the number of feature
+maps for kernel width $\ckernelWidth$. The final sentence embedding produced
+by the \convolutionalneuralnetwork~sentence encoder is defined as 
+\begin{align}
+\sentEmb_i & = \sentEnc(\wordEmb_i; \sentEncParams) = \left[  
+    \ckernel^{\left(1\right)}_{\ckernelWidth_1},
+  %  \ckernel^{(2)}_{\ckernelWidth_1},
+    \ldots, 
+    \ckernel^{\left(\cFeatureMaps_{\ckernelWidth_1}\right)}_{\ckernelWidth_1}, 
+    \ckernel^{\left(1\right)}_{\ckernelWidth_2},
+%    \ckernel^{(2)}_{\ckernelWidth_2},
+    \ldots, 
+    \ckernel^{\left(\cFeatureMaps_{\ckernelWidth_2}\right)}_{\ckernelWidth_2}, 
+    \ldots, 
+    \ckernel^{\left(1\right)}_{\ckernelWidth_m},
+ %   \ckernel^{(2)}_{\ckernelWidth_m},
+    \ldots, 
+    \ckernel^{\left(\cFeatureMaps_{\ckernelWidth_m}\right)}_{\ckernelWidth_m}
+  \right]  \\
+    \ckernel^{(j)}_{\ckernelWidth} &=
+\ckernel^{(j)}_{\ckernelWidth}(\wordEmb_i;\cMatrix^{(j,\ckernelWidth)},\cBias^{(j,\ckernelWidth)})
+\end{align}
+where \[ \sentEncParams = \left\{ 
+    \cMatrix^{\left(1,\ckernelWidth_1\right)}, \cBias^{\left(1,\ckernelWidth_1\right)}, \ldots,
+    \cMatrix^{\left(\cFeatureMaps_{\ckernelWidth_1},\ckernelWidth_1\right)}, 
+            \cBias^{\left(\cFeatureMaps_{\ckernelWidth_1},\ckernelWidth_1\right)}, \ldots,
+    \cMatrix^{\left(1,\ckernelWidth_m\right)}, \cBias^{\left(1,\ckernelWidth_m\right)}, \ldots,
+    \cMatrix^{\left(\cFeatureMaps_{\ckernelWidth_m},\ckernelWidth_m\right)}, 
+            \cBias^{\left(\cFeatureMaps_{\ckernelWidth_m},\ckernelWidth_m\right)}
+    \right\}\] are the sentence encoder parameters. 
+In our instantiation, we use kernel widths $\ckernelWidths = \{1, 2, 3, 4, 5, 6\}$ with corresponding feature maps sizes 
+$\cFeatureMaps_1=25$, $\cFeatureMaps_2=25$, $\cFeatureMaps_3=50$, $\cFeatureMaps_4=50$, $\cFeatureMaps_5=50$, and $\cFeatureMaps_6=50$, making 
+the resulting sentence embedding dimensionality $\sentDim=250$. 
+Dropout with drop probability $0.25$ is also applied to $\sentEmb_i$ during 
+training.
+
+
+\subsubsection{Sentence Encoder Tradeoffs}
+
+
+The sentence encoder's role is to obtain a vector representation of a finite
+sequence of word embeddings that is useful for the sentence extraction
+stage. Therefore it must aggregate features in the word embedding space that
+are predictive of salience. Averaging embeddings is not an unreasonable
+approach to this. Empirically there is evidence that word embedding
+averaging is a fairly competitive sentence representation generally \citep{someone,someoneelse}. In the context of summarization, averaging can be thought of
+as a noisy OR; if any of the words in a the sentence are indicative 
+of salience, this representation should capture them.
+Computationally, the averaging encoder is the fastest to compute and does
+not require learning of parameters, reducing the memory and computation time
+during training. 
+
+The \recurrentneuralnetwork~sentence encoder can in theory 
+capture some compositional features of a word sequence 
+ that would be difficult or impossible 
+to represent in the averaging encoder
+(e.g. negation or coreference).
+However, this comes at a much heavier 
+computational cost, as \recurrentneuralnetwork s cannot be fully parallelized 
+due to the inherently sequential nature of their computation. {\color{red} The \recurrentneuralnetwork~has $\mathcal{O}(?)$ number of parameters which
+must be learned.}
+
+The \convolutionalneuralnetwork~encoder represents a middle ground between
+the averaging and \recurrentneuralnetwork~encoders. When using modestly sized
+kernel widths (e.g., 1-5), the recepetive window should be sensitive short
+phrases and some locally scoped negation. It will not be able to capture
+the longer ranged dependencies that the \recurrentneuralnetwork~encoder would.
+However, it is much faster to compute than the \recurrentneuralnetwork~as 
+the individual feature maps can be computed completely in parallel. 
+{\color{red} The \convolutionalneuralnetwork~has $\mathcal{O}(?)$ number of parameters which
+must be learned.}
+
+
+
+
+
+
+
+
+
+
+\subsection{Sentence Extractors} \label{sec:sext}
+
+The role of the sentence extractor is to map a sequence of sentence 
+embeddings 
+    $\sentEmb_1,\ldots,\sentEmb_\docSize$ %h_1, ... , h_n%
+produced by the sentence encoder layer to a sequence of salience judgements 
+    $\bsal_1,\ldots, \bsal_\docSize$. %y_1, ..., y_n.%
+The sentence extractor is essentially a discriminative classifier 
+   $p(\bsal_1,\ldots, \bsal_\docSize | \sentEmb_1, \ldots, \sentEmb_\docSize)$.
+   %p(y_1,...,y_n|h_1,...,h_n).%
+Previous neural network approaches to sentence extraction have assumed 
+an \autoregressive~model, leading to a semi-Markovian factorization of the 
+extractor probabilities 
+  \[p(\bsal_{1},\ldots,\bsal_\docSize|\sentEmb_1,\ldots,\sentEmb_\docSize)=
+      \prod_{i=1}^\docSize 
+        p(\bsal_i|\bsal_1,\ldots,\bsal_{i-1},\sentEmb_1,\ldots,\sentEmb_\docSize),\]
+where each prediction $\bsal_i$ is dependent on 
+\emph{all} 
+previous $\bsal_j$ for
+all $j < i$. We compare two such models proposed by \citet{cheng2016neural}
+and \citet{nallapati2017summarunner}. 
+
+While intuitively it makes sense that previous extraction decisions might 
+affect the probability of extracting subsequent sentences, (e.g., highly 
+salient sentences might cluster together), it has not been empirically 
+investigated whether this dependence is necessary for \deeplearning~models in 
+practice. For example, in the models of 
+\citet{cheng2016neural} and \citet{nallapati2017summarunner}, individual
+predictions of $\bsal_i$ are made using information from some or all of 
+the sentence embeddings $\sentEmb_1, \ldots, \sentEmb_\docSize$, such that 
+information about neighboring sentences could be propagated through sentence
+embedding interactions. 
+
+The semi-Markovian factorization is not without
+other consequences. Because intermediate sentence extractor representations
+depend on prior extraction decisions $\bsal_i$, exact test time inference of
+$\predbsals = \argmax_{\bsals \in \bSalSpace} 
+p(\bsals|\sentEmb_1,\ldots,\sentEmb_\docSize)$
+becomes intractable. Additionally, from an efficiency perspective, 
+the semi-Markovian factorization prevents parallelization of individual
+$\bsal_i$ predictions, since they must now be sequentially computed.
+
+Motivated by these considerations, we propose two \nonautoregressive~sentence
+extractor architectures where inidividual extraction labels $\bsal_i$ 
+are independent of each other, that is, 
+\[p(\bsal_1,\ldots,\bsal_\docSize|\sentEmb_1,\ldots,\sentEmb_\docSize) = \prod_{i=1}^\docSize 
+p(\bsal_i|\sentEmb_1,\ldots,\sentEmb_\docSize).\]
+We now describe introduce the
+previously proposed \autoregressive~sentence extractors ( ) before describing
+our proposed \nonautoregressive~ones ({\color{red} Names here} ).
+
+
+%  which we explore in two proposed extractor models that we refer to as the 
+%    \naseOne~and \naseTwo~sentence extractors.  
+%Since the hidden state pre
+%A simpler approach that does not allow interaction among the $y_{1:n}$
+%is to 
+%%\hal{a simpler approach (explain why simpler) is a fully factored representation 
+%  model $p(\bsal_{1:n}|\sentEmb) = \prod_{i=1}^n p(y_i|h)$, 
+%Implementation details for all extractors are in \autoref{app:sentextractors}.
+%
+
+
+
+%\input{ch2/figures/sentence-extractors-proposed.tex}
+%\input{ch2/figures/sentence-extractors-prior.tex}
+
+%\input{ch2/figures/models_rnnext.tex}
+%\input{ch2/figures/models_srext.tex}
+%\input{ch2/figures/models_stsext.tex}
+
+\input{ch2/models_clext.tex}
+
+\input{ch2/models_srext.tex}
+
+\input{ch2/models_rnnext.tex}
+
+\input{ch2/models_stsext.tex}
+
+
+
+
+
+
+%The final outputs of each encoder direction are passed to the first decoder
+%steps; additionally, the first step of the decoder GRUs are learned 
+%``begin decoding'' vectors $\rdxhid_0$ and $\ldxhid_0$ ({\color{red} change math to reflect this}) 
+%(see \autoref{fig:extractors}.b).
+%Each GRU has separate learned 
+%parameters; $U, V$ and $u, v$ are learned weight and bias parameters.
+%The hidden layer size of the GRU is 300 for each direction and MLP hidden layer
+%size is 100. Dropout with drop probability .25 is applied to the GRU outputs and to $a_i$.
+%
+
+
+%
+%We study three architectures for the sentence encoders, namely, 
+%embedding averaging, RNNs, and 
+%CNNs.
+%We also propose two simple models for the sentence extractor and compare
+%to the previously proposed extractors of 
+%\citet{cheng2016neural} and \citet{nallapati2017summarunner}.
+%\hal{i think it's still confusing what's new and what's not. maybe you can somewhat mark? like things with $\star$ are new and ones without are old or something?}
+%The prior works differ significantly but make the same semi-Markovian
+%factorization of the extraction decisions, i.e. 
+%$p(\slabel|\sentEmb)=\prod_{i=1}^\docSize p(\slabel[i]|\slabel[<i],\sentEmb)$,
+%where each prediction \slabel[i] is dependent on all previous \slabel[j] for
+%all $j < i$.
+%By contrast, our extractors make a stronger conditional independence 
+%assumption $p(\slabel|\sentEmb)=\prod_{i=1}^\docSize p(\slabel[i]|\sentEmb)$,
+%essentially making independent predictions conditioned on $\sentEmb$.
+%In theory, our models should perform worse because of this, however, as
+%we later show, this is not the case empirically.
+%
+%
+%
+%\hal{i think you might need a subsection at the end of this section with oen or two paragraphs of compare/contrast the different models, esp if details are going to appendix}
+%
+
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "dlextsum.emnlp18"
+%%% End:
+
+

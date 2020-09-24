@@ -1,0 +1,304 @@
+\makeatletter
+\newcommand{\specialterms}[1]{%
+  \@for\next:=#1\do
+    {\@namedef{specialterm@\detokenize\expandafter{\next}}{}}%
+}
+\newcommand\term[1]{%
+  \@ifundefined{specialterm@\detokenize{#1}}
+    {#1}{\emph{#1}\global\expandafter\let\csname specialterm@\detokenize{#1}\endcsname\relax}%
+}
+\makeatother
+
+
+\specialterms{faithful,controllable,machine learning}
+
+\newcommand{\latin}[1]{\textit{#1}}
+\newcommand{\argmax}{\ensuremath{\operatorname{arg\;max}}}
+
+\newcommand{\abstractive}{abstractive}
+\newcommand{\Automaticsummarization}{Automatic summarization}
+\newcommand{\autoregressive}{autoregressive}
+\newcommand{\bidirectional}{bidirectional}
+\newcommand{\contentselection}{content selection}
+\newcommand{\controllable}{controllable}
+\newcommand{\controllablegeneration}{controllable generation}
+\newcommand{\Controllablegeneration}{Controllable generation}
+\newcommand{\ConvolutionalNeuralNetwork}{Convolutional Neural Network}
+\newcommand{\convolutionalneuralnetwork}{convolutional neural network}
+\newcommand{\dataandtexttotext}{data- and text-to-text}
+\newcommand{\datatotext}{data-to-text}
+\newcommand{\DeepLearning}{Deep Learning}
+\newcommand{\Deeplearning}{Deep learning}
+\newcommand{\deeplearning}{deep learning}
+\newcommand{\encoder}{encoder}
+\newcommand{\extractive}{extractive}
+\newcommand{\extract}{extract}
+\newcommand{\extractor}{extractor}
+\newcommand{\faithful}{faithful}
+\newcommand{\faithfulness}{faithfulness}
+\newcommand{\faithfulgeneration}{faithful generation}
+\newcommand{\featurebased}{feature-based}
+\newcommand{\feedforward}{feed-forward}
+\newcommand{\gatedrecurrentunit}{gated recurrent unit}
+\newcommand{\kernelwidth}{kernel width}
+\newcommand{\ignore}{ignore}
+\newcommand{\languagegeneration}{language generation}
+\newcommand{\linearizationstrategies}{linearization strategies}
+\newcommand{\machinelearning}{machine learning}
+\newcommand{\machinetranslation}{machine translation}
+\newcommand{\meaningrepresentation}{meaning representation}
+\newcommand{\naturallanguagegeneration}{natural language generation}
+\newcommand{\naturallanguageprocessing}{natural language processing}
+\newcommand{\naturallanguageunderstanding}{natural language understanding}
+\newcommand{\nonautoregressive}{non-autoregressive}
+\newcommand{\nugget}{nugget}
+\newcommand{\partofspeech}{part of speech}
+
+\newcommand{\RecurrentNeuralNetwork}{Recurrent Neural Network}
+\newcommand{\recurrentneuralnetwork}{recurrent neural network}
+\newcommand{\rouge}{\textsc{Rouge}}
+\newcommand{\meteor}{\textsc{Meteor}}
+\newcommand{\Salienceestimation}{Salience estimation}
+\newcommand{\salienceestimation}{salience estimation}
+\newcommand{\Salience}{Salience}
+\newcommand{\salience}{salience}
+\newcommand{\saliencefactors}{salience factors}
+\newcommand{\saliencefactor}{salience factor}
+\newcommand{\salient}{salient}
+\newcommand{\redundancy}{redundancy}
+\newcommand{\sentencesalience}{sentence salience}
+\newcommand{\sentenceencoder}{sentence encoder}
+\newcommand{\sentenceextractor}{sentence extractor}
+\newcommand{\sequencetosequence}{sequence-to-sequence}
+\newcommand{\surfacerealization}{surface realization}
+\newcommand{\taskorienteddialoggeneration}{task oriented dialog generation}
+\newcommand{\taskorienteddialoguegeneration}{task oriented dialogue generation}
+\newcommand{\texttotext}{text-to-text}
+\newcommand{\textsummarization}{text summarization}
+\newcommand{\tfidf}{TF-IDF}
+\newcommand{\unidirectional}{unidirectional}
+\newcommand{\updatesummary}{update summary}
+\newcommand{\updates}{updates}
+\newcommand{\update}{update}
+
+%\definecommand{\sal}{\varsigma}
+
+
+%%%% Math
+\newcommand{\reals}{\ensuremath{\mathbb{R}}}
+\newcommand{\naturals}{\ensuremath{\mathbb{N}}}
+\newcommand{\bSalSpace}{\ensuremath{\mathcal{Y}}}
+
+%%%% General Objects
+
+\newcommand{\extractSummary}{\varepsilon}
+\newcommand{\word}{\ensuremath{w}}
+\newcommand{\wordVocab}{\ensuremath{\mathcal{V}}}
+\newcommand{\sent}{\ensuremath{s}}
+\newcommand{\docSize}{n}
+\newcommand{\docSizeMax}{{n_{max}}}
+\newcommand{\sentSize}{l}
+\newcommand{\corpus}{\mathcal{D}}
+\newcommand{\corpusSize}{N}
+\newcommand{\bsal}{y}
+\newcommand{\psal}{p}
+\newcommand{\bsals}{\ensuremath{\boldsymbol{y}}}
+\newcommand{\predbsals}{\ensuremath{\boldsymbol{\hat{y}}}}
+\newcommand{\embLayer}{\operatorname{Emb}}
+\newcommand{\wordEmbChar}{v}
+\newcommand{\wordEmb}{\ensuremath{\mathbf{\wordEmbChar}}}
+\newcommand{\wordbudget}{\ensuremath{c}}
+\newcommand{\zeroEmb}{\ensuremath{\mathbf{0}}}
+\newcommand{\doc}{\ensuremath{x}}
+\newcommand{\params}{\ensuremath{\theta}}
+\newcommand{\sts}{Seq2Seq}
+\newcommand{\gru}{GRU}
+\newcommand{\fgru}{\operatorname{GRU}}
+\newcommand{\embDim}{D_{\word}}
+\newcommand{\hidDim}{D_{h}}
+\newcommand{\sentDim}{D_{\sent}}
+
+
+% GRU Defs
+\newcommand{\GRUparams}{\ensuremath{\varphi}}
+\newcommand{\GRUupdatechar}{u}
+\newcommand{\GRUupdategate}{\ensuremath{\mathbf{\GRUupdatechar}}}
+\newcommand{\GRUresetchar}{r}
+\newcommand{\GRUresetgate}{\ensuremath{\mathbf{\GRUresetchar}}}
+\newcommand{\GRUcandchar}{o}
+\newcommand{\GRUcandgate}{\ensuremath{\mathbf{\GRUcandchar}}}
+\newcommand{\GRUWeight}{\ensuremath{\mathbf{W}}}
+\newcommand{\GRUBias}{\ensuremath{\mathbf{b}}}
+\newcommand{\gruFuncDef}[2]{\fgru(\cdot, \cdot; \varphi) : \reals^{#1} \times \reals^{#2} \rightarrow \reals^{#2}}
+
+
+% Sentence Encoder Defs
+\newcommand{\sentEnc}{\operatorname{SentEnc}}
+\newcommand{\sentEmbChar}{h}
+\newcommand{\sentEmb}{\ensuremath{\mathbf{\sentEmbChar}}}
+\newcommand{\sentEncParams}{\ensuremath{\xi}}
+\newcommand{\sentEncFuncDef}{\ensuremath{
+        \sentEnc(\cdot\,; \sentEncParams) : 
+        \reals^{*\times \embDim} \rightarrow \reals^{\sentDim}
+}}
+
+%%  
+
+\newcommand{\model}{P}
+\newcommand{\docSpace}{\mathcal{X}}
+\newcommand{\labelSpace}{\mathcal{Y}}
+
+%% Averaging Encoder
+
+%% RNN Encoder
+
+\newcommand{\rSentEmb}{\ensuremath{\overrightarrow{\sentEmb}}}
+\newcommand{\rSentGRUParams}{\ensuremath{\overrightarrow{\sentEncParams}}}
+\newcommand{\lSentGRUParams}{\ensuremath{\overleftarrow{\sentEncParams}}}
+\newcommand{\lSentEmb}{\ensuremath{\overleftarrow{\sentEmb}}}
+
+
+
+% Conv Encoder Defs
+\newcommand{\ckernel}{f}
+\newcommand{\ckernelWidth}{k}
+\newcommand{\ckernelSize}{k}
+\newcommand{\cMatrix}{\boldsymbol{\upsilon}}
+\newcommand{\cBias}{\beta}
+\newcommand{\ckernelWidths}{\ensuremath{\mathcal{K}}}
+\newcommand{\cFeatureMaps}{\ensuremath{D}}
+
+
+% Sentence Extractor Defs
+    \newcommand{\xParams}{\chi}
+    \newcommand{\salSentEmb}{\boldsymbol{\bar{\sentEmb}}}
+
+    % Cheng and Lapata Extractor
+        \newcommand{\clext}{Cheng \& Lapata}
+    \newcommand{\xhidSize}{\ensuremath{{D_{\chi}}}}
+    \newcommand{\xpHidSize}{\ensuremath{{D_{z}}}}
+    \newcommand{\xEncHid}{\ensuremath{\boldsymbol{\eta}}}
+    \newcommand{\xDecHid}{\ensuremath{\boldsymbol{\zeta}}}
+    \newcommand{\clEncParams}{\ensuremath{\chi_\eta}}
+    \newcommand{\clDecParams}{\ensuremath{\chi_\zeta}}
+    \newcommand{\xweight}{\ensuremath{p}}
+    \newcommand{\xPredHid}{\ensuremath{\mathbf{z}}}
+    \newcommand{\xpWeight}{\ensuremath{\mathbf{U}}}
+    \newcommand{\xpBias}{\ensuremath{\mathbf{u}}}
+
+    % SummaRunner Extractor
+    \newcommand{\srext}{SummaRunner}
+    \newcommand{\srHid}{\ensuremath{\mathbf{z}}}
+    \newcommand{\srrHid}{\ensuremath{\boldsymbol{\overrightarrow{z}}}}
+    \newcommand{\srlHid}{\ensuremath{\boldsymbol{\overleftarrow{z}}}}
+    \newcommand{\srRRNNParams}{\overrightarrow{\xParams}}
+    \newcommand{\srLRNNParams}{\overleftarrow{\xParams}}
+    \newcommand{\srRNNDim}{{D_r}}
+    \newcommand{\srRepDim}{{D_z}}
+    \newcommand{\srPosDim}{{D_g}}
+    
+    \newcommand{\srDocBias}{\mathbf{u}^{(d)}}
+    \newcommand{\srDocWeight}{\mathbf{U}^{(d)}}
+    \newcommand{\srSentBias}{\mathbf{u}^{(z)}}
+    \newcommand{\srSentWeight}{\mathbf{U}^{(z)}}
+    \newcommand{\srDocEmb}{\mathbf{d}}
+    \newcommand{\srFinePositionEmb}{\mathbf{g}^{(fp)}}
+    \newcommand{\srCoarsePositionEmb}{\mathbf{g}^{(cp)}}
+    \newcommand{\srSum}{\mathbf{s}}
+    \newcommand{\srContentFactor}{\phi^{(c)}}
+    \newcommand{\srSalienceFactor}{\phi^{(s)}}
+    \newcommand{\srNoveltyFactor}{\phi^{(n)}}
+    \newcommand{\srFinePositionFactor}{\phi^{(fp)}}
+    \newcommand{\srCoarsePositionFactor}{\phi^{(cp)}}
+    \newcommand{\srContentWeight}{\mathbf{u}^{(c)}}
+    \newcommand{\srSalienceWeight}{\mathbf{U}^{(s)}}
+    \newcommand{\srNoveltyWeight}{\mathbf{U}^{(n)}}
+    \newcommand{\srFinePositionWeight}{\mathbf{u}^{(fp)}}
+    \newcommand{\srCoarsePositionWeight}{\mathbf{u}^{(cp)}}
+
+
+
+
+
+
+    % RNN Extractor
+    \newcommand{\rnnext}{RNN}
+    \newcommand{\rnnextHid}{\ensuremath{\mathbf{z}}}
+    \newcommand{\rnnextRHid}{\ensuremath{\boldsymbol{\overrightarrow{\eta}}}}
+    \newcommand{\rnnextLHid}{\ensuremath{\boldsymbol{\overleftarrow{\eta}}}}
+    \newcommand{\rnnextRParams}{\ensuremath{\overrightarrow{\xParams}}}
+    \newcommand{\rnnextLParams}{\ensuremath{\overleftarrow{\xParams}}}
+    \newcommand{\rnnextHidWeight}{\ensuremath{\boldsymbol{W}^{(1)}}}
+    \newcommand{\rnnextHidBias}{\ensuremath{\boldsymbol{b}^{(1)}}}
+    \newcommand{\rnnextPredWeight}{\ensuremath{\boldsymbol{W}^{(2)}}}
+    \newcommand{\rnnextPredBias}{\ensuremath{\boldsymbol{b}^{(2)}}}
+    \newcommand{\rnnextRNNDim}{{D_\eta}}
+    \newcommand{\rnnextHidDim}{{D_z}}
+
+
+    % Seq2Seq Extractor
+    \newcommand{\stsext}{Seq2Seq}
+    \newcommand{\stsextSent}{\ensuremath{\boldsymbol{\tilde{\sentEmb}}}}
+    \newcommand{\stsextHid}{\ensuremath{\mathbf{z}}}
+    \newcommand{\stsextEncHid}{\ensuremath{\boldsymbol{\eta}}}
+    \newcommand{\stsextDecHid}{\ensuremath{\boldsymbol{\zeta}}}
+    \newcommand{\stsextREncHid}{\ensuremath{\boldsymbol{\overrightarrow{\eta}}}}
+    \newcommand{\stsextRDecHid}{\ensuremath{\boldsymbol{\overrightarrow{\zeta}}}}
+    \newcommand{\stsextLEncHid}{\ensuremath{\boldsymbol{\overleftarrow{\eta}}}}
+    \newcommand{\stsextLDecHid}{\ensuremath{\boldsymbol{\overleftarrow{\zeta}}}}
+    \newcommand{\stsextAttn}{\alpha}
+    \newcommand{\stsextAttnHid}{\boldsymbol{\bar{\eta}}}
+%    \newcommand{\stsextLHid}{\ensuremath{\boldsymbol{\overleftarrow{z}}}}
+%    \newcommand{\rnnextRParams}{\ensuremath{\overrightarrow{\xParams}}}
+%    \newcommand{\rnnextLParams}{\ensuremath{\overleftarrow{\xParams}}}
+    \newcommand{\stsextHidWeight}{\ensuremath{\boldsymbol{W}^{(1)}}}
+    \newcommand{\stsextHidBias}{\ensuremath{\boldsymbol{b}^{(1)}}}
+    \newcommand{\stsextPredWeight}{\ensuremath{\boldsymbol{W}^{(2)}}}
+    \newcommand{\stsextPredBias}{\ensuremath{\boldsymbol{b}^{(2)}}}
+    \newcommand{\stsextRNNDim}{{D_\chi}}
+    \newcommand{\stsextHidDim}{{D_z}}
+    \newcommand{\stsextREncParams}{{\overrightarrow{\chi}_\eta}}
+    \newcommand{\stsextLEncParams}{{\overleftarrow{\chi}_\eta}}
+    \newcommand{\stsextRDecParams}{{\overrightarrow{\chi}_\zeta}}
+    \newcommand{\stsextLDecParams}{{\overleftarrow{\chi}_\zeta}}
+%
+
+%
+%
+%
+
+
+
+
+
+
+
+
+
+
+\newcommand{\xhid}{\ensuremath{z}}
+\newcommand{\rxhid}{\ensuremath{\overrightarrow{\xhid}}}
+\newcommand{\lxhid}{\ensuremath{\overleftarrow{\xhid}}}
+
+
+
+
+
+
+
+
+
+
+
+\newcommand{\rdxhid}{\ensuremath{\accentset{\rightsquigarrow}{\xhid}}}
+\newcommand{\ldxhid}{\ensuremath{\accentset{\leftsquigarrow}{\xhid}}}
+
+\newcommand{\maxWindowSize}{\ensuremath{K}}
+\newcommand{\filterWindowSize}{\ensuremath{k}}
+\newcommand{\maxFeatureMaps}{\ensuremath{F}}
+\newcommand{\numFeatureMaps}{\ensuremath{l}}
+\newcommand{\specActivation}{a}
+\newcommand{\specFeatureMap}{f}
+\newcommand{\specConvWeight}{W}
+\newcommand{\specConvBias}{b}
+\newcommand{\relu}{\operatorname{ReLU}}

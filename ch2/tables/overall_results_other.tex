@@ -1,0 +1,40 @@
+\begin{table*}[p]
+    \center
+    %\begin{tabular}{ccggccggccggcc}
+    \begin{tabular}{cccccccccccccc}
+        \toprule
+        \multirow{2}{*}{Extractor} &\multirow{2}{*}{Encoder}  &  \multicolumn{2}{c}{\textbf{Reddit}} & \multicolumn{2}{c}{\textbf{AMI}} & \multicolumn{2}{c}{\textbf{PubMed}}\\
+         &  & M & R-2 & M & R-2 & M & R-2 \\
+        \midrule
+%        Random &  -- & 18.2 & 12.7 & 20.7 & 16.0 & 21.7 & 15.8 & \textbf{20.4} & \textbf{12.9} & 12.7 &  2.0 & 16.9 &  9.3\\
+%        \hline
+        Lead &  -- &  \textbf{20.1} & \textbf{10.9} & 12.3 &  2.0 & 15.9 &  9.3\\
+%        \hline
+%        Tail &  -- & 13.7 &  5.4 & 12.5 &  4.1 & 17.8 &  9.1 & \textbf{19.8} & \textbf{10.0} & 11.5 &  2.7 & 17.0 &  9.9\\
+        \hline
+        \multirow{3}{*}{RNN} & Avg. &  \textbf{20.4} & \textbf{11.4} & \textbf{17.0} & \textbf{ 5.5} & 19.8 & 17.0\\
+         & RNN &  \textbf{20.2} & \textbf{11.4} & 16.2 & \textbf{ 5.2} & 19.7 & 16.6\\
+         & CNN & \textbf{20.9} & \textbf{12.8} & 14.4 &  3.2 & 19.9 & 16.8\\
+        \hline
+        \multirow{3}{*}{Seq2Seq} & Avg. &  \textbf{20.9} & \textbf{13.6} & \textbf{17.0} & \textbf{ 5.5} & \textbf{20.1} & \textbf{17.7}\\
+         & RNN &  \textbf{20.5} & \textbf{12.0} & 16.1 & \textbf{ 5.3} & 19.7 & 16.7\\
+         & CNN &  \textbf{20.7} & \textbf{13.2} & 14.2 &  2.9 & 19.8 & 16.9\\
+        \hline
+    \multirow{3}{*}{\begin{tabular}{c} Cheng \&  Lapata \end{tabular}} & Avg. &  \textbf{20.9} & \textbf{13.6} & \textbf{16.7} & \textbf{ 6.1} & \textbf{20.1} & \textbf{17.7}\\
+         & RNN &  \textbf{20.3} & \textbf{12.6} & \textbf{16.3} & \textbf{ 5.0} & 19.7 & 16.7\\
+         & CNN &  \textbf{20.5} & \textbf{13.4} & 14.3 &  2.8 & 19.9 & 16.9\\
+        \hline
+    \multirow{3}{*}{\begin{tabular}{c}Summa Runner \end{tabular} } & Avg. & \textbf{21.0} & \textbf{13.4} & \textbf{17.0} & \textbf{ 5.6} & 19.9 & 17.2\\
+         & RNN &\textbf{20.9} & \textbf{12.5} & \textbf{16.5} & \textbf{ 5.4} & 19.7 & 16.5\\
+         & CNN &  \textbf{20.4} & \textbf{12.3} & 14.5 &  3.2 & 19.8 & 16.8\\
+        \hline
+        Oracle & -- &  24.3 &  16.2 &17.8 &  8.7  & 24.1 &25.0 \\
+        \bottomrule
+    \end{tabular}
+
+    \caption{Non-news domain \meteor~(M) and \rouge-2 recall (R-2)  results across all 
+        extractor/encoder pairs.
+           Results that are statistically indistinguishable from the best 
+           system are shown in bold face.}
+  \label{tab:otherresults}
+\end{table*}

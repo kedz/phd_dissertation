@@ -1,0 +1,73 @@
+\begin{figure}[h!]
+    \fbox{\begin{minipage}{\textwidth}
+            \center
+\begin{tikzpicture}[
+  dep/.style ={
+    ->,line width=0.3mm
+  },
+  hid/.style 2 args={
+    rectangle split,
+    rectangle split horizontal,
+    draw=#2,
+    rectangle split parts=#1,
+    fill=#2!20,
+    minimum width=5mm,
+    minimum height=5mm,
+    outer sep=2mm},
+  mlp/.style 2 args={
+    rectangle split,
+    rectangle split horizontal,
+    draw=#2,
+    rectangle split parts=#1,
+    fill=#2!20,
+    outer sep=2mm},
+  sal/.style={
+    circle, 
+    minimum width=8mm,
+    outer sep=2mm,
+    draw=#1, 
+    fill=#1!20},
+]
+
+  \def\stepsize{2}%
+
+    \node[sal={sal}] (sal) at (7*\stepsize,1) {}; 
+    \node at (7*\stepsize,1) {$\psal_i$}; 
+\node[align=left,anchor=north west] at (6.1*\stepsize,2.8) {\textit{Salience Estimate}};
+\node[align=left,anchor=north west] at (1*\stepsize-1,2.8) {\textit{\srext~Factors}};
+
+    \draw[rectangle,draw=black,dotted] (6.1*\stepsize,2.8)
+        -- (7.85*\stepsize,2.8)
+        -- (7.85*\stepsize,0.4)
+        -- (6.1*\stepsize,0.4)
+        -- (6.1*\stepsize,2.8);
+
+    \draw[rectangle,draw=black,dotted] (1*\stepsize-1,2.8) --
+    (5.5*\stepsize,2.8) --
+    (5.5*\stepsize,0.4) --
+    (1*\stepsize-1,0.4) -- (1*\stepsize-1,2.8) ;
+
+    \foreach \factor [count=\i from 1] in {
+        \srContentFactor,\srSalienceFactor,\srNoveltyFactor,
+        \srFinePositionFactor,\srContentFactor} {
+    \node[hid={1}{factor}] (f\i) at (\i*\stepsize,1) {}; 
+    \node at (\i*\stepsize,1) {$\factor_i$}; 
+        \draw[dep] (f\i) [out=25,in=160] to (sal);
+    }
+%    \node[hid={1}{yellow}] (f2) at (2*\stepsize,1) {}; 
+%    \node at (2*\stepsize,1) {$\srSalienceFactor_i$}; 
+%    \node[hid={1}{yellow}] at (3*\stepsize,1) {}; 
+%    \node at (3*\stepsize,1) {$\srNoveltyFactor_i$}; 
+%
+%    \node[hid={1}{yellow}] at (4*\stepsize,1) {}; 
+%    \node at (4*\stepsize,1) {$\srFinePositionFactor_i$}; 
+%
+%    \node[hid={1}{yellow}] at (5*\stepsize,1) {}; 
+%    \node at (5*\stepsize,1) {$\srCoarsePositionFactor_i$}; 
+
+
+\end{tikzpicture}
+\caption{Schematic for the \srext~extractor's salience estimates.}
+\label{fig:sr4}
+\end{minipage}}
+\end{figure}

@@ -1,0 +1,48 @@
+The \gatedrecurrentunit~function $\gruFuncDef{\embDim}{\hidDim}$~is defined as
+\begin{align}
+\fgru(\wordEmb, \sentEmb; \varphi) & 
+    = (1-\GRUupdategate) \odot \GRUcandgate + \GRUupdategate \odot \sentEmb\\
+    \textit{(Reset gate)} & \nonumber \\
+\GRUresetgate &= 
+    \sigma\left(
+      \GRUWeight^{(\wordEmbChar\GRUresetchar)} \wordEmb 
+        + \GRUBias^{(\wordEmbChar\GRUresetchar)} +
+      \GRUWeight^{(\sentEmbChar\GRUresetchar)} \sentEmb 
+        + \GRUBias^{(\sentEmbChar\GRUresetchar)} 
+    \right)\\
+    \textit{(Update gate)} & \nonumber \\
+\GRUupdategate &= 
+    \sigma\left(
+      \GRUWeight^{(\wordEmbChar\GRUupdatechar)} \wordEmb 
+        + \GRUBias^{(\wordEmbChar\GRUupdatechar)} +
+      \GRUWeight^{(\sentEmbChar\GRUupdatechar)} \sentEmb 
+        + \GRUBias^{(\sentEmbChar\GRUupdatechar)} 
+    \right)\\
+    \textit{(Candidate state)} & \nonumber \\
+\GRUcandgate &= \tanh\left(
+    \GRUWeight^{(\wordEmbChar\GRUcandchar)} \wordEmb 
+        + \GRUBias^{(\wordEmbChar\GRUcandchar)} + 
+    \GRUresetgate \odot \left(
+        \GRUWeight^{(\sentEmbChar\GRUcandchar)} \sentEmb 
+            + \GRUBias^{(\sentEmbChar\GRUcandchar)} 
+    \right) \right)
+\end{align}
+where \[\GRUparams = \left\{
+    \GRUWeight^{(\wordEmbChar\GRUresetchar)}, 
+    \GRUBias^{(\wordEmbChar\GRUresetchar)}, 
+    \GRUWeight^{(\sentEmbChar\GRUresetchar)}, 
+    \GRUBias^{(\sentEmbChar\GRUresetchar)}, 
+    \GRUWeight^{(\wordEmbChar\GRUupdatechar)}, 
+    \GRUBias^{(\wordEmbChar\GRUupdatechar)}, 
+    \GRUWeight^{(\sentEmbChar\GRUupdatechar)}, 
+    \GRUBias^{(\sentEmbChar\GRUupdatechar)},
+    \GRUWeight^{(\wordEmbChar\GRUcandchar)}, 
+    \GRUBias^{(\wordEmbChar\GRUcandchar)}, 
+    \GRUWeight^{(\sentEmbChar\GRUcandchar)}, 
+    \GRUBias^{(\sentEmbChar\GRUcandchar)}
+  \right\}\] is the set of \gru~parameters with $\GRUWeight^{(\wordEmbChar\cdot)} \in \reals^{\hidDim \times \embDim}$, 
+    $\GRUWeight^{(\sentEmbChar\cdot)} \in \reals^{\hidDim \times \hidDim}$, 
+    and $\GRUBias^{(\cdot)} \in \reals^{\hidDim }$, 
+    and $\sigma(x) = \frac{1}{1+e^{-x}}$, 
+    $\tanh(x) = \frac{e^x-1}{e^x+1}$, and $\odot$ is the Hadamard product.
+ 

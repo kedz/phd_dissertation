@@ -1,0 +1,599 @@
+\begin{figure}[H!]
+\center
+\begin{tikzpicture}[
+  dep/.style ={
+    ->,line width=0.3mm
+  },
+  hid/.style 2 args={
+    rectangle split,
+    draw=#2,
+    rectangle split parts=#1,
+    fill=#2!20,
+    minimum width=5mm,
+    minimum height=5mm,
+    outer sep=2mm},
+  mlp/.style 2 args={
+    rectangle split,
+    rectangle split horizontal,
+    draw=#2,
+    rectangle split parts=#1,
+    fill=#2!20,
+    outer sep=2mm},
+  sal/.style={
+    circle, 
+    minimum width=8mm,
+    outer sep=2mm,
+    draw=#1, 
+    fill=#1!20},
+]
+
+  \def\stepsize{2}%
+  \def\lvlbase{0}%
+  \def\lvlheight{3}%
+ 
+
+    % Sentence Embeddings    
+  \foreach \step in {1,...,3} {
+    \node[hid={3}{green}] (s\step) at (\stepsize*\step, \lvlbase) {};    
+    \node at (\stepsize*\step, \lvlbase) {$\sentEmb_\step$};    
+   }
+%    \foreach \step [count=\i from 1] in {5,...,7} {
+%        \node[hid={3}{green}] (s\step) at (\stepsize*\step, \lvlbase) {};    
+%        \node at (\stepsize*\step, \lvlbase) {$\sentEmb_\i$};    
+%    %\draw[->] (i\step.north) -> (e\step.south);
+%    }
+
+%       \node[hid={3}{red}] (s4) at (\stepsize*4, \lvlbase) {};    
+%       \node at (\stepsize*4, \lvlbase) {$\sentEmb_0$};    
+%
+%    % RNN hidden states
+    \foreach \step in {1,...,3} {
+        \node[hid={3}{yellow}] (rrnn_\step) 
+            at (\stepsize *\step+0.5, \lvlbase + \lvlheight) {};    
+        \node at (\stepsize *\step+0.5, \lvlbase + \lvlheight) 
+            {$\stsextREncHid_\step$}; 
+
+        \node[hid={3}{yellow}] (lrnn_\step) 
+            at (\stepsize *\step-0.5, \lvlbase + \lvlheight+1.0) {};    
+        \node at (\stepsize *\step-0.5, \lvlbase + \lvlheight+1.0) 
+            {$\stsextLEncHid_\step$}; 
+
+
+        \node[hid={3}{yellow}] (enc_ctx_\step) 
+            at (\stepsize *\step, \lvlbase + 2.5*\lvlheight) {};    
+        \node at (\stepsize *\step, \lvlbase + 2.5*\lvlheight) 
+            {$\stsextEncHid_\step$}; 
+
+        \draw[dep] (s\step.north) -- (lrnn_\step.south);
+        \draw[dep] (s\step.north) -- (rrnn_\step.south);
+
+        \draw[dep] (lrnn_\step.north) -- (enc_ctx_\step.south);
+        \draw[dep] (rrnn_\step.north) -- (enc_ctx_\step.south);
+    }
+    \foreach \start [count=\stop from 2] in {1,...,2} {
+        \draw[dep] ($ (rrnn_\start.east) - (0,0.3)$) 
+            -- ($ (rrnn_\stop.west) - (0,0.3) $);
+        \draw[dep] ($(lrnn_\stop.west) + (0,0.3)$) 
+            -- ($ (lrnn_\start.east) + (0,0.3)   $);
+    }
+
+
+
+
+%    \foreach \step [count=\i from 0] in {4,...,7} {
+%        \node[hid={3}{orange}] (rnn_\step) 
+%            at (\stepsize *\step, \lvlbase + \lvlheight) {};    
+%        \node at (\stepsize *\step, \lvlbase + \lvlheight) {$\xDecHid_\i$}; 
+%    }
+%
+%    \foreach \step in {1,...,6} {
+%        \draw[dep] (s\step.north) to (rnn_\step.south);
+%    }
+%    \foreach \start [count=\stop from 2] in {1,...,5} {
+%        \draw[dep] (rnn_\start.east) to (rnn_\stop.west);
+%    }
+%
+%
+%%    \foreach \step [count=\i from 1] in {4,...,6} {
+%%        \node[hid={3}{green}] (ctx_\i) 
+%%            at (\stepsize *\step, \lvlbase + 2*\lvlheight) {};    
+%%        \node at (\stepsize *\step, \lvlbase + 2*\lvlheight) {$\xPredHid_\i$}; 
+%%        \draw[dep] (rnn_\step.north) to (ctx_\i.south);
+%%        \draw[dep] (rnn_\i.north) to (ctx_\i.south west);
+%%        \node[sal={blue}] (sal_\i) at (\stepsize * \step,\lvlbase + 3*\lvlheight) {};
+%%        \node at (\stepsize * \step,\lvlbase + 3*\lvlheight) {$\bsal_\i$};
+%%        \draw[dep] (ctx_\i.north) to (sal_\i.south);
+%%    }
+%%
+%%    \foreach \step [count=\i from 1] in {5,...,6} {
+%%        \draw[dep] (sal_\i) -- (\stepsize * \step - \stepsize / 2,
+%%                            \lvlbase + 3*\lvlheight) 
+%%                     -- (\stepsize * \step - \stepsize / 2,
+%%                            \lvlbase + 0* \lvlheight) -> (s\step) ;
+%%
+%%    }
+%%    \draw[dep] (s1.south) -- ($ (s1.south) + (0,-0.3)$) --($ (s5.south) + (0,-0.3)$) -- (s5.south);
+%%
+%%    \draw[dep] (s2.south) -- ($ (s2.south) + (0,-0.5)$) --($ (s6.south) + (0,-0.5)$) -- (s6.south);
+%%
+%%    \draw[rectangle,draw=black,dotted] 
+%%        (\stepsize * 3.5,\lvlbase + 3.5*\lvlheight) -- 
+%%        (\stepsize*6.5, \lvlbase + 3.5*\lvlheight) -- 
+%%        (\stepsize*6.5, \lvlbase + 2.6*\lvlheight) --
+%%        (\stepsize*3.5, \lvlbase + 2.6*\lvlheight) --
+%%        (\stepsize*3.5, \lvlbase + 3.5*\lvlheight) ;
+%%
+%%    \node[align=left,anchor=north west] 
+%%        at (\stepsize * 3.5,\lvlbase + 3.5*\lvlheight) 
+%%        {\textit{Salience Estimates}};
+%%
+%%    \draw[rectangle,draw=black,dotted] 
+%%        (\stepsize*0.5,\lvlbase + 2.5*\lvlheight) -- 
+%%        (\stepsize*6.5, \lvlbase + 2.5*\lvlheight) -- 
+%%        (\stepsize*6.5, \lvlbase + 1.5*\lvlheight) --
+%%        (\stepsize*0.5, \lvlbase + 1.5*\lvlheight) --
+%%        (\stepsize*0.5, \lvlbase + 2.5*\lvlheight) ;
+%%
+%%    \node[align=left,anchor=north west] 
+%%        at (\stepsize * 0.5,\lvlbase + 2.5*\lvlheight) 
+%%        {\textit{Contextual Sentence Embeddings}};
+%%
+%%    \draw[rectangle,draw=black,dotted] 
+%%        (\stepsize*-0.5,\lvlbase + 0.5*\lvlheight) -- 
+%%        (\stepsize*3.5, \lvlbase + 0.5*\lvlheight) -- 
+%%        (\stepsize*3.5, \lvlbase + -0.9*\lvlheight) --
+%%        (\stepsize*-0.5, \lvlbase + -0.9*\lvlheight) --
+%%        (\stepsize*-0.5, \lvlbase + 0.5*\lvlheight) ;
+%%
+%%    \node[align=left,anchor=south west] 
+%%        at (\stepsize * -0.5,\lvlbase + -0.9*\lvlheight) 
+%%        {\textit{Sentence Embeddings}\\\textit{(Sentence Encoder Output)}};
+%%
+%%    \draw[rectangle,draw=black,dotted] 
+%%        (\stepsize*4.3,\lvlbase + 0.5*\lvlheight) -- 
+%%        (\stepsize*6.5, \lvlbase + 0.5*\lvlheight) -- 
+%%        (\stepsize*6.5, \lvlbase + -0.9*\lvlheight) --
+%%        (\stepsize*4.3, \lvlbase + -0.9*\lvlheight) --
+%%        (\stepsize*4.3, \lvlbase + 0.5*\lvlheight) ;
+%%
+%%    \node[align=left,anchor=south west] 
+%%        at (\stepsize * 4.3,\lvlbase + -0.9*\lvlheight) 
+%%        {\textit{Salience Gated}\\\textit{Sentence Embeddings}};
+%%
+
+    
+
+
+
+\end{tikzpicture}
+
+\begin{tikzpicture}[
+  dep/.style ={
+    ->,line width=0.3mm
+  },
+  hid/.style 2 args={
+    rectangle split,
+    draw=#2,
+    rectangle split parts=#1,
+    fill=#2!20,
+    minimum width=5mm,
+    minimum height=5mm,
+    outer sep=2mm},
+  mlp/.style 2 args={
+    rectangle split,
+    rectangle split horizontal,
+    draw=#2,
+    rectangle split parts=#1,
+    fill=#2!20,
+    outer sep=2mm},
+  sal/.style={
+    circle, 
+    minimum width=8mm,
+    outer sep=2mm,
+    draw=#1, 
+    fill=#1!20},
+]
+
+  \def\stepsize{2}%
+  \def\lvlbase{0}%
+  \def\lvlheight{3}%
+ 
+
+    \node[hid={3}{green}] (s0) at (\stepsize*0, \lvlbase) {};    
+    \node at (\stepsize*0, \lvlbase) {$\sentEmb_0$};    
+
+
+    \node[hid={3}{green}] (s4) at (\stepsize*4, \lvlbase) {};    
+    \node at (\stepsize*4, \lvlbase) {$\sentEmb_0$};    
+
+    % Sentence Embeddings    
+  \foreach \step in {1,...,3} {
+    \node[hid={3}{green}] (s\step) at (\stepsize*\step, \lvlbase) {};    
+    \node at (\stepsize*\step, \lvlbase) {$\sentEmb_\step$};    
+   }
+%    \foreach \step [count=\i from 1] in {5,...,7} {
+%        \node[hid={3}{green}] (s\step) at (\stepsize*\step, \lvlbase) {};    
+%        \node at (\stepsize*\step, \lvlbase) {$\sentEmb_\i$};    
+%    %\draw[->] (i\step.north) -> (e\step.south);
+%    }
+
+%       \node[hid={3}{red}] (s4) at (\stepsize*4, \lvlbase) {};    
+%       \node at (\stepsize*4, \lvlbase) {$\sentEmb_0$};    
+%
+%    % RNN hidden states
+
+        \node[hid={3}{yellow}] (rrnn_0) 
+            at (\stepsize *0+0.5, \lvlbase + \lvlheight) {};    
+        \node at (\stepsize *0+0.5, \lvlbase + \lvlheight) 
+            {$\stsextRDecHid_0$}; 
+
+        \node[hid={3}{yellow}] (lrnn_4) 
+            at (\stepsize *4-0.5, \lvlbase + \lvlheight+1.0) {};    
+        \node at (\stepsize *4-0.5, \lvlbase + \lvlheight+1.0) 
+            {$\stsextLDecHid_4$}; 
+
+        \node[hid={3}{yellow}] (rrnn_m1) 
+            at (-\stepsize +0.5, \lvlbase + \lvlheight) {};    
+        \node at (-\stepsize +0.5, \lvlbase + \lvlheight) 
+            {$\stsextREncHid_3$}; 
+
+        \node[hid={3}{yellow}] (lrnn_m1) 
+            at (\stepsize*5 -0.5, \lvlbase + \lvlheight+1.0) {};    
+        \node at (\stepsize*5 -0.5, \lvlbase + \lvlheight+1.0) 
+            {$\stsextLEncHid_1$}; 
+
+
+
+    \foreach \step in {1,...,3} {
+        \node[hid={3}{yellow}] (rrnn_\step) 
+            at (\stepsize *\step+0.5, \lvlbase + \lvlheight) {};    
+        \node at (\stepsize *\step+0.5, \lvlbase + \lvlheight) 
+            {$\stsextRDecHid_\step$}; 
+
+        \node[hid={3}{yellow}] (lrnn_\step) 
+            at (\stepsize *\step-0.5, \lvlbase + \lvlheight+1.0) {};    
+        \node at (\stepsize *\step-0.5, \lvlbase + \lvlheight+1.0) 
+            {$\stsextLDecHid_\step$}; 
+
+
+        \node[hid={3}{yellow}] (enc_ctx_\step) 
+            at (\stepsize *\step, \lvlbase + 2.5*\lvlheight) {};    
+        \node at (\stepsize *\step, \lvlbase + 2.5*\lvlheight) 
+            {$\stsextDecHid_\step$}; 
+
+        \draw[dep] (s\step.north) -- (lrnn_\step.south);
+        \draw[dep] (s\step.north) -- (rrnn_\step.south);
+
+        \draw[dep] (lrnn_\step.north) -- (enc_ctx_\step.south);
+        \draw[dep] (rrnn_\step.north) -- (enc_ctx_\step.south);
+    }
+    \foreach \start [count=\stop from 2] in {1,...,2} {
+        \draw[dep] ($ (rrnn_\start.east) - (0,0.3)$) 
+            -- ($ (rrnn_\stop.west) - (0,0.3) $);
+        \draw[dep] ($(lrnn_\stop.west) + (0,0.3)$) 
+            -- ($ (lrnn_\start.east) + (0,0.3)   $);
+    }
+
+
+
+
+%    \foreach \step [count=\i from 0] in {4,...,7} {
+%        \node[hid={3}{orange}] (rnn_\step) 
+%            at (\stepsize *\step, \lvlbase + \lvlheight) {};    
+%        \node at (\stepsize *\step, \lvlbase + \lvlheight) {$\xDecHid_\i$}; 
+%    }
+%
+%    \foreach \step in {1,...,6} {
+%        \draw[dep] (s\step.north) to (rnn_\step.south);
+%    }
+%    \foreach \start [count=\stop from 2] in {1,...,5} {
+%        \draw[dep] (rnn_\start.east) to (rnn_\stop.west);
+%    }
+%
+%
+%%    \foreach \step [count=\i from 1] in {4,...,6} {
+%%        \node[hid={3}{green}] (ctx_\i) 
+%%            at (\stepsize *\step, \lvlbase + 2*\lvlheight) {};    
+%%        \node at (\stepsize *\step, \lvlbase + 2*\lvlheight) {$\xPredHid_\i$}; 
+%%        \draw[dep] (rnn_\step.north) to (ctx_\i.south);
+%%        \draw[dep] (rnn_\i.north) to (ctx_\i.south west);
+%%        \node[sal={blue}] (sal_\i) at (\stepsize * \step,\lvlbase + 3*\lvlheight) {};
+%%        \node at (\stepsize * \step,\lvlbase + 3*\lvlheight) {$\bsal_\i$};
+%%        \draw[dep] (ctx_\i.north) to (sal_\i.south);
+%%    }
+%%
+%%    \foreach \step [count=\i from 1] in {5,...,6} {
+%%        \draw[dep] (sal_\i) -- (\stepsize * \step - \stepsize / 2,
+%%                            \lvlbase + 3*\lvlheight) 
+%%                     -- (\stepsize * \step - \stepsize / 2,
+%%                            \lvlbase + 0* \lvlheight) -> (s\step) ;
+%%
+%%    }
+%%    \draw[dep] (s1.south) -- ($ (s1.south) + (0,-0.3)$) --($ (s5.south) + (0,-0.3)$) -- (s5.south);
+%%
+%%    \draw[dep] (s2.south) -- ($ (s2.south) + (0,-0.5)$) --($ (s6.south) + (0,-0.5)$) -- (s6.south);
+%%
+%%    \draw[rectangle,draw=black,dotted] 
+%%        (\stepsize * 3.5,\lvlbase + 3.5*\lvlheight) -- 
+%%        (\stepsize*6.5, \lvlbase + 3.5*\lvlheight) -- 
+%%        (\stepsize*6.5, \lvlbase + 2.6*\lvlheight) --
+%%        (\stepsize*3.5, \lvlbase + 2.6*\lvlheight) --
+%%        (\stepsize*3.5, \lvlbase + 3.5*\lvlheight) ;
+%%
+%%    \node[align=left,anchor=north west] 
+%%        at (\stepsize * 3.5,\lvlbase + 3.5*\lvlheight) 
+%%        {\textit{Salience Estimates}};
+%%
+%%    \draw[rectangle,draw=black,dotted] 
+%%        (\stepsize*0.5,\lvlbase + 2.5*\lvlheight) -- 
+%%        (\stepsize*6.5, \lvlbase + 2.5*\lvlheight) -- 
+%%        (\stepsize*6.5, \lvlbase + 1.5*\lvlheight) --
+%%        (\stepsize*0.5, \lvlbase + 1.5*\lvlheight) --
+%%        (\stepsize*0.5, \lvlbase + 2.5*\lvlheight) ;
+%%
+%%    \node[align=left,anchor=north west] 
+%%        at (\stepsize * 0.5,\lvlbase + 2.5*\lvlheight) 
+%%        {\textit{Contextual Sentence Embeddings}};
+%%
+%%    \draw[rectangle,draw=black,dotted] 
+%%        (\stepsize*-0.5,\lvlbase + 0.5*\lvlheight) -- 
+%%        (\stepsize*3.5, \lvlbase + 0.5*\lvlheight) -- 
+%%        (\stepsize*3.5, \lvlbase + -0.9*\lvlheight) --
+%%        (\stepsize*-0.5, \lvlbase + -0.9*\lvlheight) --
+%%        (\stepsize*-0.5, \lvlbase + 0.5*\lvlheight) ;
+%%
+%%    \node[align=left,anchor=south west] 
+%%        at (\stepsize * -0.5,\lvlbase + -0.9*\lvlheight) 
+%%        {\textit{Sentence Embeddings}\\\textit{(Sentence Encoder Output)}};
+%%
+%%    \draw[rectangle,draw=black,dotted] 
+%%        (\stepsize*4.3,\lvlbase + 0.5*\lvlheight) -- 
+%%        (\stepsize*6.5, \lvlbase + 0.5*\lvlheight) -- 
+%%        (\stepsize*6.5, \lvlbase + -0.9*\lvlheight) --
+%%        (\stepsize*4.3, \lvlbase + -0.9*\lvlheight) --
+%%        (\stepsize*4.3, \lvlbase + 0.5*\lvlheight) ;
+%%
+%%    \node[align=left,anchor=south west] 
+%%        at (\stepsize * 4.3,\lvlbase + -0.9*\lvlheight) 
+%%        {\textit{Salience Gated}\\\textit{Sentence Embeddings}};
+%%
+
+    
+
+
+
+\end{tikzpicture}
+
+
+
+\begin{tikzpicture}[
+  dep/.style ={
+    ->,line width=0.3mm
+  },
+  hid/.style 2 args={
+    rectangle split,
+    draw=#2,
+    rectangle split parts=#1,
+    fill=#2!20,
+    minimum width=5mm,
+    minimum height=5mm,
+    outer sep=2mm},
+  mlp/.style 2 args={
+    rectangle split,
+    rectangle split horizontal,
+    draw=#2,
+    rectangle split parts=#1,
+    fill=#2!20,
+    outer sep=2mm},
+  sal/.style={
+    circle, 
+    minimum width=8mm,
+    outer sep=2mm,
+    draw=#1, 
+    fill=#1!20},
+]
+
+  \def\stepsize{3}%
+  \def\lvlbase{0}%
+  \def\lvlheight{3}%
+ 
+
+
+    % Sentence Embeddings    
+  \foreach \step in {1,...,3} {
+    \node[hid={3}{green}] (enc\step) at (\stepsize*\step, \lvlbase) {};    
+    \node at (\stepsize*\step, \lvlbase) {$\stsextEncHid_\step$};    
+   }
+
+  \foreach \step in {1,...,3} {
+    \node[hid={1}{yellow}] (a\step) at (\stepsize*\step-0.5*\stepsize, \lvlbase) {};    
+    \node at (\stepsize*\step-0.5*\stepsize, \lvlbase) {$\stsextAttn_{i,\step}$};    
+
+    \draw[dep] (enc\step.west) to (a\step.east);
+   }
+
+
+    \node[hid={3}{orange}] (deci) at (\stepsize*4, \lvlbase) {};    
+    \node at (\stepsize*4, \lvlbase) {$\stsextDecHid_i$};    
+
+    \draw[dep] (deci.south) to [out=270,in=270] (a3.south);
+    \draw[dep] (deci.south) to [out=270,in=270] (a2.south);
+    \draw[dep] (deci.south) to [out=270,in=270] (a1.south);
+
+    \node[hid={3}{yellow}] (encattn) at (\stepsize*3, \lvlbase+\lvlheight) {};    
+    \node at (\stepsize*3, \lvlbase+\lvlheight) {$\stsextAttnHid_i$};    
+
+
+    \node[hid={3}{yellow}] (encattn) at (\stepsize*4, \lvlbase+\lvlheight) {};    
+    \node at (\stepsize*4, \lvlbase+\lvlheight) {$\stsextHid_i$};    
+
+        \node[sal={blue}] at (\stepsize * 5,\lvlbase + \lvlheight) {};
+        \node at (\stepsize * 5,\lvlbase + \lvlheight) {$\bsal_i$};
+%  \foreach \step [count=\i from 1] in {4,...,6} {
+%    \node[hid={3}{green}] (s\i) at (\stepsize*\step-0.5*\stepsize, \lvlbase) {};    
+%    \node at (\stepsize*\step-0.5*\stepsize, \lvlbase) {$\stsextDecHid_\i$};    
+%   }
+%
+%  \foreach \step [count=\i from 1]  in {2,...,4} {
+%    \node[hid={3}{green}] (s\i) at (\stepsize*\step, \lvlbase+\lvlheight) {};    
+%    \node at (\stepsize*\step, \lvlbase+\lvlheight) {$\stsextAttnHid_\i$};    
+%   }
+%
+
+
+
+%    \foreach \step [count=\i from 1] in {5,...,7} {
+%        \node[hid={3}{green}] (s\step) at (\stepsize*\step, \lvlbase) {};    
+%        \node at (\stepsize*\step, \lvlbase) {$\sentEmb_\i$};    
+%    %\draw[->] (i\step.north) -> (e\step.south);
+%    }
+
+%       \node[hid={3}{red}] (s4) at (\stepsize*4, \lvlbase) {};    
+%       \node at (\stepsize*4, \lvlbase) {$\sentEmb_0$};    
+%
+%    % RNN hidden states
+
+%        \node[hid={3}{yellow}] (rrnn_0) 
+%            at (\stepsize *0+0.5, \lvlbase + \lvlheight) {};    
+%        \node at (\stepsize *0+0.5, \lvlbase + \lvlheight) 
+%            {$\stsextRDecHid_0$}; 
+%
+%        \node[hid={3}{yellow}] (lrnn_4) 
+%            at (\stepsize *4-0.5, \lvlbase + \lvlheight+1.0) {};    
+%        \node at (\stepsize *4-0.5, \lvlbase + \lvlheight+1.0) 
+%            {$\stsextLDecHid_4$}; 
+%
+%        \node[hid={3}{yellow}] (rrnn_m1) 
+%            at (-\stepsize +0.5, \lvlbase + \lvlheight) {};    
+%        \node at (-\stepsize +0.5, \lvlbase + \lvlheight) 
+%            {$\stsextREncHid_3$}; 
+%
+%        \node[hid={3}{yellow}] (lrnn_m1) 
+%            at (\stepsize*5 -0.5, \lvlbase + \lvlheight+1.0) {};    
+%        \node at (\stepsize*5 -0.5, \lvlbase + \lvlheight+1.0) 
+%            {$\stsextLEncHid_1$}; 
+%
+%
+%
+%    \foreach \step in {1,...,3} {
+%        \node[hid={3}{yellow}] (rrnn_\step) 
+%            at (\stepsize *\step+0.5, \lvlbase + \lvlheight) {};    
+%        \node at (\stepsize *\step+0.5, \lvlbase + \lvlheight) 
+%            {$\stsextRDecHid_\step$}; 
+%
+%        \node[hid={3}{yellow}] (lrnn_\step) 
+%            at (\stepsize *\step-0.5, \lvlbase + \lvlheight+1.0) {};    
+%        \node at (\stepsize *\step-0.5, \lvlbase + \lvlheight+1.0) 
+%            {$\stsextLDecHid_\step$}; 
+%
+%
+%        \node[hid={3}{yellow}] (enc_ctx_\step) 
+%            at (\stepsize *\step, \lvlbase + 2.5*\lvlheight) {};    
+%        \node at (\stepsize *\step, \lvlbase + 2.5*\lvlheight) 
+%            {$\stsextDecHid_\step$}; 
+%
+%        \draw[dep] (s\step.north) -- (lrnn_\step.south);
+%        \draw[dep] (s\step.north) -- (rrnn_\step.south);
+%
+%        \draw[dep] (lrnn_\step.north) -- (enc_ctx_\step.south);
+%        \draw[dep] (rrnn_\step.north) -- (enc_ctx_\step.south);
+%    }
+%    \foreach \start [count=\stop from 2] in {1,...,2} {
+%        \draw[dep] ($ (rrnn_\start.east) - (0,0.3)$) 
+%            -- ($ (rrnn_\stop.west) - (0,0.3) $);
+%        \draw[dep] ($(lrnn_\stop.west) + (0,0.3)$) 
+%            -- ($ (lrnn_\start.east) + (0,0.3)   $);
+%    }
+%
+%
+%
+%
+%%    \foreach \step [count=\i from 0] in {4,...,7} {
+%%        \node[hid={3}{orange}] (rnn_\step) 
+%%            at (\stepsize *\step, \lvlbase + \lvlheight) {};    
+%%        \node at (\stepsize *\step, \lvlbase + \lvlheight) {$\xDecHid_\i$}; 
+%%    }
+%%
+%%    \foreach \step in {1,...,6} {
+%%        \draw[dep] (s\step.north) to (rnn_\step.south);
+%%    }
+%%    \foreach \start [count=\stop from 2] in {1,...,5} {
+%%        \draw[dep] (rnn_\start.east) to (rnn_\stop.west);
+%%    }
+%%
+%%
+%%%    \foreach \step [count=\i from 1] in {4,...,6} {
+%%%        \node[hid={3}{green}] (ctx_\i) 
+%%%            at (\stepsize *\step, \lvlbase + 2*\lvlheight) {};    
+%%%        \node at (\stepsize *\step, \lvlbase + 2*\lvlheight) {$\xPredHid_\i$}; 
+%%%        \draw[dep] (rnn_\step.north) to (ctx_\i.south);
+%%%        \draw[dep] (rnn_\i.north) to (ctx_\i.south west);
+%%%        \node[sal={blue}] (sal_\i) at (\stepsize * \step,\lvlbase + 3*\lvlheight) {};
+%%%        \node at (\stepsize * \step,\lvlbase + 3*\lvlheight) {$\bsal_\i$};
+%%%        \draw[dep] (ctx_\i.north) to (sal_\i.south);
+%%%    }
+%%%
+%%%    \foreach \step [count=\i from 1] in {5,...,6} {
+%%%        \draw[dep] (sal_\i) -- (\stepsize * \step - \stepsize / 2,
+%%%                            \lvlbase + 3*\lvlheight) 
+%%%                     -- (\stepsize * \step - \stepsize / 2,
+%%%                            \lvlbase + 0* \lvlheight) -> (s\step) ;
+%%%
+%%%    }
+%%    \draw[dep] (s1.south) -- ($ (s1.south) + (0,-0.3)$) --($ (s5.south) + (0,-0.3)$) -- (s5.south);
+%%
+%%    \draw[dep] (s2.south) -- ($ (s2.south) + (0,-0.5)$) --($ (s6.south) + (0,-0.5)$) -- (s6.south);
+%%
+%%    \draw[rectangle,draw=black,dotted] 
+%%        (\stepsize * 3.5,\lvlbase + 3.5*\lvlheight) -- 
+%%        (\stepsize*6.5, \lvlbase + 3.5*\lvlheight) -- 
+%%        (\stepsize*6.5, \lvlbase + 2.6*\lvlheight) --
+%%        (\stepsize*3.5, \lvlbase + 2.6*\lvlheight) --
+%%        (\stepsize*3.5, \lvlbase + 3.5*\lvlheight) ;
+%%
+%%    \node[align=left,anchor=north west] 
+%%        at (\stepsize * 3.5,\lvlbase + 3.5*\lvlheight) 
+%%        {\textit{Salience Estimates}};
+%%
+%%    \draw[rectangle,draw=black,dotted] 
+%%        (\stepsize*0.5,\lvlbase + 2.5*\lvlheight) -- 
+%%        (\stepsize*6.5, \lvlbase + 2.5*\lvlheight) -- 
+%%        (\stepsize*6.5, \lvlbase + 1.5*\lvlheight) --
+%%        (\stepsize*0.5, \lvlbase + 1.5*\lvlheight) --
+%%        (\stepsize*0.5, \lvlbase + 2.5*\lvlheight) ;
+%%
+%%    \node[align=left,anchor=north west] 
+%%        at (\stepsize * 0.5,\lvlbase + 2.5*\lvlheight) 
+%%        {\textit{Contextual Sentence Embeddings}};
+%%
+%%    \draw[rectangle,draw=black,dotted] 
+%%        (\stepsize*-0.5,\lvlbase + 0.5*\lvlheight) -- 
+%%        (\stepsize*3.5, \lvlbase + 0.5*\lvlheight) -- 
+%%        (\stepsize*3.5, \lvlbase + -0.9*\lvlheight) --
+%%        (\stepsize*-0.5, \lvlbase + -0.9*\lvlheight) --
+%%        (\stepsize*-0.5, \lvlbase + 0.5*\lvlheight) ;
+%%
+%%    \node[align=left,anchor=south west] 
+%%        at (\stepsize * -0.5,\lvlbase + -0.9*\lvlheight) 
+%%        {\textit{Sentence Embeddings}\\\textit{(Sentence Encoder Output)}};
+%%
+%%    \draw[rectangle,draw=black,dotted] 
+%%        (\stepsize*4.3,\lvlbase + 0.5*\lvlheight) -- 
+%%        (\stepsize*6.5, \lvlbase + 0.5*\lvlheight) -- 
+%%        (\stepsize*6.5, \lvlbase + -0.9*\lvlheight) --
+%%        (\stepsize*4.3, \lvlbase + -0.9*\lvlheight) --
+%%        (\stepsize*4.3, \lvlbase + 0.5*\lvlheight) ;
+%%
+%%    \node[align=left,anchor=south west] 
+%%        at (\stepsize * 4.3,\lvlbase + -0.9*\lvlheight) 
+%%        {\textit{Salience Gated}\\\textit{Sentence Embeddings}};
+%%
+
+    
+
+
+
+\end{tikzpicture}
+
+
+\end{figure}

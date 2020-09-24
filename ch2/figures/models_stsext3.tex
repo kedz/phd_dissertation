@@ -1,0 +1,139 @@
+\begin{figure}[p]
+\fbox{\begin{minipage}{\textwidth}
+\center
+\scalebox{0.75}{
+\begin{tikzpicture}[
+  dep/.style ={
+    ->,line width=0.3mm
+  },
+  hid/.style 2 args={
+    rectangle split,
+    draw=#2,
+    rectangle split parts=#1,
+    fill=#2!20,
+    minimum width=5mm,
+    minimum height=5mm,
+    outer sep=2mm},
+  mlp/.style 2 args={
+    rectangle split,
+    rectangle split horizontal,
+    draw=#2,
+    rectangle split parts=#1,
+    fill=#2!20,
+    outer sep=2mm},
+  sal/.style={
+    circle, 
+    minimum width=8mm,
+    outer sep=2mm,
+    draw=#1, 
+    fill=#1!20},
+]
+
+  \def\stepsize{3}%
+  \def\lvlbase{0}%
+  \def\lvlheight{3}%
+ 
+
+
+    % Sentence Embeddings    
+  \foreach \step in {1,...,3} {
+    \node[hid={3}{encctxemb}] (enc\step) at (\stepsize*\step, \lvlbase) {};    
+    \node at (\stepsize*\step, \lvlbase) {$\stsextEncHid_\step$};    
+   }
+
+  \foreach \step in {1,...,3} {
+    \node[hid={1}{yellow}] (a\step) at (\stepsize*\step-0.5*\stepsize, \lvlbase) {};    
+    \node at (\stepsize*\step-0.5*\stepsize, \lvlbase) {$\stsextAttn_{i,\step}$};    
+
+    \draw[dep] (enc\step.west) to (a\step.east);
+   }
+
+
+    \node[hid={3}{decctxemb}] (deci) at (\stepsize*4, \lvlbase) {};    
+    \node at (\stepsize*4, \lvlbase) {$\stsextDecHid_i$};    
+
+
+    \draw[dep] (deci.south) to [out=270,in=270] (a3.south);
+    \draw[dep] (deci.south) to [out=270,in=270] (a2.south);
+    \draw[dep] (deci.south) to [out=270,in=270] (a1.south);
+
+    \node[hid={3}{yellow}] (encattn) at (\stepsize*2, \lvlbase+\lvlheight) {};    
+    \node at (\stepsize*2, \lvlbase+\lvlheight) {$\stsextAttnHid_i$};    
+
+
+    \node[hid={3}{ctxemb}] (ctxi) at (\stepsize*4, \lvlbase+\lvlheight) {};    
+    \node at (\stepsize*4, \lvlbase+\lvlheight) {$\stsextHid_i$};    
+
+        \node[sal={sal}] (sal) at (\stepsize * 5,\lvlbase + \lvlheight) {};
+        \node at (\stepsize * 5,\lvlbase + \lvlheight) {$\psal_i$};
+
+    \draw[dep] (ctxi) to (sal);
+    \draw[dep] (deci.north) to (ctxi.south);
+    \draw[dep] (encattn.east) to (ctxi.west);
+
+    \node[text width=2.3cm] (info) at (0,\lvlbase + \lvlheight) {\textit{Encoder Contextual Sentence Embeddings}};
+    \draw[dotted] (enc1.north west) to (info);
+    \draw[dotted] (enc2.north west) to (info);
+    \draw[dotted] (enc3.north west) to (info);
+    \node (info) at (0,\lvlbase - 1.5*\lvlheight) {\textit{(a) Attention Weights}};
+    \draw[dotted] (a1.south west) to (info);
+    \draw[dotted] (a2.south west) to (info);
+    \draw[dotted] (a3.south west) to (info);
+
+    \foreach \step in {1,...,3} {
+        \draw[dep] (a\step.north) to (encattn.south);
+        \draw[dep] (enc\step.north) to (encattn.south);
+    }
+
+
+    \node[align=left,anchor=north west,text width=5.5cm] at (\stepsize*2-2.1,2.0*\lvlheight+\lvlbase)
+    {\textit{(b) Attention-weighted \phantom{(b) }Encoder Sentence \phantom{(b) }Embedding}};
+\draw[rectangle,draw=black,dotted] 
+        (\stepsize*2.0-2.1, \lvlbase + 2.0*\lvlheight) -- 
+        (\stepsize*2.0+2.1, \lvlbase + 2.0*\lvlheight) -- 
+        (\stepsize*2.0+2.1, \lvlbase + 0.6*\lvlheight) --
+        (\stepsize*2.0-2.1, \lvlbase + 0.6*\lvlheight) --
+        (\stepsize*2.0-2.1, \lvlbase + 2.0*\lvlheight) ;
+
+
+
+
+    \node[align=left,anchor=north west,text width=2.5cm] at (\stepsize*4-1.4,2.0*\lvlheight+\lvlbase)
+    {\textit{(c) Contextual \phantom{(c) }Sentence \phantom{(c) }Embedding}};
+\draw[rectangle,draw=black,dotted] 
+        (\stepsize*4.0-1.4, \lvlbase + 2.0*\lvlheight) -- 
+        (\stepsize*4.0+1.4, \lvlbase + 2.0*\lvlheight) -- 
+        (\stepsize*4.0+1.4, \lvlbase + 0.6*\lvlheight) --
+        (\stepsize*4.0-1.4, \lvlbase + 0.6*\lvlheight) --
+        (\stepsize*4.0-1.4, \lvlbase + 2.0*\lvlheight) ;
+
+
+    \node[align=left,anchor=north west,text width=2.5cm] at (\stepsize*5-1.4,2.0*\lvlheight+\lvlbase)
+{\textit{(d) Salience \phantom{(d) }Estimate}};
+\draw[rectangle,draw=black,dotted] 
+        (\stepsize*5.0-1.4, \lvlbase + 2.0*\lvlheight) -- 
+        (\stepsize*5.0+1.4, \lvlbase + 2.0*\lvlheight) -- 
+        (\stepsize*5.0+1.4, \lvlbase + 0.6*\lvlheight) --
+        (\stepsize*5.0-1.4, \lvlbase + 0.6*\lvlheight) --
+        (\stepsize*5.0-1.4, \lvlbase + 2.0*\lvlheight) ;
+
+
+    \draw[rectangle,draw=black,dotted] 
+        (\stepsize*4.0-1.4, \lvlbase + 0.4*\lvlheight) -- 
+        (\stepsize*5.0+1.4, \lvlbase + 0.4*\lvlheight) -- 
+        (\stepsize*5.0+1.4, \lvlbase - 0.6*\lvlheight) --
+        (\stepsize*4.0-1.4, \lvlbase - 0.6*\lvlheight) --
+        (\stepsize*4.0-1.4, \lvlbase + 0.4*\lvlheight) ;
+
+
+    \node[align=left,anchor=north east,text width=2.5cm] at (\stepsize*5+1.4,0.4*\lvlheight + \lvlbase)
+    {\textit{\phantom{(a) }Decoder \phantom{(a) }Contextual \phantom{(a) }Sentence \phantom{(a) }Embedding}};
+
+
+\end{tikzpicture}}
+\caption{Attention layer, contextual sentence embedding, and salience
+estimation layer for the \stsext~extractor.}
+\label{fig:stsext3}
+\end{minipage}}
+\end{figure}
+
