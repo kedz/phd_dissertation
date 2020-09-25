@@ -18,7 +18,7 @@ structure of the encoder and closely following the subsequent
 equations can be found in \autoref{fig:clext}.
 
 The encoder is fairly standard. The initial state is initialized to
-a zero embedding, and each sentence embedding $\sentEmb_i$ is fed into 
+a zero embedding, $\zeroEmb$, and each sentence embedding $\sentEmb_i$ is fed into 
 the encoder, to obtain the final encoder hidden state $\xEncHid_\docSize \in \reals^\xhidSize$ . That is,
 \begin{align}
     \textit{(a) Extractor -- Encoder} & \nonumber \\
@@ -39,8 +39,8 @@ to decoder step $i$, for $i >1$, are the salience gated $(i-1)^\textrm{th}$ sent
 \end{align}
 where the salience gate is 
 % p_i = p(y_i|y_1,...,y_i-1,h_1,...,h_n) %
-$\xweight_i = p(\bsal_i|\bsal_1,\ldots,\bsal_{i-1},
-                        \sentEmb_1,\ldots,\sentEmb_\docSize)$, is the
+$\xweight_i = \model(\bsal_i|\bsal_1,\ldots,\bsal_{i-1},
+                        \sentEmb_1,\ldots,\sentEmb_\docSize;\xParams)$, is the
                         salience estimate computed for sentence $\sent_{i-1}$.
                         For the first decoder step (i.e. $i=1$), since there is no $\xweight_0$, $\salSentEmb_0$ is a special learned parameter.
 
@@ -96,7 +96,7 @@ through another \feedforward~layer with logistic sigmoid activation,
 \begin{align}
     \textit{(e) Salience Estimates} & \nonumber\\
     \forall i : \;\; i \in \{1,\ldots,\docSize\}& \nonumber \\
- p_i = p(\bsal_i =1|\bsal_1,\ldots,\bsal_{i-1}, \sentEmb_1,\ldots,\sentEmb_\docSize) &= \sigma\left(\xpWeight^{(2)}\xPredHid_i + \xpBias^{(2)}  \right).
+ p_i = \model(\bsal_i =1|\bsal_1,\ldots,\bsal_{i-1}, \sentEmb_1,\ldots,\sentEmb_\docSize; \xParams) &= \sigma\left(\xpWeight^{(2)}\xPredHid_i + \xpBias^{(2)}  \right).
 \end{align}
 
 The contextual embedding and salience estimate layers have parameters are $\xpWeight^{(1)} \in \reals^{\xpHidSize \times 2 \xhidSize}$, $\xpBias^{(1)} \in \reals^{\xpHidSize}$, $\xpWeight^{(2)} \in \reals^{1 \times \xpHidSize}$, and $\xpBias^{(2)}\in \reals$.
@@ -110,8 +110,8 @@ The entire set of learned parameters for the \clext~extractor are
 The hidden layer dimensionality of the \gru~and the contextual embedding layer
 is 
 $\xhidSize = 300$ and $\xpHidSize=100$, respectively.
-{\color{red}Dropout with drop probability .25 is applied to the \gru~outputs
-($\xEncHid_i$ and $\xDecHid_i$),   and to $\xPredHid_i$.}
+Dropout with drop probability $0.25$ is applied to the \gru~outputs
+($\xEncHid_i$ and $\xDecHid_i$),   and to $\xPredHid_i$.
 
 %TODO
 %Note that in the original paper, the Cheng \& Lapata extractor was paired 

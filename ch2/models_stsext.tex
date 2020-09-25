@@ -117,7 +117,7 @@ contextual sentence embedding are then concatenated and fed through a
 \feedforward~layer to produce the $i^\textrm{th}$ contextual sentence
 embedding $\stsextHid_i$, which is itself fed through a final 
 \feedforward~layer to compute the $i^\textrm{th}$ salience estimate
-$\psal_i = p(\bsal_i=1|\sentEmb_1,\ldots,\sentEmb_\docSize)$,
+$\psal_i = \model(\bsal_i=1|\sentEmb_1,\ldots,\sentEmb_\docSize;\xParams)$,
 
 \vspace{10pt}   \noindent \textit{(Fig.~\ref{fig:stsext3}.c) Contextual Sentence Embedding} 
 \begin{align}
@@ -127,10 +127,13 @@ $\psal_i = p(\bsal_i=1|\sentEmb_1,\ldots,\sentEmb_\docSize)$,
         \stsextDecHid_i \end{array}\right] 
         + \stsextHidBias \right),
 \end{align}
+
+~\\
+
 \vspace{10pt} \noindent \textit{(Fig.~\ref{fig:stsext3}.d) Salience Estimate}
 \begin{align}
     \forall i : \;\; i \in \{1,\ldots,\docSize\} & \nonumber\\
-\psal_i =    p(\bsal_i=1|\sentEmb_1, \ldots,\sentEmb_\docSize)& = 
+\psal_i =    \model(\bsal_i=1|\sentEmb_1, \ldots,\sentEmb_\docSize;\xParams)& = 
             \sigma\left(\stsextPredWeight \stsextHid_i + \stsextPredBias  
             \right).
 \end{align}

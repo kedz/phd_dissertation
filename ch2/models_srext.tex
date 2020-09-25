@@ -3,11 +3,13 @@
 
 \citet{nallapati2017summarunner} proposed
 a sentence extractor, which we refer to as the \srext~Extractor,
-that factorizes the salience estimates into contributions 
+that factorizes the salience estimates for each sentence into contributions 
 from five different sources, which we refer to as \saliencefactors.
 The \saliencefactors~take into account interactions between 
 contextual sentence embeddings and document embeddings or summary embeddings,
-as well as sentence position embeddings.
+as well as sentence position embeddings. Salience estimates are made sequentially, starting with the first sentence $\sent_1$ and preceding to the last $\sent_\docSize$. When computing the salience estimate of sentence $\sent_i$, 
+the previous $i-1$ salience estimates are used to update the summary
+representation.
 
 In order to construct the contextual sentence embeddings, document 
 embeddings, and summary embeddings, the \srext~extractor first runs 
@@ -80,7 +82,7 @@ embeddings weighted by their salience estimates,
 \srSum_1 & = \zeroEmb, \\
 \srSum_i & = \tanh\left(\sum_{j=1}^{i-1} \psal_j \cdot \srHid_j\right).
 \end{align}
-where $\psal_j= p\left(\bsal_j=1|\bsal_1,\ldots,\bsal_{j-1},\sentEmb_1, \ldots, \sentEmb_\docSize\right)$ are previously computed salience estimates for
+where $\psal_j= \model\left(\bsal_j=1|\bsal_1,\ldots,\bsal_{j-1},\sentEmb_1, \ldots, \sentEmb_\docSize; \xParams\right)$ are previously computed salience estimates for
 sentences $\sent_1,\ldots,\sent_{i-1}$.
 
 \input{ch2/figures/models_sr2.tex}
@@ -91,7 +93,7 @@ Each salience estimate $\psal_i$ is calculated as the sum of five \saliencefacto
 \vspace{10pt}
     \noindent \textit{(Fig.~\ref{fig:sr4}) Salience Estimates}
 \begin{align}
-  \psal_i =  p(\bsal_i=1|\bsal_1,\dots,\bsal_{i-1},\sentEmb_1,\ldots,\sentEmb_\docSize)
+  \psal_i =  \model(\bsal_i=1|\bsal_1,\dots,\bsal_{i-1},\sentEmb_1,\ldots,\sentEmb_\docSize;\xParams)
          & = 
         \sigma\left(\srContentFactor_i 
         + \srSalienceFactor_i + \srNoveltyFactor_i
@@ -103,6 +105,7 @@ Each salience estimate $\psal_i$ is calculated as the sum of five \saliencefacto
 
 %\input{ch2/figures/models_sr1.tex}
 
+\pagebreak
 
 \begin{wrapfigure}{r}{0.50\textwidth}
     \fbox{\begin{minipage}{0.50\textwidth}
@@ -114,7 +117,7 @@ Each salience estimate $\psal_i$ is calculated as the sum of five \saliencefacto
                   \label{fig:srfactors}
           \end{minipage}}
 \end{wrapfigure}
-Each \saliencefactors~for content, centrality, and novelty are computed
+Salience factors for content, centrality, and novelty are computed
 %~$\phi_i^{(\cdot)}$ is computed 
 via the following equations for all $i \in \{1,\ldots,\docSize\}$,
 
@@ -160,7 +163,7 @@ The complete set of parameters for the \srext~extractor is
 \srDocWeight,\srDocBias, \srContentWeight, \srSalienceWeight, \srNoveltyWeight,
 \srFinePositionWeight, \srCoarsePositionWeight, \srFinePositionEmb_1,\ldots,\srFinePositionEmb_{\docSizeMax}, \srCoarsePositionEmb_1,\ldots,\srCoarsePositionEmb_4,\right\}. \]
 In our experiments, we set $\srRNNDim=300$, $\srRNNDim=100$, $\srPosDim=16$,
-and $\docSizeMax={\color{red}???}$. Dropout with drop probability of $.25$
+and $\docSizeMax={\color{red}???}$. Dropout with drop probability of $0.25$
 is applied to the \gru~outputs $\srrHid_i$ and $\srlHid_i$, as well as 
 the contextual sentence embeddings $\srHid_i$ for all $i \in \{1,\ldots,\docSize\}$.
 

@@ -76,7 +76,7 @@
         \draw[dep] (rnn_\step.north) to (ctx_\i.south);
         \draw[dep] (rnn_\i.north) to (ctx_\i.south west);
         \node[sal={sal}] (sal_\i) at (\stepsize * \step,\lvlbase + 3*\lvlheight) {};
-        \node at (\stepsize * \step,\lvlbase + 3*\lvlheight) {$\bsal_\i$};
+        \node at (\stepsize * \step,\lvlbase + 3*\lvlheight) {$\psal_\i$};
         \draw[dep] (ctx_\i.north) to (sal_\i.south);
     }
 

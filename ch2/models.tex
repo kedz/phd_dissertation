@@ -262,20 +262,27 @@ must be learned.}
 
 \subsection{Sentence Extractors} \label{sec:sext}
 
-The role of the sentence extractor is to map a sequence of sentence 
+The role of the sentence extractor, 
+$\sentExt(\cdot; \xParams) : \reals^{* \times \sentDim} \rightarrow \labelSpace$, is to map a
+sequence of sentence 
 embeddings 
     $\sentEmb_1,\ldots,\sentEmb_\docSize$ %h_1, ... , h_n%
 produced by the sentence encoder layer to a sequence of salience judgements 
-    $\bsal_1,\ldots, \bsal_\docSize$. %y_1, ..., y_n.%
-The sentence extractor is essentially a discriminative classifier 
-   $p(\bsal_1,\ldots, \bsal_\docSize | \sentEmb_1, \ldots, \sentEmb_\docSize)$.
+    $\bsals = \bsal_1,\ldots, \bsal_\docSize$. %y_1, ..., y_n.%
+    The proposed sentence extractors do this by first implementing a 
+    probability distribution over salience label sequences conditioned 
+    on, $\model(\bsals|\sentEmb_1,\ldots,\sentEmb_\docSize; \xParams)$, and then inferring the (approximate) maximum likelilhood
+    sequence $\predbsals \approx \argmax_{\bsals \in \labelSpace} \model(\bsals|\sentEmb_1,\ldots,\sentEmb_\docSize;\xParams)$.
+%    a mapping of sentence embeddings to a probability
+%The sentence extractor is essentially a discriminative classifier 
+%   $p(\bsal_1,\ldots, \bsal_\docSize | \sentEmb_1, \ldots, \sentEmb_\docSize)$.
    %p(y_1,...,y_n|h_1,...,h_n).%
 Previous neural network approaches to sentence extraction have assumed 
 an \autoregressive~model, leading to a semi-Markovian factorization of the 
-extractor probabilities 
-  \[p(\bsal_{1},\ldots,\bsal_\docSize|\sentEmb_1,\ldots,\sentEmb_\docSize)=
+salience label distribution
+  \[\model(\bsal_{1},\ldots,\bsal_\docSize|\sentEmb_1,\ldots,\sentEmb_\docSize;\xParams)=
       \prod_{i=1}^\docSize 
-        p(\bsal_i|\bsal_1,\ldots,\bsal_{i-1},\sentEmb_1,\ldots,\sentEmb_\docSize),\]
+        \model(\bsal_i|\bsal_1,\ldots,\bsal_{i-1},\sentEmb_1,\ldots,\sentEmb_\docSize;\xParams),\]
 where each prediction $\bsal_i$ is dependent on 
 \emph{all} 
 previous $\bsal_j$ for
@@ -291,25 +298,25 @@ practice. For example, in the models of
 predictions of $\bsal_i$ are made using information from some or all of 
 the sentence embeddings $\sentEmb_1, \ldots, \sentEmb_\docSize$, such that 
 information about neighboring sentences could be propagated through sentence
-embedding interactions. 
+embedding interactions rather than on previous salience decisions.
 
 The semi-Markovian factorization is not without
 other consequences. Because intermediate sentence extractor representations
 depend on prior extraction decisions $\bsal_i$, exact test time inference of
 $\predbsals = \argmax_{\bsals \in \bSalSpace} 
-p(\bsals|\sentEmb_1,\ldots,\sentEmb_\docSize)$
+\model(\bsals|\sentEmb_1,\ldots,\sentEmb_\docSize;\xParams)$
 becomes intractable. Additionally, from an efficiency perspective, 
 the semi-Markovian factorization prevents parallelization of individual
 $\bsal_i$ predictions, since they must now be sequentially computed.
 
 Motivated by these considerations, we propose two \nonautoregressive~sentence
-extractor architectures where inidividual extraction labels $\bsal_i$ 
+extractor architectures where inidividual salience labels $\bsal_i$ 
 are independent of each other, that is, 
-\[p(\bsal_1,\ldots,\bsal_\docSize|\sentEmb_1,\ldots,\sentEmb_\docSize) = \prod_{i=1}^\docSize 
-p(\bsal_i|\sentEmb_1,\ldots,\sentEmb_\docSize).\]
-We now describe introduce the
-previously proposed \autoregressive~sentence extractors ( ) before describing
-our proposed \nonautoregressive~ones ({\color{red} Names here} ).
+\[\model(\bsal_1,\ldots,\bsal_\docSize|\sentEmb_1,\ldots,\sentEmb_\docSize;\xParams) = \prod_{i=1}^\docSize 
+\model(\bsal_i|\sentEmb_1,\ldots,\sentEmb_\docSize;\xParams).\]
+We now describe  the
+previously proposed \autoregressive~sentence extractors (the \clext~extractor and  the \srext~extractor) before describing
+our proposed \nonautoregressive~ones (the \rnnext~extractor and the \stsext~extractor).
 
 
 %  which we explore in two proposed extractor models that we refer to as the 
@@ -339,6 +346,18 @@ our proposed \nonautoregressive~ones ({\color{red} Names here} ).
 
 \input{ch2/models_stsext.tex}
 
+
+\section{Comparison of Sentence Extractors}
+
+At first, each sentence extractor architecture can feel \latin{sui generis}
+or bespoke, without one having much in common with the other. However,
+at their core, they all take context-free\footnote{Here we mean that 
+    the sentence embedding $\sentEmb_i$ 
+    is constructed using only the words from sentence $\sent_i$ and no 
+other surrounding document information.} sentence embeddings $\sentEmb_1,\ldots,
+\sentEmb_\docSize$ and produce contextual sentence embeddings 
+$\xHid_i$ that contain information propagated from neighboring sentence 
+embeddings $\sentEmb_1,\ldots,\sentEmb_{i_1},\sentEmb_{i+1},\ldots,\sentEmb_\docSize$ and possibly previous salience estimates $\psal_1,\ldots,\psal_{i-1}$.
 
 
 

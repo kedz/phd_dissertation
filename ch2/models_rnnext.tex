@@ -28,7 +28,7 @@ and $\rnnextRParams$ and $\rnnextLParams$ are the forward and backward
 %As in the \recurrentneuralnetwork~sentence encoder we use a \gru~cell
 %to implement the forward and backward \recurrentneuralnetwork s.
 The left and right partial contextual embeddings of each sentence 
-are then passed through a \feedforward~layer to produce a contextual
+are then passed through a \feedforward~layer to produce contextual
 sentence embeddings $\rnnextHid_i$,
 
 \vspace{10pt}\noindent\textit{(Fig.~\ref{fig:rnnext}.b) Contextual Sentence Embeddings}
@@ -46,12 +46,12 @@ and $\rnnextHidBias \in \reals^{\rnnextHidDim}$ are learned parameters.
 
 Another \feedforward~layer
 with a logsitic sigmoid activation computes the actual salience 
-estimates $\psal_1,\ldots,\psal_\docSize$ where $\psal_i = p(\bsal_i=1|\sentEmb_1,\ldots,\sentEmb_\docSize)$,
+estimates $\psal_1,\ldots,\psal_\docSize$ where $\psal_i = \model(\bsal_i=1|\sentEmb_1,\ldots,\sentEmb_\docSize;\xParams)$ and 
 
 \vspace{10pt}\noindent\textit{(Fig.~\ref{fig:rnnext}.c) Salience Estimates}
 \begin{align}
     \forall i : \;\; i \in \{1,\ldots,\docSize\}& \nonumber \\
-    \psal_i &= p(\bsal_i=1|\sentEmb_i,\ldots,\sentEmb_\docSize) = \sigma\left(\rnnextPredWeight\rnnextHid_i + \rnnextPredBias  \right)
+    \psal_i &= \model(\bsal_i=1|\sentEmb_i,\ldots,\sentEmb_\docSize; \xParams) = \sigma\left(\rnnextPredWeight\rnnextHid_i + \rnnextPredBias  \right)
 \end{align}
 where $\rnnextPredWeight \in \reals^{1 \times \rnnextHidDim}$
 and $\rnnextPredBias \in \reals$ are learned parameters.
@@ -59,7 +59,7 @@ and $\rnnextPredBias \in \reals$ are learned parameters.
 The complete set of parameters for the extractor is 
 \[ \xParams = \left\{\rnnextRParams, \rnnextLParams, \rnnextHidWeight, \rnnextHidBias, \rnnextPredWeight, \rnnextPredBias \right\}.\]
 In our experiments, we set $\rnnextRNNDim=300$ and $\rnnextHidDim=100$.
-Dropout with drop probability of $.25$ is applied to $\rnnextRHid_i, \rnnextLHid_i,$ and $\rnnextHid_i$ for $i \in \{1,\ldots,\docSize\}$.
+Dropout with drop probability of $0.25$ is applied to $\rnnextRHid_i, \rnnextLHid_i,$ and $\rnnextHid_i$ for $i \in \{1,\ldots,\docSize\}$.
 
 \FloatBarrier
 
