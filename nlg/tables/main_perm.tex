@@ -1,0 +1,43 @@
+\begin{table}
+
+    \centering
+
+    \begin{tabular}{llcccc}
+\toprule
+ & & \multicolumn{2}{c}{E2E} & \multicolumn{2}{c}{ViGGo} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6}
+ \multicolumn{2}{c}{Model} & SER$\downarrow$ & OA$\uparrow$ & SER$\downarrow$ & OA$\uparrow$ \\
+\midrule
+\multicolumn{2}{l}{biGRU} &
+ 1.14 & 94.44 & 13.58 & 46.72 \\
+ & \small{\textsc{+p }} &
+ 0.54 & 97.34 & 14.46 & 49.26 \\
+ & \small{\textsc{+NUP }} &
+ 0.22 & 98.72 &  \uline{9.62} & 62.04 \\
+ & \small{\textsc{+NUP+p }} &
+\textbf{ 0.02} & \textbf{99.86} & \textbf{ 8.98} & \textbf{64.50} \\
+\midrule
+\multicolumn{2}{l}{Transformer} &
+ 0.78 & 95.20 & 28.34 & 18.70 \\
+ & \small{\textsc{+p }} &
+ \uline{0.40} & 98.10 & 25.72 & 18.10 \\
+ & \small{\textsc{+NUP }} &
+ \uline{0.08} & 99.64 & 24.18 & 31.34 \\
+ & \small{\textsc{+NUP+p}} &
+\textbf{ 0.02} & \textbf{99.86} & \textbf{21.64} & \textbf{31.86} \\
+\midrule
+\multicolumn{2}{l}{BART} &
+ 0.42 & 97.78 &  2.30 & 82.00 \\
+ & \small{\textsc{+p }} &
+\uline{0.22} & 98.78 &  1.82 & 87.98 \\
+ & \small{\textsc{+NUP }} &
+ 0.64 & 96.52 &  1.34 & 91.40 \\
+ & \small{\textsc{+NUP+p}} &
+\textbf{ 0.20} & \textbf{99.02} & \textbf{ 0.76} & \textbf{95.32} \\
+\bottomrule
+
+    \end{tabular}
+
+\caption{Random permutation stress test of \lsshort{At} models.}
+\label{tab:perm}
+\end{table}

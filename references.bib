@@ -465,12 +465,6 @@ series = {SIGIR '01}
   year={2014}
 }
 
-@article{bahdanau2014neural,
-  title={Neural machine translation by jointly learning to align and translate},
-  author={Bahdanau, Dzmitry and Cho, Kyunghyun and Bengio, Yoshua},
-  journal={arXiv preprint arXiv:1409.0473},
-  year={2014}
-}
 
 @inproceedings{vaswani2017attention,
   title={Attention is all you need},
@@ -802,10 +796,257 @@ series = {SIGIR '01}
 }
 
 
-@inproceedings{bahdanau2015neural,
-      title={Neural machine translation by jointly learning to align and translate},
-        author={Bahdanau, Dzmitry and Cho, Kyunghyun and Bengio, Yoshua},
-          booktitle={3rd International Conference on Learning Representations, ICLR 2015},
-            year={2015}
+
+@article{dusek2020,
+title = "Evaluating the state-of-the-art of {End}-to-{End} {N}atural {L}anguage {G}eneration: The {E2E} {NLG} challenge",
+journal = "Computer Speech \& Language",
+volume = "59",
+pages = "123 - 156",
+year = "2020",
+issn = "0885-2308",
+doi = "https://doi.org/10.1016/j.csl.2019.06.009",
+url = "http://www.sciencedirect.com/science/article/pii/S0885230819300919",
+author = "Ondřej Dušek and Jekaterina Novikova and Verena Rieser",
+abstract = "This paper provides a comprehensive analysis of the first shared task on End-to-End Natural Language Generation (NLG) and identifies avenues for future research based on the results. This shared task aimed to assess whether recent end-to-end NLG systems can generate more complex output by learning from datasets containing higher lexical richness, syntactic complexity and diverse discourse phenomena. Introducing novel automatic and human metrics, we compare 62 systems submitted by 17 institutions, covering a wide range of approaches, including machine learning architectures – with the majority implementing sequence-to-sequence models (seq2seq) – as well as systems based on grammatical rules and templates. Seq2seq-based systems have demonstrated a great potential for NLG in the challenge. We find that seq2seq systems generally score high in terms of word-overlap metrics and human evaluations of naturalness – with the winning Slug system (Juraska et al., 2018) being seq2seq-based. However, vanilla seq2seq models often fail to correctly express a given meaning representation if they lack a strong semantic control mechanism applied during decoding. Moreover, seq2seq models can be outperformed by hand-engineered systems in terms of overall quality, as well as complexity, length and diversity of outputs. This research has influenced, inspired and motivated a number of recent studies outwith the original competition, which we also summarise as part of this paper."
 }
 
+
+@inproceedings{wen2015,
+    title = "Semantically Conditioned {LSTM}-based Natural Language Generation for Spoken Dialogue Systems",
+    author = "Wen, Tsung-Hsien  and
+      Ga{\v{s}}i{\'c}, Milica  and
+      Mrk{\v{s}}i{\'c}, Nikola  and
+      Su, Pei-Hao  and
+      Vandyke, David  and
+      Young, Steve",
+    booktitle = "Proceedings of the 2015 Conference on Empirical Methods in Natural Language Processing",
+    month = sep,
+    year = "2015",
+    address = "Lisbon, Portugal",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/D15-1199",
+    doi = "10.18653/v1/D15-1199",
+    pages = "1711--1721",
+}
+
+@inproceedings{dusek2018,
+    title = "Findings of the {E}2{E} {NLG} Challenge",
+    author = "Du{\v{s}}ek, Ond{\v{r}}ej  and
+      Novikova, Jekaterina  and
+      Rieser, Verena",
+    booktitle = "Proceedings of the 11th International Conference on Natural Language Generation",
+    month = nov,
+    year = "2018",
+    address = "Tilburg University, The Netherlands",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/W18-6539",
+    doi = "10.18653/v1/W18-6539",
+    pages = "322--328",
+    abstract = "This paper summarises the experimental setup and results of the first shared task on end-to-end (E2E) natural language generation (NLG) in spoken dialogue systems. Recent end-to-end generation systems are promising since they reduce the need for data annotation. However, they are currently limited to small, delexicalised datasets. The E2E NLG shared task aims to assess whether these novel approaches can generate better-quality output by learning from a dataset containing higher lexical richness, syntactic complexity and diverse discourse phenomena. We compare 62 systems submitted by 17 institutions, covering a wide range of approaches, including machine learning architectures {--} with the majority implementing sequence-to-sequence models (seq2seq) {--} as well as systems based on grammatical rules and templates.",
+}
+
+@inproceedings{dusek2016,
+    title = "Sequence-to-Sequence Generation for Spoken Dialogue via Deep Syntax Trees and Strings",
+    author = "Du{\v{s}}ek, Ond{\v{r}}ej  and
+      Jur{\v{c}}{\'\i}{\v{c}}ek, Filip",
+    booktitle = "Proceedings of the 54th Annual Meeting of the Association for Computational Linguistics (Volume 2: Short Papers)",
+    month = aug,
+    year = "2016",
+    address = "Berlin, Germany",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/P16-2008",
+    doi = "10.18653/v1/P16-2008",
+    pages = "45--51",
+}
+
+@inproceedings{elder2018,
+    title = "{E}2{E} {NLG} Challenge Submission: Towards Controllable Generation of Diverse Natural Language",
+    author = "Elder, Henry  and
+      Gehrmann, Sebastian  and
+      O{'}Connor, Alexander  and
+      Liu, Qun",
+    booktitle = "Proceedings of the 11th International Conference on Natural Language Generation",
+    month = nov,
+    year = "2018",
+    address = "Tilburg University, The Netherlands",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/W18-6556",
+    doi = "10.18653/v1/W18-6556",
+    pages = "457--462",
+    abstract = "In natural language generation (NLG), the task is to generate utterances from a more abstract input, such as structured data. An added challenge is to generate utterances that contain an accurate representation of the input, while reflecting the fluency and variety of human-generated text. In this paper, we report experiments with NLG models that can be used in task oriented dialogue systems. We explore the use of additional input to the model to encourage diversity and control of outputs. While our submission does not rank highly using automated metrics, qualitative investigation of generated utterances suggests the use of additional information in neural network NLG systems to be a promising research direction.",
+}
+
+@inproceedings{juraska2018,
+    title = "A Deep Ensemble Model with Slot Alignment for Sequence-to-Sequence Natural Language Generation",
+    author = "Juraska, Juraj  and
+      Karagiannis, Panagiotis  and
+      Bowden, Kevin  and
+      Walker, Marilyn",
+    booktitle = "Proceedings of the 2018 Conference of the North {A}merican Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long Papers)",
+    month = jun,
+    year = "2018",
+    address = "New Orleans, Louisiana",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/N18-1014",
+    doi = "10.18653/v1/N18-1014",
+    pages = "152--162",
+    abstract = "Natural language generation lies at the core of generative dialogue systems and conversational agents. We describe an ensemble neural language generator, and present several novel methods for data representation and augmentation that yield improved results in our model. We test the model on three datasets in the restaurant, TV and laptop domains, and report both objective and subjective evaluations of our best model. Using a range of automatic metrics, as well as human evaluators, we show that our approach achieves better results than state-of-the-art models on the same datasets.",
+}
+
+@inproceedings{mairesse2010,
+    title = "Phrase-Based Statistical Language Generation Using Graphical Models and Active Learning",
+    author = "Mairesse, Fran{\c{c}}ois  and
+      Ga{\v{s}}i{\'c}, Milica  and
+      Jur{\v{c}}{\'\i}{\v{c}}ek, Filip  and
+      Keizer, Simon  and
+      Thomson, Blaise  and
+      Yu, Kai  and
+      Young, Steve",
+    booktitle = "Proceedings of the 48th Annual Meeting of the Association for Computational Linguistics",
+    month = jul,
+    year = "2010",
+    address = "Uppsala, Sweden",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/P10-1157",
+    pages = "1552--1561",
+}
+
+@inproceedings{wiseman2017,
+    title = "Challenges in Data-to-Document Generation",
+    author = "Wiseman, Sam  and
+      Shieber, Stuart  and
+      Rush, Alexander",
+    booktitle = "Proceedings of the 2017 Conference on Empirical Methods in Natural Language Processing",
+    month = sep,
+    year = "2017",
+    address = "Copenhagen, Denmark",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/D17-1239",
+    doi = "10.18653/v1/D17-1239",
+    pages = "2253--2263",
+    abstract = "Recent neural models have shown significant progress on the problem of generating short descriptive texts conditioned on a small number of database records. In this work, we suggest a slightly more difficult data-to-text generation task, and investigate how effective current approaches are on this task. In particular, we introduce a new, large-scale corpus of data records paired with descriptive documents, propose a series of extractive evaluation methods for analyzing performance, and obtain baseline results using current neural generation methods. Experiments show that these models produce fluent text, but fail to convincingly approximate human-generated documents. Moreover, even templated baselines exceed the performance of these neural models on some metrics, though copy- and reconstruction-based extensions lead to noticeable improvements.",
+}
+
+@inproceedings{wang2019,
+    title = "Revisiting Challenges in Data-to-Text Generation with Fact Grounding",
+    author = "Wang, Hongmin",
+    booktitle = "Proceedings of the 12th International Conference on Natural Language Generation",
+    month = oct # "{--}" # nov,
+    year = "2019",
+    address = "Tokyo, Japan",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/W19-8639",
+    doi = "10.18653/v1/W19-8639",
+    pages = "311--322",
+    abstract = "Data-to-text generation models face challenges in ensuring data fidelity by referring to the correct input source. To inspire studies in this area, Wiseman et al. (2017) introduced the RotoWire corpus on generating NBA game summaries from the box- and line-score tables. However, limited attempts have been made in this direction and the challenges remain. We observe a prominent bottleneck in the corpus where only about 60{\%} of the summary contents can be grounded to the boxscore records. Such information deficiency tends to misguide a conditioned language model to produce unconditioned random facts and thus leads to factual hallucinations. In this work, we restore the information balance and revamp this task to focus on fact-grounded data-to-text generation. We introduce a purified and larger-scale dataset, RotoWire-FG (Fact-Grounding), with 50{\%} more data from the year 2017-19 and enriched input tables, and hope to attract research focuses in this direction. Moreover, we achieve improved data fidelity over the state-of-the-art models by integrating a new form of table reconstruction as an auxiliary task to boost the generation quality.",
+}
+
+
+@InProceedings{lake18, title = {Generalization without Systematicity: On the Compositional Skills of Sequence-to-Sequence Recurrent Networks}, author = {Lake, Brenden and Baroni, Marco}, pages = {2873--2882}, year = {2018}, editor = {Jennifer Dy and Andreas Krause}, volume = {80}, series = {Proceedings of Machine Learning Research}, address = {Stockholmsmässan, Stockholm Sweden}, month = {10--15 Jul}, publisher = {PMLR}, pdf = {http://proceedings.mlr.press/v80/lake18a/lake18a.pdf}, url = {http://proceedings.mlr.press/v80/lake18a.html}, abstract = {Humans can understand and produce new utterances effortlessly, thanks to their compositional skills. Once a person learns the meaning of a new verb "dax," he or she can immediately understand the meaning of "dax twice" or "sing and dax." In this paper, we introduce the SCAN domain, consisting of a set of simple compositional navigation commands paired with the corresponding action sequences. We then test the zero-shot generalization capabilities of a variety of recurrent neural networks (RNNs) trained on SCAN with sequence-to-sequence methods. We find that RNNs can make successful zero-shot generalizations when the differences between training and test commands are small, so that they can apply "mix-and-match" strategies to solve the task. However, when generalization requires systematic compositional skills (as in the "dax" example above), RNNs fail spectacularly. We conclude with a proof-of-concept experiment in neural machine translation, suggesting that lack of systematicity might be partially responsible for neural networks’ notorious training data thirst.} }
+
+@inproceedings{juraska2019,
+    title = "{V}i{GGO}: A Video Game Corpus for Data-To-Text Generation in Open-Domain Conversation",
+    author = "Juraska, Juraj  and
+      Bowden, Kevin  and
+      Walker, Marilyn",
+    booktitle = "Proceedings of the 12th International Conference on Natural Language Generation",
+    month = oct # "{--}" # nov,
+    year = "2019",
+    address = "Tokyo, Japan",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/W19-8623",
+    doi = "10.18653/v1/W19-8623",
+    pages = "164--172",
+    abstract = "The uptake of deep learning in natural language generation (NLG) led to the release of both small and relatively large parallel corpora for training neural models. The existing data-to-text datasets are, however, aimed at task-oriented dialogue systems, and often thus limited in diversity and versatility. They are typically crowdsourced, with much of the noise left in them. Moreover, current neural NLG models do not take full advantage of large training data, and due to their strong generalizing properties produce sentences that look template-like regardless. We therefore present a new corpus of 7K samples, which (1) is clean despite being crowdsourced, (2) has utterances of 9 generalizable and conversational dialogue act types, making it more suitable for open-domain dialogue systems, and (3) explores the domain of video games, which is new to dialogue systems despite having excellent potential for supporting rich conversations.",
+}
+
+@inproceedings{novikova2017,
+    title = "The {E}2{E} Dataset: New Challenges For End-to-End Generation",
+    author = "Novikova, Jekaterina  and
+      Du{\v{s}}ek, Ond{\v{r}}ej  and
+      Rieser, Verena",
+    booktitle = "Proceedings of the 18th Annual {SIG}dial Meeting on Discourse and Dialogue",
+    month = aug,
+    year = "2017",
+    address = {Saarbr{\"u}cken, Germany},
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/W17-5525",
+    doi = "10.18653/v1/W17-5525",
+    pages = "201--206",
+    abstract = "This paper describes the E2E data, a new dataset for training end-to-end, data-driven natural language generation systems in the restaurant domain, which is ten times bigger than existing, frequently used datasets in this area. The E2E dataset poses new challenges: (1) its human reference texts show more lexical richness and syntactic variation, including discourse phenomena; (2) generating from this set requires content selection. As such, learning from this dataset promises more natural, varied and less template-like system utterances. We also establish a baseline on this dataset, which illustrates some of the difficulties associated with this data.",
+}
+
+@inproceedings{gasic2014,
+author={Ga{\v{s}}i{\'c}, M. and Kim, Dongho and Tsiakoulis, Pirros and Breslin, Catherine and Henderson, Matthew and Szummer, Martin and Thomson, Blaise and Young, Steve},
+  editor    = {Haizhou Li and
+               Helen M. Meng and
+               Bin Ma and
+               Engsiong Chng and
+               Lei Xie},
+  title     = {Incremental on-line adaptation of POMDP-based dialogue managers to
+               extended domains},
+  booktitle = {{INTERSPEECH} 2014, 15th Annual Conference of the International Speech
+               Communication Association, Singapore, September 14-18, 2014},
+  pages     = {140--144},
+  publisher = {{ISCA}},
+  year      = {2014},
+  url       = {https://www.isca-speech.org/archive/interspeech_2014/i14_0140.html},
+  timestamp = {Wed, 12 Sep 2018 16:38:51 +0200},
+  biburl    = {https://dblp.org/rec/conf/interspeech/GasicKTBHSTY14.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@article{reddy1977,
+  title={Speech understanding systems: A summary of results of the five-year research effort},
+  author={Reddy, D Raj and others},
+  journal={Department of Computer Science. Camegie-Mell University, Pittsburgh, PA},
+  volume={17},
+  year={1977}
+}
+
+@inproceedings{bahdanau2015,
+  author    = {Dzmitry Bahdanau and
+               Kyunghyun Cho and
+               Yoshua Bengio},
+  editor    = {Yoshua Bengio and
+               Yann LeCun},
+  title     = {Neural {M}achine {T}ranslation by {J}ointly {L}earning to {A}lign and {T}ranslate},
+  booktitle = {3rd International Conference on Learning Representations, {ICLR} 2015,
+               San Diego, CA, USA, May 7-9, 2015, Conference Track Proceedings},
+  year      = {2015},
+  url       = {http://arxiv.org/abs/1409.0473},
+  timestamp = {Wed, 17 Jul 2019 10:40:54 +0200},
+  biburl    = {https://dblp.org/rec/journals/corr/BahdanauCB14.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{luong2015,
+    title = "Effective {A}pproaches to {A}ttention-based {N}eural {M}achine {T}ranslation",
+    author = "Luong, Thang  and
+      Pham, Hieu  and
+      Manning, Christopher D.",
+    booktitle = "Proceedings of the 2015 Conference on Empirical Methods in Natural Language Processing",
+    month = sep,
+    year = "2015",
+    address = "Lisbon, Portugal",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/D15-1166",
+    doi = "10.18653/v1/D15-1166",
+    pages = "1412--1421",
+}
+
+
+@article{ba2016,
+  author    = {Lei Jimmy Ba and
+               Jamie Ryan Kiros and
+               Geoffrey E. Hinton},
+  title     = {Layer {N}ormalization},
+  journal   = {CoRR},
+  volume    = {abs/1607.06450},
+  year      = {2016},
+  url       = {http://arxiv.org/abs/1607.06450},
+  archivePrefix = {arXiv},
+  timestamp = {Tue, 23 Jul 2019 17:33:23 +0200},
+  biburl    = {https://dblp.org/rec/journals/corr/BaKH16.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}

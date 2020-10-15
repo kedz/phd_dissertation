@@ -27,7 +27,7 @@ summary at test time (which we refer to as inference).
 
 \subsection{Word Embedding Layer}
 
-    The word embedding layer, $\embLayer(\cdot\,;\Lambda) : \wordVocab^* \rightarrow \mathbb{R}^{* \times \embDim}$ maps a sequence of words $\sent_i = \word_{i,1},\ldots,
+    The word embedding layer, $\embLayer(\cdot\,;\embParams) : \wordVocab^* \rightarrow \mathbb{R}^{* \times \embDim}$ maps a sequence of words $\sent_i = \word_{i,1},\ldots,
 \word_{i,\sentSize_i}$ to a sequence of word embeddings $\wordEmb_i = \wordEmb_{i,1},
 \ldots, \wordEmb_{i,\sentSize_i} \in \mathbb{R}^{\sentSize_i \times \embDim}$
 where the sole parameter $\Lambda \in \mathbb{R}^{|\wordVocab| \times \embDim}$ 
@@ -347,7 +347,7 @@ our proposed \nonautoregressive~ones (the \rnnext~extractor and the \stsext~extr
 \input{ch2/models_stsext.tex}
 
 
-\section{Comparison of Sentence Extractors}
+\section{Comparison of Sentence Extractors and Inference}
 
 At first, each sentence extractor architecture can feel \latin{sui generis}
 or bespoke, without one having much in common with the other. However,
@@ -358,7 +358,72 @@ other surrounding document information.} sentence embeddings $\sentEmb_1,\ldots,
 \sentEmb_\docSize$ and produce contextual sentence embeddings 
 $\xHid_i$ that contain information propagated from neighboring sentence 
 embeddings $\sentEmb_1,\ldots,\sentEmb_{i_1},\sentEmb_{i+1},\ldots,\sentEmb_\docSize$ and possibly previous salience estimates $\psal_1,\ldots,\psal_{i-1}$.
+The salience estimates $\psal_i$ are then explicit functions of the contextual
+embeddings $\xHid_i$. 
 
+All of the extractors rely on running at least one \gru~over the sentence 
+embeddings to propogate contextual information of neighboring sentences
+to $\xHid_i$. However, only the \clext~and \srext~extractors rely on 
+$\psal_1,\ldots,\psal_{i-1}$ to compute $\psal_i$. This 
+dependency makes exact inference
+intractable. Additionally, after the \gru~layers are computed in the
+\rnnext~and \stsext~extracts, all salience estimates can be computed in
+parallel; the \clext~and \srext~must make their salience predictions 
+sequentially.
+Additionally, we hypothesize that including this depenence is not necessary to achieve good
+performance, as similar information about the salience of neighboring sentences
+will already be captured in the left and right partial contextual sentence
+embeddings used to construct $\xHid_i$.
+
+\subsection{Inference and Summary Generation} \label{sec:inference}
+
+Given a setting of encoder and extractor architectures, and the appropriate
+embedding, encoder, and extractor parameters ($\embParams$, $\sentEncParams$,
+and $\xParams$ respectively), we can compute the probability of a salience
+label sequence given a document, $\model\left(\bsals|\doc;\theta\right)$, as 
+\[\model\left(\bsals|\doc;\theta\right) = \model\Big(\bsals|
+\sentEnc\big(\embLayer\left(\sent_1;\embParams\right),\ldots,\embLayer\left(\sent_\docSize;\embParams\right)  ;\sentEncParams\big);\xParams\Big). \]
+
+We can then obtain a salience label sequence 
+$\predbsals\approx \argmax_{\bsals\in\labelSpace} \model\left(\bsals|\doc;\params\right)$, 
+where $\predbsals$ is exact in the case of the \rnnext~and \stsext~extractors,
+and approximated by greedy 1-best search in the \clext~and~\srext~extractors.
+
+This method of inference does not take into account the summary
+word budget $\wordbudget$ and the resulting $\predbsals$ may imply an 
+extract summary that is either too short or too long with respect to the 
+budget constraint. Overly long summaries are less of a problem because they
+can always be truncated. Short summaries, however, will suffer more in evaluation
+as \rouge-recall monotonically increases with summary size until reaching the
+word budget. Additionally, for fair comparisons between systems, summary lengths should always be the same size \citep{sumlen}.
+
+To account for this and obtain a summary of length $\wordbudget$, 
+we first compute $\predbsals = \left[\predbsal_1,\ldots,\predbsal_\docSize 
+\right]$. Then we sort the sentences by 
+$\psal_i = \model(\bsal_i=1|\predbsal_1,\ldots,\predbsal_{i-1},\sentEmb_1,\ldots,
+\sentEmb_\docSize; \xParams)$ in descending order $\sent_{\pi_1}, \ldots, \sent_{\pi_\docSize}$ where $\psal_{\pi_i} \ge \psal_{\pi_{i+1}}$. We then 
+construct the extract summary by selecting the first $k$ sentences
+such that $\sum_{i=1}^{k-1} \sentSize_{\pi_i} < \wordbudget \le \sum_{i=1}^{k}
+\sentSize_{\pi_i}$ (i.e., the first $k$ sentences that  meet 
+or excede the length budget). When evaluating or displaying summaries,
+we show the extracted sentences in the original document order since this
+improves the coherence, and we truncate the final sentence where it
+excedes $\wordbudget$.
+
+
+
+
+
+
+
+%?We outline the dependencies of $\xHid_i$ in each of the
+%?models as,
+%?\begin{itemize}
+%?    %\item (\clext) --- $\sentEmb_{i-1}, $
+%?    \item left and right partial contextual sentence embeddings (? and ?)
+%?    \item a mixture of all encoder left and right partial contextual embeddings, and the $i^\textrm{th}$ decoder left and right partial contextual embeddings
+%?    \item the mean left and right partial contextual embeddings 
+%?\end{itemize}
 
 
 

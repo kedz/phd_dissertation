@@ -1,0 +1,40 @@
+\begin{figure}
+
+    \begin{subfigure}[t]{.30\textwidth}
+            \centering
+    \MR{\textsc{Inform}}{\AV{name}{Aromi}}{\AV{area}{city centre}}{\AV{eat\_type}{coffee shop}}
+
+
+    ~\\~\\~\\~\\
+
+    \caption{\textit{Inform} dialog act.}
+\end{subfigure}
+\hfill
+\begin{subfigure}[t]{.65\textwidth}
+    \small
+    \centering
+        \begin{tabular}{l}
+         %   \toprule
+            ~\\
+            Plan A:~~~~~~~~name~~~$\rightarrow$~~~eat\_type~~~$\rightarrow$~~~area\\[4pt]
+            Realization: \textit{Aromi is a coffee shop in the city 
+                centre.}\\
+                ~\\
+            %\midrule
+                Plan B:~~~~~~~~eat\_type~~~$\rightarrow$~~~name~~~$\rightarrow$~~~area\\[4pt]
+            Realization: \textit{There is a coffee shop called Aromi in the 
+                city centre.}\\
+            %\midrule
+                ~\\
+                Plan C:~~~~~~~~eat\_type~~~$\rightarrow$~~~area~~~$\rightarrow$~~~name\\[4pt]
+            Realization: \textit{For coffee in the centre of the city, try 
+                Aromi.}\\
+        %    \bottomrule
+                ~\\
+        \end{tabular}
+        \caption{Three different utterance plans with example realizations
+        for the \textit{Inform} dialogue act (left).}
+\end{subfigure}
+\caption{Examples of controllable generation. (a) A \meaningrepresentation~of an \textit{Inform} dialogue act. (b) Three hypothetical utterance plans and their realizations for the example dialogue act.}
+\label{fig:examplecontrol}
+\end{figure}

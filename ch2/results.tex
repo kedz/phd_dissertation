@@ -71,23 +71,31 @@ size of these datasets.
 
 \input{ch2/tables/table_embs.tex}
 
-\paragraph{Word Embedding Learning}
+
+\subsection{Ablation Experiments}
+
+In addition to our main evaluation above, we also perform several ablation 
+experiments further understand how the various summarization models perform
+when certain information is witheld from the model. In particular, we 
+evaluate the effect of fine-tuning word embeddings, part-of-speech (POS) based ablations, and sentence-order shuffling.
+
+\paragraph{Word Embedding Fine-tuning}
  Given that learning a sentence encoder (averaging has no learned parameters)
  does not yield significant improvement, it is natural to consider whether
- learning word embeddings is also necessary. 
+ fine-tuning word embeddings is also necessary. 
  In \autoref{tab:embeddings} we compare the performance of different extractors
  using the averaging encoder, when the word embeddings are held fixed or 
- learned during training. In both cases, word embeddings are initialized with
+ fine-tuned during training. In both cases, word embeddings are initialized with
  GloVe embeddings trained on a combination of Gigaword and Wikipedia.
 % \hal{TRAINED ON WHAT? JUST THE DEFAULT ONES?}
- When learning embeddings, words occurring 
+ When fine-tuning embeddings, words occurring 
  fewer than three times in the training data are mapped to an unknown
  token (with learned embedding).
  
 % shows ROUGE recall
 %when using fixed or updated word embeddings. 
  In all but one case,
-fixed embeddings are as good or better than the learned embeddings.
+fixed embeddings are as good or better than the fine-tuned embeddings.
 This is a somewhat surprising finding on the CNN/DM data since it is reasonably
 large, and learning embeddings should give the models more
 flexibility to identify important word features.\footnote{The AMI corpus is an exception here where learning \emph{does} lead to small
@@ -98,7 +106,7 @@ test set size.}
 This suggests that we cannot extract much generalizable learning signal 
 from the content other than what is already present from initialization. 
 Even on PubMed, where the language is quite different from the news/Wikipedia
-articles the GloVe embeddings were trained on, learning leads to 
+articles the GloVe embeddings were trained on, fine-tuning leads to 
 significantly worse results.
 
 %The language of this corpus is quite different from the 
@@ -120,7 +128,7 @@ function words (adpositions, determiners, conjunctions).
 %Additionally, we ran ablation experiments
 %using part-of-speech (POS) tags. \hal{this needs to be justified. why is this experiment interesting?}
 All datasets were automatically tagged using
-the spaCy part-of-speech (POS)
+the spaCy POS
 tagger\footnote{https://github.com/explosion/spaCy}.   
 %\kathy{I'm still curious what would happen if you separately removed all conjunction tags and later remaining POS.}
 %We experimented with selectively removing 
@@ -163,7 +171,7 @@ on DUC 2002 and AMI.
 
 \input{ch2/tables/table_order.tex}
 
-\textbf{Document Shuffling} Sentence position is a well known and 
+\textbf{Sentence Order Shuffling} Sentence position is a well known and 
 powerful feature for news summarization \cite{hong2014improving}, owing 
 to the intentional lead bias in the news article writing\footnote{\url{https://en.wikipedia.org/wiki/Inverted_pyramid_(journalism)}}; it also explains the difficulty in beating
 the lead baseline for single-document summarization 

@@ -1,0 +1,852 @@
+\section{Faithful Generation}
+
+We say that an utterance $\utttoks$ is \faithful~to a 
+\meaningrepresentation~$\mr$ if $\utttoks$ denotes\footnote{Mention Emily Bender} the exact meaning 
+of $\mr$, which we write $\denotes{\utttoks} = \mr$. We then say that a 
+\surfacerealization~model $\model$ is a globally \faithful~\surfacerealization~model
+if for any two utterances $\futt,\ufutt \in \outSpace$, such that 
+$\denotes{\futt} = \mr$ and $\denotes{\ufutt} \ne \mr$, we have 
+$\model\left(\futt|\ls\left(\mr\right);\params\right) > \model\left(\ufutt|\ls\left(\mr\right);\params\right)$.
+
+Unfortunately, it is intractable to verify that a \sequencetosequence~based
+language generation model is globally \faithful. Even verifying that the 
+mode of the model distribution
+\[\boldsymbol{\utttoks^*} = \argmax_\utttoks \model\left(\utttoks|\ls\left(\mr\right);\params  \right)\] satisfies $\denotes{\boldsymbol{\utttoks^*}} = \mr$ 
+is intractable as well. In practice, we can only certify $\denotes{\predutttoks} = \mr$ where
+\[ \predutttoks \approx \argmax_\utttoks \model\left(\utttoks|\ls\left(\mr\right);\params  \right)\] 
+and the $\argmax$ operator is approximated by an approximate decoding algorithm, typically beam search.
+
+\subsection{Why does $\model$ produce unfaithful utterances?}
+
+Since any practical \sequencetosequence-based~implementation of 
+\surfacerealization~will rely on approximate decoding, 
+the \faithfulness~of a generated utterance $\predutttoks$ is affected
+by the conditional distribution  $\model\left(\cdot|\ls\left(\mr\right);\params\right)$ but also by the decoding algorithm. Beam search, the dominate
+approximate decoding strategy produces an $\nbest$-best list of candidate
+utterances by maintaining a list a $\nbest$ partially completed utterances.
+Both greedy (i.e. $\nbest=1$) and beam decoding are known
+to produce somewhat homogeneous outputs \citep{serban2016building}.
+Diversifying
+beam outputs often involves careful tuning of secondary search objectives
+which trade off fluency \citep{li2015diversity}.
+
+This is compounded by the finding that neural models on natural language data\footnote{Here we are referring to both \sequencetosequence~models but also 
+sequence classification and sequence-pair classification }  do not 
+naively exhibit the quality of systematicity \citep{fodor,genwosys}, or 
+the ability to exploit the algebraic and compositional 
+nature of natural language. \citet{genwosys} give the example of a human
+speaker that understands the concept of ``twice'' or ``again,'' who, upon
+learning a novel verb, ``to dax,'' immediately understands the meaning 
+of ``daxed twice'' or ''to dax again'' even though they have never seen 
+examples of these compositions before. Empirically, they demonstrate that a
+\recurrentneuralnetwork~based \meaningrepresentation-to-text model ({\color{red} check direction}) does not posses this ability and frequently fails to 
+generalize to novel compostions even where the individual constituents of 
+the compositinoal phrases are well represented in the training distribution.
+
+In our present case, this failure of systematicy manifests itself a failure
+to realize individual \attributevalues~that are well represented in the 
+training data when those \attributevalues~occur in novel \meaningrepresentations at test time. We use as a case-study, the \attributevalue~``near=Burger King.'' which in our restaurant domain data, denotes that a restaurant $x$ is near
+Burger King.
+
+
+show pmi\\
+
+\begin{figure}[p]
+    \includegraphics[width=\textwidth]{nlg/trainpmis.pdf}
+\end{figure}
+
+As in X, Y, Z, data augmentation has been show to be helpful in endowing
+more systamtic behavior.\\ 
+
+
+
+If we could generate random samples and parse them back, we could over come this?\\
+
+
+Problems with ancestral sampling? \\
+
+Introduce noise injection sampling\\
+
+
+
+%Moreover, simply learning a \sequencetosequence-based 
+%conditional probability model 
+%$\model\left(\utttoks|\ls(\mr);\params\right)$ on a training corpus 
+%$\corpus = \left\{\left(\mr^{(i)}, \utttoks^{(i)} \right) 
+%: i \in \left\{1,\ldots,\corpusSize \right\} \right\}$ such that 
+%the training set log-likelihood
+%$\sum_{i=1}^\corpusSize \ln \model\left(\utttoks^{(i)}|\ls\left(\mr^{(i)}\right);\params \right)$ is at a local maxima is not sufficient to 
+%    semantically correct utterances. In practice, it is often the case
+%    that for two given utterances 
+
+    \label{section:selftrain}
+
+\newcommand{\trdata}{\ensuremath{\mathcal{D}}}
+\newcommand{\augdata}{\ensuremath{\mathcal{A}}}
+\newcommand{\basegen}{\ensuremath{p_0}}
+\newcommand{\auggen}{\ensuremath{p_1}}
+\newcommand{\sampley}{\ensuremath{\tilde{y}}}
+\newcommand{\samplex}{\ensuremath{\tilde{x}}}
+\newcommand{\clf}{\ensuremath{q}}
+\newcommand{\ruleclf}{\ensuremath{q_r}}
+\newcommand{\learnedclf}{\ensuremath{q_\phi}}
+
+\newcommand{\descy}{\ensuremath{y}}
+
+\newcommand{\mrx}{\ensuremath{x}}
+
+
+
+
+Our approach to self-training is relatively straightforward and 
+invariant
+to the choices of whether or not to use delexicalization, and rule vs. 
+classifier based
+parser. There are minor differences depending on the dataset and we elaborate 
+on
+those below. There are three main steps to our self-training approach.
+Starting with an initially empty augmented dataset \augdata, we 
+
+\begin{enumerate}
+
+    \item Train a base generator model \basegen~on the original training
+        data \trdata.
+    \item Repeat many times:
+        \begin{enumerate}
+            \item Sample a random MR $\mrx \sim \mathcal{X}$. 
+            \item Sample $K$ utterances $\sampley^{(i)} \sim \basegen(\cdot|\mrx, \epsilon)$ 
+            \item Parse MR, $\samplex^{(i)} = \clf(\sampley^{(i)})$,
+            discarding any samples with invalid parses, and adding the 
+            survivors to \augdata.
+        \end{enumerate}
+    \item Train a new generator \auggen~ on the combined dataset $\trdata \cup
+       \augdata$.
+\end{enumerate}
+Steps 1 and 3 are identical, the generators \basegen~and \auggen~have the same 
+architecture and training setup, ony the dataset, \trdata~vs. $\trdata \cup
+\augdata$, is different. We now discuss step 2 in detail. 
+
+
+\paragraph{Step 2: E2E Dataset} 
+%First we need to sample an MR \mrx~from
+%the space of all valid MRs, $\mathcal{X}$. 
+%%Valid MRs consist of 3 to 8
+%attribute slots. 
+To sample a novel MR with  $S$ attributes, we sample a combination of $S-1$ attributes
+uniformly at random %from the $\binom{7}{S-1}$ possible combinations
+(always appending the \textit{name} attribute since every MR contains it).
+ We 
+then sample attribute values for each slot % independently
+inversely proportional to their empirical frequency
+in the training set so as to increase the likelihood of creating a novel
+or under-represented MR.
+
+
+After obtaining such a sample \mrx~we then perform noise injection sampling,
+generating 200 samples $\sampley^{(i)} \sim 
+\basegen(\cdot|\mrx, \epsilon^{(i)})$ 
+in parallel and discarding all but the top 20
+samples by average log likelihood according to \basegen.
+We also discard any utterances that have previously been generated.
+%to avoid 
+%adding repeat utterances to the augmented data.
+
+We then apply the parser to the sampled utterances, to obtain its
+predicted MR, $\samplex^{(i)} = \clf(\sampley^{(i)})$. If using 
+the rule based parser \ruleclf~and $\samplex = \emptyset$, i.e. the utterance
+does not have a valid parse, we discard it.
+Similarly, when using the classifier based parser, \learnedclf, if 
+any attribute value is predicted with less than 50\% probability we discard 
+it. All surviving $(\samplex^{(i)}, \sampley^{(i)})$ pairs are added to \augdata.
+We repeat this process 25,000 times for each valid MR size $S$.
+See \autoref{table:samplequal} for statistics on the total sample sizes 
+after filtering.
+%yielding 1,591,788 additional samples for the lexicalized \basegen/\ruleclf,
+%501,909 for the delexicalized \basegen/\ruleclf, and 384,436 for the 
+%delexicalized \basegen/\learnedclf~pairings.
+
+\paragraph{Step 2: Laptops and TVs} On the Laptops and TVs dataset,
+%each DA can have a different minimum and maximum number of attributes.
+for each DA and legal number of attributes $S$ we draw $S$ random attributes
+(modulo any required attributes like \textit{Name}; not all DAs require it).\footnote{A number of attributes $S$ is ``legal'' if we observe a DA instance with that 
+many attributes in the original training data.}
+%For binary attributes, or attributes that can have the \textit{don't care}
+%value, we randomly sample these values, to obtain a MR \mrx.
+
+We then perform noise injection sampling,
+generating 200 samples $\sampley^{(i)} \sim 
+\basegen(\cdot|\mrx, \epsilon^{(i)})$ under the same settings as the E2E
+dataset. We repeat this process 25,000 times for each DA and DA size.
+We obtain 373,468 and 33,478 additional samples for the Laptops 
+and TVs datasets respectively.
+
+%~\\ Stop reading here.
+%
+%~\\
+%~\\
+%~\\
+%\subsection{Base Generator Model}
+%We instantiate our \basegen~ using 
+%a two layer uni-directional gated reccurent unit (GRU) based encoder-decoder
+%model with feed-forward style attention \cite{}. In an abuse of notation,
+%let the source and target token sequences \mrx  ~ and \descy ~  
+%also represent sequences of $\embsize$-dimensional word embedding 
+%sequences where $\mrx \in \mathbb{R}^{M \times \embsize}$ and
+%$\descy \in \mathbb{R}^{N \times \embsize}$. The the two-layer GRU is 
+%represented
+%by the parameterized function 
+%$g(\cdot, \cdot;\omega) : \mathbb{R}^\embsize \times \mathbb{R}^\embsize \rightarrow \mathbb{R}^\embsize$ where $\omega$ represent the parameters the GRU. The encoder and
+%decoder hidden states, $\encstate_i$ and $\decstate_j$ respectively, are then defined by the following recurrences:
+%\begin{align*}
+%    \encstate_i & = g(\mrx_i,\encstate_{i-1}; \omega_{enc}) & \forall i \in 1,\ldots, M \\
+%    \decstate_1 & = g(y_1, \encstate_M; \omega_{dec}) &  \\
+%    \decstate_j & = g(y_j, \decstate_{j-1}; \omega_{dec}) &  \forall j \in 2,\ldots, N\\
+%\end{align*}
+%where the encoder intial state $\encstate_0$ is a learned parameter vector
+%and $\omega^{enc}, \omega^{dec}$ represent the encoder and decoder GRU
+%parameters. At each decoder timestep $j$ we produce a distribution 
+%$\basegen(Y_j|\descy_{<i}, \mrx;\modparams)$ over the target vocabulary $\mathcal{V}_{desc}$ by using the encoder
+%context and decoder hidden state:
+%\begin{align*}
+%    \alpha_{i,j} & \propto \exp\left( \nu^T\tanh(W^T\encstate_i + U^T\decstate_j)\right)\\
+%    \bar{c}_j & = \sum_{i=1}^M \alpha_{i,j}  \encstate_i \\
+%    o_j & = W^T\tanh(W^T\left[\begin{array}{c} \decstate_j \\ \bar{c}_j \end{array}\right] + b) + b\\
+%p(Y_i|\descy_{<i}, \mrx) & = \operatorname{softmax}(o_j) \\
+%\end{align*}
+%where ... are model parameters.
+%
+%During test time we perform approximate inference of the best output
+%utterance $\hat{\descy}$ using either greedy or beam search.
+%
+%\subsection{Sampling from \basegen}
+%
+%Our method requires that we obtain a diverse array of outputs from \basegen ~
+%given an arbitrary MR \mrx. As has been noted \cite{}, beam search is not 
+%viable option for this, as the outputs tend to be quite homogeneous.
+%Ancestral sampling i.e. drawing a random token from
+%$\basegen(Y_i|\descy_{<i}, \mrx;\theta)$ at each step, is another option
+%but the outputs can be of lower fluency and coherence.
+%
+%
+%Instead, we inject random Gaussian noise into the decoder hidden states,
+%following the noisy parallel approximate decoding (NPAD) method presented in 
+%\cite{}.
+%At each decoder step $j$, random noise $\epsilon_j \in \mathbb{R}^\embsize$ 
+% is drawn from a $\embsize$-dimensional Gaussian distribution 
+% $\mathcal{N}(0, \frac{\sigma^2}{j})$ and added to the decoder state $\decstate_j$
+% to produce a noisy state $\tilde{\decstate}_j = \decstate_j + \epsilon_j$.
+% $\tilde{\decstate}_j$ then replaces the original $\decstate_j$ in computing 
+% the attention weights and output probabilities, as well as the subsequent
+% decoder hidden states. Crucially, variance of $\epsilon_j$ approaches
+% zero as the decoder proceeds, recovering deterministic greedy decoding
+% in the limit. Effectively, the first few steps allow the decoder to 
+% reach a novel hidden state space, while the gradually diminishing 
+% noise allows the decoder to produce fluent outputs.
+% 
+% NPAD is also incredibly efficient to perform, as it has the same
+% asymptotic time and memory complexity as greedy decoding,
+% and avoids the 
+% significant bookkeeping overhead of beam search-based methods.
+% $K$ random samples can be obtained simultaneously by running the decoder
+% in batch mode. 
+% 
+% \subsubsection{Reachability of rare attribute values}
+%
+% See \ref{} for example outputs produced by various sampling
+% strategies. Remarkably, the samples obtained by NPAD maintain fluency
+% and valid syntactic structure. At the same time they are very often
+% semantically invalid, i.e. given an NPAD sample $\sampley \sim 
+% \npaddist$ it is often the case that the implied MR of the sample $\samplex 
+% \ne \mrx$. What's more, the implied \mrx ~ can sometimes contain
+% rare argument fillers or novel combinations of attribute/atribute values
+% pairs.
+%As an example, in the E2E dataset, the near slot filler ??? is quite rare in
+%the training set, however, using NPAD sampling we were able to abtain
+%??? occurences. Additional, an MR from the E2E dataset can have anywhere
+%from three to eight attributes present. The training data under
+%represent many MR's of size ???. Again, using NPAD sampling we produced ???
+%and many appear to be of good quality.
+%
+% If we had a reliable way of parsing the sample MR $\samplex$ 
+% from $\sampley$, we could augment the existing training data \trdata with 
+% additional pairs $(\samplex, \sampley)$. 
+%
+% %where the variance $\sigma^2$ is scaled by the inverse 
+% %decoder step count, i.e. the variance of the noise is highest at the 
+% %start of decoding, and gradually converges on deterministic greedy
+% %decoding as the generation proceeds. 
+%
+%
+%\subsection{Classification Models}
+%
+%We obtain such a MR parser in one of two ways. Given the 
+%regularity of the samples (\sampley tend to be very formulaic and do not
+%exhibit some of the more create realizations humans were capable of)
+%we can fairly quickly construct a series of regular-expression based 
+%rules to recover each of the attribute slots, e.g. 
+%\texttt{if /is (family|kid|child) friendly/ } $\Rightarrow $
+%\textit{family\_friendly=yes}. On the Laptops and TV datasets where 
+%make use of heavy delexicalization and most attributes have binary values
+%of present or not present this is even simpler, we simply check 
+%for the presence of the slot filler token, e.g. is the token 
+%``\_\_BATTERYRATING\_\_'' present in \sampley.
+%For a complete list of rules used, see the \ref{} in the supplemental 
+%materials. We design these rules to be high precision, but in many cases 
+%they are also high recall as well. See figure ?? for the classification
+%performance on the E2E validation set. In many cases 0.95 F-score is probably
+%close to the performance ceiling; the human authored references in the validation
+%set are noisy and are often incorrectly labeled or omit realizing attributes.
+%
+%It is perhaps too optimistic to believe we can construct reasonable rules
+%in all cases. Rule creation quickly becomes tedious and for more complex
+%MRs this would become a bottleneck. To address these concerns, we also 
+%study the feasibility of using learned classifiers to predict the presence
+%and value of attribute values. For each attribute in the E2E dataset,
+%we trained a separate convolutional neural network (CNN) classifier 
+%to predict the correct attribute value (or if the attribute is not present).
+%The CNN architecture follows that of \cite{} and are trained with 
+%gradient descent on the original training data. Figure ??? shows validation
+%set classifier preformance on the E2E validation set. The classifiers
+%are noisier than the rules but required significantly less manual effort
+%(and almost zero domain knowledge) to construct.
+%
+%
+%\subsection{Generating Samples}
+%
+%\paragraph{E2E} E2E MR's can have anywhere from three to eight attributes.
+%For each MR size $K$, we perform the following procedure 25,000 times.
+%We randomly sample $K-1$ attributes (and the \textit{name} attribute since
+%it is always present). For each attribute we sample an attribute value
+%inversely proportional to its frequency in the training data so
+%as to encourage the production of novel MRs. Given a sampled \mrx ~ we then 
+%draw 200 samples $\sampley^{(i)} \sim \npaddist$, sort them by average 
+%log likelihood, keeping only the top 20 to ensure that only high quality
+%samples are added to the training data. 
+%
+%When using the rule based 
+%classifiers we apply $\ruleclf(\sampley^{(i)})$ to obtain a corresponding
+%MR $\samplex^{(i)}$. We additionally check to see that the MR is well formed,
+%i.e. only one attribute value per attribute is found, and that a
+%\textit{name} attribute value is always found; if either of these checks 
+%are violated we discard the sample. The surviving samples are then
+%added to the augmented dataset $\augdata_K$.
+%
+%When using the learned classifiers, we apply each attribute classifier
+%to the top 20 samples and remove any sample that has a predicted attribute
+%value with less than 50\% probability. The surviving samples are then
+%added to the augmented dataset $\augdata_K$.
+%Figure ??? shows some statistics of the samples for each \augdata partition.
+%
+%\paragraph{Laptops and TVs} TODO.
+%
+%
+%
+%\section{Datasets}
+%  \begin{itemize}
+%   \item e2e dataset
+%   \item laptops, tv dataset (wen et al. 2016)
+%  \end{itemize}
+%
+
+
+\subsection{Generation Models}
+
+\subsection{NLU models}
+Given a novel utterance \sampley~sampled from $p$, we need to 
+reliably parse the implied MR, i.e. $\samplex = \clf(\sampley)$, 
+where \clf~is our parsing model. We have two things going for us in 
+our experimental setting. First, even with noise injection sampling,
+model outputs are fairly patterned, reducing the variability of the utterances
+we need to parse in practice. 
+
+Second, the MRs in this study are
+flat lists of attributes that are somewhat independent of each other.
+We only need to detect the presence of each attribute and its value.
+For the Laptops and TVs datasets we also need to recover the dialog
+act but these also are signaled by a fairly limited repertoire 
+of cues, e.g. ``we recommend.'' % or ``compared to'' for the 
+%\textit{Recommend} and \textit{Compare} DAs respectively. 
+Given this, we experiment with both hand crafted regular expression 
+rules and learned classifiers to predict the value of
+an attribute if present or that it is missing. 
+
+
+\paragraph{Rule-based parser \ruleclf} We design hand-crafted 
+regular expression based rules to match for the presence of key phrases 
+for each of the attributes and DAs in the datasets while also checking to
+make sure that there is only one match per attribute.
+
+To construct the rules, we look through both the training data references as 
+well as the generation model outputs as this is what the rules will
+be operating on in practice. For each lexicalized attribute (and DA) we 
+develop a list of regular expressions % or conjunctions of regular expressions
+such as,
+\texttt{/is (family|kid|child) friendly/} $\Rightarrow$ \textit{familyFriendly[yes]}.
+For the delexicalized attributes, we simply check for the presence 
+of the placeholder token. 
+
+%One failure mode of the generation models on
+%Laptops and TVs is to use the wrong attribute value token in an expression,
+%e.g. ``...has a DRIVESIZERANGE price range,'' so we add additional rules
+%to mark an utterance/MR pair as invalid in these cases.
+%e.g.
+%\begin{align*}
+%\texttt{/price/}~\land~\lnot\texttt{/PRICERANGE/} 
+%    \Rightarrow \emptyset.
+%\end{align*}
+
+We design these rules to be high precision, as it is safer to miss out on 
+more obscure varieties of utterance to avoid adding incorrectly parsed data 
+points.
+However,  in many cases the rules are also high recall as well. 
+The average F-score on the E2E validation set is 0.93.
+%In some cases, this is probably
+%close to the performance ceiling; the human authored references in the validation
+%set are noisy and are often incorrectly labeled or omit realizing attributes.
+
+
+%This is a relativity conservative approach as it is possible we will
+%miss good phrases, however, it is more important that we add as little
+%noise to augmented dataset as possible.
+%rules to detect the presence of 
+%key phrases related to each attribute's realization. We design these rules
+%to be high-precision, so even while we may not cover all possible 
+%only need to augment our training data with pairs $(\samplex, \sampley)$ 
+%If the rules indicate that the MR is valid (e.g. only mentions an attribute
+%once). While we may miss out on more diverse constructions, we more reliably
+%ensure the augmented data is correct, i.e. \sampley~correct conveys the
+%discourse act and attibute values specified in \samplex. Adding too many
+%incorrect pairs will degrade the reliability of our final generation model.
+
+
+
+\paragraph{Classifier-based parser \learnedclf} 
+It is perhaps too optimistic to believe we can construct reasonable rules
+in all cases. Rule creation quickly becomes tedious and for more complex
+MRs this would become a bottleneck. To address these concerns, we also 
+study the feasibility of using learned classifiers to predict the presence
+and value of the attributes. For each attribute in the E2E dataset,
+we trained a separate convolutional neural network (CNN) classifier 
+to predict the correct attribute value (or \textit{n/a} if the attribute is 
+not present).
+The CNN architecture follows that of \citet{kim2014convolutional} and is 
+trained with 
+gradient descent on the original training data. See \autoref{app:cnnclf} for
+full architecture and training details.
+The average E2E validation F-score is 0.94.
+%iThe classifiers
+%required significantly less manual effort
+%(and almost zero domain knowledge) to construct.
+
+
+
+\subsubsection{CNN Classifier Details}
+\label{app:cnnclf}
+
+
+We use a separate CNN classifier for each attribute to predict
+the corresponding value (or \textit{n/a}) from an utterance \descy.
+We first look up the tokens in \descy~ in an embedding matrix $E$
+to obtain a matrix $W\in\mathbb{R}^{N \times D}$ where $D=50$ is
+the embedding dimension.
+
+We then apply a series of unigram, bigram, and trigram convolutional
+filters each with $50$ output features.
+After concatenating and max-pooling over the sequence dimension,
+and applying a ReLU activation,
+we obtain a hidden layer in $\mathbb{R}^{150}$.
+We then apply another fully-connected layer with ReLU activation
+which down projects the hidden layer to $\mathbf{R}^{50}$.
+Finaly we apply the final softmax layer to predict the class label.
+
+During training we apply dropout (with drop rate 0.25) to 
+the embedding layer, convolutional filter outputs, and hidden
+layers. We train for 30 epochs with gradient descent
+using  a learning rate of 0.25 and 
+weight decay penalty of 0.0001, using validation set F1
+as our model selection criterion.
+
+
+
+\subsection{Datasets}
+
+We ground our experiments in three recent dialogue generation datasets,
+the E2E Challenge Dataset \cite{duvsek2019evaluating}, and the Laptops and 
+TVs datasets \cite{wen2016multi}.
+We only briefly review them here.
+Each dataset consists of dialog act MRs paired with one or more 
+reference utterances 
+(see \autoref{figure:introexample} for an example from the E2E dataset).
+The structure of each MR is relatively simple, consisting of the 
+dialog act itself, (e.g. \textit{inform}, \textit{recommend}, 
+\textit{compare}, etc.) and a variable number of attribute slots
+which need to be realised in the utterance. All attribute values 
+come from a closed vocabulary.
+If an attribute is not present in the MR it should not be realized in the 
+corresponding utterance. 
+
+The three datasets also represent different training size conditions;
+there are 42,061, 7,944, and  4,221 training examples in E2E, Laptops,
+and TVs datasets respectively.
+
+The NLG task for all three datasets 
+is to produce an utterance for a given MR such that all attributes
+in the MR are realized naturally and correctly.
+
+%['EATTYPE_N/A', 'NEAR_The_Six_Bells', 'AREA_N/A', 'FAMILYFRIENDLY_yes', 'CUSTOMERRATING_N/A', 'PRICERANGE_N/A', 'FOOD_N/A', 'NAME_The_Golden_Curry']
+\paragraph{E2E Model Input}
+Following previous sequence-to-sequence approaches for the E2E dataset 
+\cite{juraskaslug2slug},
+we treat the MRs as a linear sequence of tokens
+$\mrx = (\mrx_1, \ldots, \mrx_8)$ where each of the 8 positions represents
+the value of a corresponding attribute.
+If an attribute is not specified
+in the MR we assign it an attribute specific \textit{n/a} token.
+In the E2E dataset  there is only one dialog act type, \textit{Inform}, 
+so we do not represent it in \mrx.
+%See \autoref{figure:e2einp} for an example input representation 
+%for the MR 
+%\textit{Inform(name[The~Mill], near[Avalon], food[Italian])}.
+
+
+
+Prior work often delexicalizes the \textit{Name} and \textit{Near} 
+attributes (i.e. replaces verbalizations of attribute values with a
+placeholder token), which can later be replaced with the original
+attribute value in a post-processing step. 
+%attribute specific
+%token. At test time that token can be substituted for the appropriate 
+%attribute value. 
+For example, the delexicalized version of the utterance in 
+\autoref{figure:introexample}
+would be ``Near NEAR is a venue that is children friendly named NAME.''
+%See \autoref{figure:e2einp} for an example utterance with and without 
+%delexicalization.
+\textit{Name} and \textit{Near}  have a relatively large vocabulary of valid slot fillers, some of which are only seen  infrequently in the training data;
+it can be difficult for fully lexicalized models to produce some of the 
+rarer location names for these attributes. 
+
+However, since delexicalization might be difficult or 
+impossible in other domains, we implement both delexicalized and lexicalized
+versions of the generation models on the E2E dataset to 
+more fully evaluate the
+self-training method.\footnote{
+    Additional preprocessing details can be found in \autoref{app:preproc}.}
+
+
+
+\paragraph{Laptops and TVs Model Inputs}
+The Laptops and TVs datasets have a more diverse set of dialog acts
+and can have repeated attributes (with different values)  in some cases, so we 
+abandon our fixed length, fixed position encoding, and represent
+each MR as a initial dialog act token and then a variable length sequence
+of tokens for each of the specified attributes. 
+The evaluation script for these datasets uses delexicalization
+to evaluate attribute realization error, and so we use it here to be 
+consistent with prior work, 
+delexicalizing all possible attributes.
+%except for the binary ones.
+%\textit{hasUsbPort} and \textit{isForBusinessComputing}. %For simplicity, we do not perform
+%lexicalized experiments on these datasets. 
+See \autoref{app:inputrep} for example input sequences for all datasets.
+%\textit{Compare} and \textit{InformCount} dialog acts.
+
+
+
+
+\subsection{Experiments and Results}
+
+\subsection{E2E Self-Training}
+ We train base generators \basegen~on the original training data \trdata, 
+ with and without
+delexicalizing the \textit{Name} and \textit{Near} attributes. 
+We train for 500 epochs with gradient descent. We use a batch size of 128,
+with a learning rate of 0.25, weight decay penalty of 0.0001, and a dropout 
+probability of 0.25.
+We select the best model iteration using validation
+set BLEU score\footnote{We use the official shared task script to
+compute automatic quality metrics on the E2E dataset.}.
+
+Using the self-training method outlined in \autoref{section:selftrain},
+we create augmented datasets using either \ruleclf~or
+\learnedclf, which we refer to as 
+$\augdata_{\ruleclf}$ and $\augdata_{\learnedclf}$ respectively 
+(\learnedclf~is only in the delexicalized setting).
+
+For both $\trdata \cup \augdata_{\ruleclf}$ and 
+$\trdata \cup \augdata_{\learnedclf}$ we train new generators \auggen~using 
+the same training setting as above (although we terminate training after 50 
+epochs
+because the models converge much faster with the additional data).
+
+%We then create augmented datasets using the methods
+%described in section~\ref{}, using either the rule-based classifier 
+%\ruleclf~or learned classifier \learnedclf~to reconstruct the MRs.
+%For each filtering method we train a new generator \auggen~on the union of 
+%the original training data the augmented data collection, i.e. 
+%$\trdata \cup \augdata^{\ruleclf}$ and $\trdata \cup \augdata^{\learnedclf}$.
+%The architecture of \auggen ~ is identical to that of \basegen. We 
+%train \auggen ~ for 50 epochs (with the added data, the \auggen ~ 
+%models converge much faster), again selecting the best model via validation 
+%set BLEU score.
+
+
+\input{nlg/tables/e2e_autoqual.tex}
+
+
+\paragraph{Results} \autoref{table:autoqual} shows the automatic quality measurements on
+the E2E test set using BLEU, ROUGE-L, and METEOR.
+We show results for both greedy and beam decoding with beam size 8
+under \basegen~and
+\auggen~models. We compare our models to the best sequence-to-sequence DNN
+model, Slug \cite{juraskaslug2slug}, the best grammar rule based model, 
+DANGNT \cite{nguyen2018structurebased},
+and the best template based model, TUDA \cite{puzikov2018e2e}, as determined during 
+the shared task evaluation \cite{duvsek2019evaluating}.
+
+\input{nlg/tables/e2e_autosem.tex}
+
+
+
+Surprisingly, \basegen~using greedy decoding surpases all of the 
+baseline systems. This is quite shocking as the Slug model ensembles
+three different sequence-to-sequence models producing 10 outputs each using beam search and reranking based on slot alignment to select the final generation
+output. The \auggen/\ruleclf~model remains competitive with Slug, 
+again even using greedy decoding.
+The \auggen/\learnedclf~starts underperforming Slug on BLEU score but
+remains competitive on ROUGE-L and METEOR again when using greedy decoding.
+Overall the augmented training data tends to hurt generation quality.
+In this regard, the added noise of the trained classifier exacerbates things
+as it reduces quality more than the rule-based filtering. 
+
+In the lexicalized setting,
+\basegen~produces lower quality output than the Slug system.
+However, the augmented training procedure increases
+the quality of the lexicalized \auggen~model which beats Slug on ROUGE-L.
+
+
+The automatic quality evaluations are somewhat limited, however. To gain
+more insight into model performance
+we apply our rule based parser to estimate attribute realization error
+for all system outputs on the test set,
+similarly to \cite{duvsek2019evaluating}
+(e.g., if the MR specifies \textit{food[French]},
+we check to make sure the generated utterance says so). 
+The results of this evaluation are shown in \autoref{table:autosem}.
+Immediately, it is revealed that \basegen~is far worse than the baseline 
+methods making 115 and 83 errors using greedy and beam decoding respectively.
+
+
+The \auggen/\ruleclf~model achieves zero test set
+errors even when using the greedy 
+decoding. The \auggen/\learnedclf~model is slightly worse (in agreement 
+with the automatic quality measurements), but its greedy search is still
+superior to the more sophisticated Slug decoder, achieving 19 total
+test set errors compared to Slug's 67 errors.
+
+
+%In this experiment we train a fully lexicalized \basegen~and \auggen~models
+%on the E2E dataset. This is an especially challenging setting as there
+%are several rare attribute values for the \textit{name} and \textit{near}
+%attributes and as previously noted it is often very difficult to generate
+%the corresponding realizations via beam search.
+%Other than lexicalization, we follow the same training protocol as experiment 
+%1.
+%We generate an augmented dataset using the rule based classifier and
+%compare the automatic quality and attribute realization error rates 
+%as in experiment 1.
+%
+
+%?\paragraph{Results}
+%?\autoref{table:e3:autoqual} show the automatic quality metrics for
+%?the lexicalized \basegen~and \auggen~models. 
+
+
+
+The lexicalized \basegen~model has especially high error rates, 
+particularly on the \textit{Name} and \textit{Near} attributes.
+With augmented data training, the \auggen~model reduces these errors
+ to zero when using greedy search and 2 with beam search. Unfortunately,
+the augmented training is more unstable in the lexicalized setting, 
+as it produces a large spike in \textit{food} attribute errors, although
+the \auggen~models still have lower overall error than  \basegen.
+ 
+
+\subsection{Laptops and TVs Self-Training}
+We perform similar experiments on the Laptops and TVs datasets. 
+We train a separate \basegen~model for each dataset 
+for 300 epochs with a learning rate of 0.1
+for Laptops and 0.25 for TVs. The weight decay penalty was 0.0001 
+and dropout probability was 0.25. Best model iteration is determined
+by validation set BLEU score. As in the E2E experiments, we create an augmented
+dataset for both the Laptops and TVs dataset using the method
+outlined in \autoref{section:selftrain}. We then train new generators 
+\auggen~on the union of original training data and the augmented dataset.
+
+\paragraph{Results} 
+
+We automatically evaluate our models using the evaluation script of
+\citet{wen2016multi}, which computes BLEU scores, as well as slot
+alignment error rate (since this dataset is almost fully delexicalized,
+it simply checks for the presence of the correct attribute placeholders
+according to the MR). We compare again to the Slug model as well
+as the Semantically Conditioned LSTM (SCLSTM) \cite{wen2015semantically}
+which report state-of-the-art results on these datasets.
+
+The results are more mixed here. Our BLEU scores are about 15 points 
+below the baselines on the Laptops dataset and 20 points below the 
+baselines on the TVs dataset. 
+Upon examing  the evaluation script in detail we see that 
+BLEU score is calculated using 5 model outputs which \citet{juraskaslug2slug}
+and \citet{wen2016multi} do. We only produce the 1-best output
+at test time,
+perhaps explaining the difference.
+
+Looking through our model
+outputs we see mostly good utterances, often nearly exactly matching the 
+references.
+Our models outperform the state of the art models on errors. The best state of the art models  make errors by generating sentences that do not match the input representation 0.79\%  and 1.67\% of the time on the Laptops and TVs datasets
+respectively. Our \auggen~model reduces that error to only 0.13\% and 
+0.20\%.
+
+%We do achieve the lowest error rates, with \auggen~beam
+%decoding achieving a 0.2\% error rate versus the previous best of 1.67\%
+%on the TVs dataset, and \auggen~greedy decoding achieving a 0.13\% error
+%rate compared the 0.79\% baseline rate.
+
+
+
+\begin{table}
+    \begin{tabular}{lrrrr}
+        \toprule
+        & \multicolumn{2}{c}{Laptops} & \multicolumn{2}{c}{TVs} \\
+        Model & BLEU & Err. & BLEU & Err.  \\
+        \midrule
+        SCLSTM    & 51.16 &   0.79\% & \textbf{52.65} &   2.31\%\\
+        Slug & \textbf{52.38}  &  1.55\% & 52.26  &  1.67\% \\
+        \basegen~~beam  &37.13  &0.72\% & 32.63 & 0.72\% \\
+        \auggen~~greedy & 37.21 &  \textbf{0.13\%} & 32.43 & 0.28\%\\
+        ~~~~~~beam   & 37.19 & 0.14\% & 32.59 &  \textbf{0.20\%} \\
+\bottomrule
+    \end{tabular}
+
+    \caption{BLEU and automatic attribute error on the Laptops and TVs
+    datasets.}
+    \label{table:laptoptvautoqual}
+\end{table}
+
+
+
+
+\subsection{Experiment 4: Human Evaluation} 
+
+\paragraph{E2E Dataset} We had two undergraduate students not involved with 
+the research look at 100 random test set utterances for six
+of our model variants. They were shown
+both the Slug output and one of our model outputs and asked to select
+which output was of better linguistic quality and correctness or 
+indicate that they were equally good.
+ We resolved disagreements in favor of the baseline,
+i.e. if any annotator thought the baseline was better we considered it so.
+If an annotator marked one of our 
+systems as better and the other marked it as equal, we considered it 
+equal to the baseline. Inter-annotator agreement was high, with 92\% agreement on correctness
+and 88\% agreement on quality.
+
+\autoref{humane2e} shows the results of the evaluation.
+We find that the \auggen~model outputs are indistinguishable from the Slug
+model in terms of linguistic quality, regardless of the setting.
+In terms of correctness, the lexicalized \auggen~model is as good as or better than the Slug model 98\%
+of the time. 
+%We again stress that the \auggen~model only uses beam search 
+%with beam size 8, while Slug is delexicalized, and consists of an ensemble of 
+%three DNN models each producing 10 outputs via beam search, and reranking 
+%to select the candidate that minimizes attribute realization error.
+When using the delexicalized models, we don't even need beam search.
+The delexicalized \auggen~greedy decoder is as good as or better 
+than Slug 100\% of the time.
+
+\paragraph{Laptops Dataset} We had the same annotators look at 100 random 
+\textit{Inform}
+DAs from the Laptops test set since they are the majority DA type and we 
+could use the same annotator
+guidelines from the E2E experiment. We do not have access to the Slug
+or SCLSTM outputs on this dataset, so we compared to one of the two
+test set reference sentences (picking at random) vs. 
+the \auggen/\ruleclf~with greedy decoding. \autoref{humanlaptop}
+shows the results. Despite the low BLEU scores, we find our outputs
+to be of comparable quality to references 91\% of the time. Moreover,
+they are equally as correct as the human references 100\% of the time.
+Annotators agreed 99\% and 87\% of the time on correctness and quality 
+respectively.
+
+\input{nlg/tables/table_human_eval.tex}
+
+
+
+
+\subsection{Analysis}
+
+We hypothesize that self-training improves the correctness of outputs
+by sacrificing some expressivity of the model. For example, 
+\auggen~BLEU scores
+on the E2E dataset drop by at least 0.8 as compared to \basegen~with beam
+search. We see a similar pattern on the TVs dataset. Self-training
+increases automatic metrics in the lexicalized setting, but this could 
+be attributable to reductions  in \textit{Name} and \textit{Near}
+realization errors, which are orthogonal to the 
+syntactic diversity of generation.
+
+To better quantify these effects we report the average length in words, 
+average number of sentences, and average revised Developmental Level (D-Level)
+score according to the D-Level analyser \cite{lu2009automatic}.
+The D-Level analyser automatically categorizes the syntactic complexities 
+of an utterance into one of eight categories, with eight being the most
+complex, based on the revised Developmental Level scale \cite{rosenberg1987indicators,covington2006complex}.
+
+
+\autoref{table:samplequal} shows the statistics for the E2E test set outputs. 
+In the lexicalized setting, the mean D-level results support our hypothesis;
+syntactic complexity of test set outputs decreases from \basegen~to~\auggen.
+In the delexicalized setting this is somewhat true; three of 
+the \auggen~models have lower mean D-level scores than \basegen~with 
+greedy decoding. Curiously, \auggen/\learnedclf~with beam search has the 
+highest overall syntactic complexity of any our model variants, at odds
+with our hypothesis.
+No models are as syntactically complex as the human references, but our
+models come closest, with a mean D-Level category of 1.87 using the delex. \auggen/\learnedclf~model with beam decoder. %, compared to 1.39 with Slug. 
+
+
+We  also 
+see that \auggen/\ruleclf~models %are on average two words longer than
+%the human references and Slug outputs. Additionally they 
+are over two sentences
+in length on average while the human references are under two sentences,
+suggesting they are more often falling back to simple but reliable
+ways to realize attributes (e.g., appending ``It is a family-friendly venue.'').
+
+\input{nlg/tables/table_test_qual.tex}
+
+
+
+\input{nlg/tables/table_sample_qual.tex}
+
+That our simple models with greedy search and no semantic control mechanisms
+can perform as reliably as more sophisticated models suggest that 
+in standard training regimes we 
+are often not fully learning from all information available in the 
+training data. Via sampling we can uncover novel recombinations of 
+utterances that are only implied by the provided references.
+The gains of self-training also suggest that additional
+research into active learning for this task might bear fruit.
+
+One curious observation about the self-training procedure is that 
+it leads to a convergence in output complexity of greedy and beam decoding.
+The differences between mean D-level score on the \basegen~models is
+0.34 and 0.31 in the lexicalized and delexicalized settings respectively.
+This shrinks to 0.0 and 0.1 in the delexicalized \auggen~settings and 0.06 
+for lexicalized \auggen, suggesting that the model probability distributions
+are sharpening around a smaller set of output structures.
+
+
+

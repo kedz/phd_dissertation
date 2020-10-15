@@ -1,0 +1,320 @@
+\section{Meaning Representations for Task-Oriented Dialogue Generation}
+\label{sec:mr4tod}
+\subsubsection{On \MeaningRepresentations}
+
+In this chapter, we use several domain specific \meaningrepresentation s to
+formally represent the input to the \surfacerealization~model.  While
+specifics of the \meaningrepresentation~can vary from domain to domain, the
+overall structure of the \meaningrepresentation~is fairly straightforward,
+borrowing from a common format used frequently in the
+\naturallanguagegeneration~literature
+\citep{mairesse2010,gasic2014,wen2015,novikova2017,juraska2019}. Each
+\meaningrepresentation~of an utterance is defined by the \dialogueact, which
+expresses the communicative goal or intent, and zero or more
+\attributevalue~pairs which further define the semantics of the desired
+utterance. 
+
+See \autoref{fig:informexample} for an example \meaningrepresentation~from
+the restaurant domain. The dialogue act, in this case \textit{Inform},
+is the first item and is written in \textsc{SmallCaps} style.
+The attributes are ``name,'' ``eat\_type,'' ``customer\_rating,'' ``food,'' 
+``area,'' and ``family\_friendly;''
+their associated values are ``Aromi,'' ``coffee shop,'' ``5 out of 5,'' 
+``English,'' ``city centre,'' and ``yes'' respectively. In this
+case the attributes are referring to the restaurant about which a hypothetical
+dialogue agent is trying to inform a user.
+
+In our setting, \dialogueact s are predominantly declaritive (e.g.,
+\autoref{fig:informexample} or \autoref{fig:giveopinionexample}), but also
+include iterogatives (e.g., \autoref{fig:confirmexample}), and some that may be
+a mix of both (e.g., \autoref{fig:compareexample} where the second reference
+ends in a question about user preference).  Additionally, we also have
+semantically vacuous ``chit-chat'' like \textit{Greeting} and \textit{Goodbye}.
+
+
+The term \meaningrepresentation~is somewhat of a misnomer as the
+representations might better be characterized as a pragmatic construct, i.e. a
+representation of the dialogue agent's intentional state.  The
+\attributevalues, on the other hand, are a semantic construct, representing the
+semantic value or propositional content of the sentences in the utterance. In
+other words, from the perspective of formal semantics, \begin{itemize} 
+    \item The Aromi is a coffe shop in the city centre.  \item Just to
+    confirm, the coffee shop in the city centre is called Aromi?  \item What
+about Aromi, the coffee shop in the city centre?  \end{itemize} \noindent all
+share the same semantic value. The ``meaning'' of the above statements
+in first-order logic might look something like, \[\exists x :
+\operatorname{isCoffeeShop}(x) \wedge \operatorname{namedAromi}(x) \wedge
+\operatorname{inCityCentre}(x).\] which we might represent in our present
+setting as a ``\meaningrepresentation~without a dialogue act,'' i.e.,
+\begin{center} \MR{\textrm{---}}{\AV{name}{Aromi}}{\AV{eat\_type}{coffee
+    shop}}{\AV{area}{city centre}} \end{center} ~\\
+    
+    \noindent and which combined with one of the dialogue acts
+    \textit{Inform}, \textit{Confirm},
+    or \textit{Recommend} yields the pragmatic meaning of the respective sentences above.
+
+
+
+The kinds of values that can fill an attribute are typically categorical
+variables. For example, in the restaurant domain, the attribute ``food'' may
+take values from a closed list of food types such as the set
+$\{\textrm{``Chinese''}, \textrm{``English''}, \textrm{``French''},
+\textrm{``Fast food''}, \textrm{``Italian''}, \textrm{``Japanese''}\}$. Other
+value types include list-valued attributes, numerical values, or free text (see
+\autoref{fig:valtypes} for examples of each). For list-valued attributes, the
+value is a list of items drawn from a closed set.  For example, in the video
+game domain, a video game can belong to several genres simultaneously.
+For purposes, we treat each value in the 
+list as a distinct \attributevalue~pair. So in the case of \autoref{fig:valtypes},
+we treat the genres attribute, it is as if we have \AV{genres}{platformer}, 
+\AV{genres}{puzzle}, and \AV{genres}{shooter} present in the \meaningrepresentation.
+Additionally, not all attributes need to be specified. In which case, the
+utterance should not mention them.
+
+\input{nlg/figures/valtypes.tex}
+
+
+\subsubsection{Relating Between \MeaningRepresentations~and \Utterances}
+
+Let $\mr \in \mrspace$ be a \meaningrepresentation, and let $\utttoks = \left[\utttok_1,\ldots,
+\utttok_\uttSize \right] \in \outSpace$ be an utterance, i.e. sequence of $\uttSize$ tokens from a vocabulary 
+$\uttvocab$ and $\outSpace = \uttvocab^*$. We say that an utterance $\utttoks$ \textit{denotes} a \meaningrepresentation~$\mr$,
+which we write $\denotes{\utttoks} = \mr$ if the propositional content of the utterance and the
+meaning representation are the same, i.e. the \attributevalues~implied by $\utttoks$ and explicitly 
+listed by $\mr$ are the same. 
+We can make similar statements about a sub-sequence of an utterance. Let 
+$\utttoks_{i:i+j} = \left[\utttok_i, \utttok_{i+1},\ldots, \utttok_{i+j-1} \right]$ be 
+sub-sequence of $j$ tokens starting at token $i$. 
+We then have $\denotes{\utttoks_{i:i+j}} = \mr^\prime$ for some $\mr^\prime \in \mrspace$.  
+
+
+As an example, consider the following \meaningrepresentation,
+\begin{singlespace}
+\[
+    \mr = \left[\!\!\left[ \begin{array}{l}
+        \textsc{Inform} \\
+        \AV{name}{The Vaults}\\
+        \AV{eat\_type}{pub}\\
+        \AV{near}{Caf{\'e} Adriatic}\\
+        \AV{family\_friendly}{no}\\
+\end{array}\right]\!\!\right] 
+\]
+\end{singlespace}
+and the utterance,
+\[\utttoks = \left[ \textit{The},\,\textit{Vaults},\,\textit{pub},\,\textit{is},\,\textit{near},\,\textit{Caf{\'e}},\,\textit{Adriatic},\,\textit{.},\,\textit{It},\,\textit{is},\,\textit{not},\,\textit{a},\,\textit{good},\,\textit{place},\,\textit{for},\,\textit{families},\,\textit{.}\right]. \]
+\noindent Clearly, $\denotes{\utttoks} = \mr$. But we can also look at the meanings of individual
+phrases,\begin{singlespace}
+    \begin{align*}
+        \denotes{\utttoks_{1:3}} = \left[\!\!\left[ \left[\textit{The}, \textit{Vaults}  \right] \right]\!\!\right] & = \left[\!\!\left[
+\begin{array}{l} \textrm{---} \\ \AV{name}{The Vaults}\end{array} \right]\!\!\right] \\
+    \denotes{\utttoks_{3:4}} = \left[\!\!\left[ \left[\textit{pub}  \right] \right]\!\!\right] &= \left[\!\!\left[
+\begin{array}{l} \textrm{---} \\ \AV{eat\_type}{pub}\end{array} \right]\!\!\right] \\
+    \denotes{\utttoks_{5:8}} = \left[\!\!\left[ \left[\textit{near}, \textit{Caf{\'e}}, \textit{Adriatic}  \right] \right]\!\!\right] & = \left[\!\!\left[
+\begin{array}{l} \textrm{---} \\ \AV{near}{Caf{\'e} Adriatic}\end{array} \right]\!\!\right] \\
+    \denotes{\utttoks_{11:17}} = \left[\!\!\left[ \left[\textit{not}, \textit{a}, \textit{good}, \textit{place}, \textit{for}, \textit{families}  \right] \right]\!\!\right] & = \left[\!\!\left[
+\begin{array}{l} \textrm{---} \\ \AV{family\_friendly}{no}\end{array} \right]\!\!\right]. 
+\end{align*}
+\end{singlespace}
+Note that it is not the case that $\denotes{\utttoks} = \mr \Rightarrow \denotes{\utttoks_{i:i+j}} \subseteq \mr$. Consider in the example above $\utttoks_{11:17}$ its sub-sequence $\utttoks_{12:17} = \left[\textit{a},\,\textit{good},\,\textit{place},\,\textit{for},\,\textit{families}\right]$ which have
+the following denotations,
+\begin{singlespace}
+   \[
+   \denotes{\utttoks_{11:17}} = \left[\!\!\left[\begin{array}{l}\textrm{---}\\ \AV{family\_friendly}{yes} \end{array}\right]\!\!\right] \ne \denotes{\utttoks_{12:17}}= \left[\!\!\left[\begin{array}{l}\textrm{---}\\ \AV{family\_friendly}{no} \end{array}\right]\!\!\right] 
+       \]
+   \end{singlespace}
+\noindent It is important to note that the \attributevalues~are
+unordered and do not necessarily reflect the realization order of the 
+utterance. 
+
+
+   In the datasets used for this chapter, $\mr$ are provided with one or more reference uttterances, $\utttoks^{(1)}, \ldots \utttoks^{(k)}$ and that for each reference $\utttoks^{(i)}$, we have that each 
+\attributevalue~in $\mr$ can be mapped to an 
+utterance sub-sequence that denotes it.
+Occasionally this is not the case in the available
+training data. For example, some \attributevalues~may have several possible
+groundings (see \autoref{somefig}), 
+no possible grounding (\autoref{somefig2}),
+or be realized using inferential knoweldge not explicitly 
+represented in the \meaningrepresentation~(\autoref{somefig3}). While we 
+do not remove such examples for the training data, we consider model 
+generation of such phenomena to constitute a failure to faithfully generate
+an utterance.  
+ 
+Because each \attributevalue~is explicitly and uniquely grounded in the 
+target utterances, this makes \surfacerealization~from 
+\meaningrepresentations~a useful task to study faithful generation. The
+baseline task of correctly generating all \attributevalues~appropriately 
+for the \dialogueact~is hard enough, and it in this setting we do not have
+to worry about ungrounded information or information that is not explicitly
+represented in the \meaningrepresentations~but is deducable from
+the \meaningrepresentation~\citep{cleanuprotowire}.  
+ 
+\clearpage
+
+%
+%pairs are provided for training a
+%\naturallanguagegeneration~model such that each \attributevalue~can be mapped to an 
+%utterance sub-sequence that denotes it.
+%of words 
+%(or subwords) in the 
+%reference utterance.
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%%\begin{figure}
+%%\center
+%%%\begin{tabular}{cp{9cm}}
+%%\begin{subfigure}{.35\textwidth}
+%%\center
+%%$\left[\begin{array}{l} 
+%%    \textsc{Inform} \\ 
+%%    \textrm{name=The Vaults} \\
+%%    \textrm{eat\_type=pub} \\
+%%    \textrm{customer\_rating=5 out of 5} \\
+%%    \textrm{near=Caf{\'e} Adriatic} \\
+%%    \textrm{price\_range=more than \pounds 30}
+%%\end{array}\right]$ 
+%%\caption{\emph{Inform} dialog act.}
+%%\end{subfigure}\hfill \begin{subfigure}{.58\textwidth}
+%%\begin{itemize}
+%%    \item The Vaults pub near Caf{\'e} Adriatic has a 5 star rating. Prices start at \pounds 30.
+%%    \item Located near Caf{\'e} Adriatic, the Vaults is a 5 star rated pub. Prices range above \pounds 30.
+%%\end{itemize}
+%%\caption{Natural language utterances.}
+%%\label{fig:mr1utt}
+%%\end{subfigure}
+%%\caption{An example \meaningrepresentation~(a) and example utterances (b)
+%%from the restaurant domain.}
+%%\label{fig:mr1}
+%%\end{figure}
+%
+%
+%\autoref{fig:mr1utt} shows some possible realizations of the 
+%\meaningrepresentation. It is important to note that the \attributevalues~are
+%unordered and do not necessarily reflect the realization order of the 
+%utterance. In the datasets used for this chapter,  \meaningrepresentations~are
+% paired with at least one reference utterance, and for the most part
+%each \attributevalue~uniquelt maps to a span of words (or subwords) in the 
+%reference utterance. See \autoref{fig:mr2align} where the mapping is made
+%explicit for the first utterance realization from \autoref{fig:mr1utt}.
+%
+%
+%%\begin{figure}
+%%\center
+%%%\begin{tabular}{cp{9cm}}
+%%\begin{subfigure}{.35\textwidth}
+%%\center
+%%$\left[\begin{array}{l} 
+%%    \textsc{Inform} \\ 
+%%    \textrm{(1) name=The Vaults} \\
+%%    \textrm{(2) eat\_type=pub} \\
+%%    \textrm{(3) customer\_rating=5 out of 5} \\
+%%    \textrm{(4) near=Caf{\'e} Adriatic} \\
+%%    \textrm{(5) price\_range=more than \pounds 30}
+%%\end{array}\right]$ 
+%%\caption{\emph{Inform} dialog act.}
+%%\end{subfigure}\hfill \begin{subfigure}{.58\textwidth}
+%%  [The Vaults]\textsubscript{(1)} [pub]\textsubscript{(2)} [near Caf{\'e} Adriatic]\textsubscript{(4)} [has a 5 star rating.]\textsubscript{(3)} [Prices start at \pounds 30.]\textsubscript{(5)}
+%%\caption{Natural language utterances.}
+%%
+%%\end{subfigure}
+%%\caption{An example \meaningrepresentation~(a) and example utterances (b)
+%%from the restaurant domain.}
+%%\label{fig:mr2align}
+%%\end{figure}
+%
+%
+%
+%
+%
+%
+%\begin{figure}
+% \begin{subfigure}{\textwidth}
+%    \begin{minipage}{0.5\textwidth}
+%\center
+%$\left[\begin{array}{l} 
+%    \textsc{Inform} \\ 
+%    \textrm{name=Portal 2} \\
+%    \textrm{esrb=E 10+ (for Everyone 10 and Older)} \\
+%    \textrm{genres=[platformer, puzzle, shooter]} \\
+%    \textrm{player\_perspective=[first person]} \\
+%    \textrm{has\_multiplayer=yes}
+%\end{array}\right]$ 
+%\end{minipage}
+%    \begin{minipage}{0.5\textwidth}
+%        Portal 2 was rated E 10+ (for Everyone 10 and
+%        Older). It is a puzzle platformer FPS with
+%        multiplayer.
+%\end{minipage}
+%
+%~\\
+%
+%\caption{An example of list-valued attributes (genres and player\_perspective)
+%    from the video game domain. Note that the acronym FPS means ``first person
+%shooter'' which realizes both a genre \attributevalue~and the 
+%player\_perspective \attributevalue.}
+%\end{subfigure}  
+%
+%~\\
+%~\\
+%~\\
+%
+%\begin{subfigure}{\textwidth}
+%    \begin{minipage}{0.5\textwidth}
+%    \center
+%$\left[\begin{array}{l} 
+%    \textsc{Request} \\ 
+%    \textrm{specifier=``dull''} \\
+%    \textrm{has\_multiplayer=yes}
+%\end{array}\right]$ 
+%\end{minipage}\begin{minipage}{0.5\textwidth}
+%    What's the most dull multiplayer game you've ever played?
+%\end{minipage}
+%
+%~\\
+%
+%\caption{An example of a free-text valued attribute (specifier) from the 
+%video game domain. The specifier value can be any adjective.}
+%\end{subfigure}  
+%
+%~\\
+%~\\
+%~\\
+%
+%\begin{subfigure}{\textwidth}
+%    \begin{minipage}{0.5\textwidth}
+% \center
+%$\left[\begin{array}{l} 
+%    \textsc{Inform Count} \\ 
+%    \textrm{count=$58$} \\
+%    \textrm{type=laptop} \\
+%    \textrm{is\_for\_business\_computing=true} \\
+%    \textrm{weight\_range=don't care} \\
+%    \textrm{drive\_range=don't care} \\
+%\end{array}\right]$ 
+%\end{minipage}
+%\begin{minipage}{0.5\textwidth}
+%There are 58 laptops used for business computing if you do not care what 
+%weight range or drive range they have.
+%\end{minipage}
+%
+%~\\
+%
+%
+%\caption{An example of a numeric-valued attribute (count) from the laptop domain.}
+%\end{subfigure}  
+%
+%   
+%%inform_count(count=58;type=laptop;isforbusinesscomputing=true;weightrange=dontcare;driverange=dontcare
+%\caption{Examples of various \attributevalue~types paired with an example
+%realization.}
+%\end{figure}
+%
+%

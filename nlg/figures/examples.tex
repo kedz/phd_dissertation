@@ -1,0 +1,116 @@
+\begin{figure}[p]
+\center
+%\begin{tabular}{cp{9cm}}
+\begin{subfigure}{.35\textwidth}
+\center
+\MR{\textsc{Inform}}
+    {\AV{name}{Aromi}}
+    {\AV{eat\_type}{coffee shop}}
+    {\AV{customer\_rating}{5 out of 5}}
+    {\AV{food}{English}}
+    {\AV{area}{city centre}}
+    {\AV{family\_friendly}{yes}}
+ 
+\caption{\emph{Inform} dialog act.}\label{fig:informexample}
+\end{subfigure}\hfill \begin{subfigure}{.58\textwidth}
+\begin{itemize}
+\item Aromi coffee shop serves English food in a family-friendly atmosphere near the city center and has a customer rating of 5 out of 5.
+\item The Aromi coffee shop is family-friendly and serves English food.  It has a customer rating of 5 out of 5 and is located near the center of the city.
+\end{itemize}
+\caption{Natural language utterances.}
+\label{fig:mr1utt}
+\end{subfigure}
+
+%"name[Aromi], eatType[coffee shop], food[English], customer rating[5 out of 5], area[city centre], familyFriendly[yes]",
+%"name[Aromi], eatType[coffee shop], food[English], customer rating[5 out of 5], area[city centre], familyFriendly[yes]"
+%"name[Aromi], eatType[coffee shop], food[English], customer rating[5 out of 5], area[city centre], familyFriendly[yes]",,0,"name[Aromi], eatType[coffee shop], food[English], customer rating[5 out of 5], area[city centre], familyFriendly[yes]"
+
+
+~\\~\\
+
+\begin{subfigure}{.35\textwidth}
+\center
+$\left[\begin{array}{l} 
+    \textsc{Give Opinion} \\ 
+    \textrm{name=Little Nightmares} \\
+    \textrm{rating=good} \\
+    \textrm{genres=[}\\
+    \textrm{~~~~adventure,} \\
+    \textrm{~~~~platformer,}\\
+    \textrm{~~~~puzzle} \\
+    \textrm{]} \\
+    \textrm{player\_perspective=side view}
+\end{array}\right]$ 
+\caption{\emph{Give Opinion} dialog act.}\label{fig:giveopinionexample}
+\end{subfigure}\hfill \begin{subfigure}{.58\textwidth}
+\begin{itemize}
+    \item Adventure games that combine platforming and puzzles can be frustrating to play, but the side view perspective is perfect for them. That's why I enjoyed playing Little Nightmares.
+
+    \item Little Nightmares is a pretty cool game that has kept me entertained. It's an adventure side-scrolling platformer with some puzzle elements to give me a bit of a challenge.
+\end{itemize}
+\caption{Natural language utterances.}
+\label{fig:mr1utt}
+\end{subfigure}
+
+
+~\\~\\
+
+
+\begin{subfigure}{.35\textwidth}
+\center
+$\left[\begin{array}{l} 
+    \textsc{Compare} \\ 
+    \textrm{name\textsubscript{1}=Erebus 92} \\
+    \textrm{resolution\textsubscript{1}=720p} \\
+    \textrm{family\textsubscript{1}=W2} \\[8pt]
+    
+    \textrm{name\textsubscript{2}=Helios 96} \\
+    \textrm{resolution\textsubscript{2}=1080p} \\
+    \textrm{family\textsubscript{2}=L5} \\
+\end{array}\right]$ 
+
+~\\
+~\\
+
+\caption{\emph{Compare} dialog act.}\label{fig:compareexample}
+\end{subfigure}\hfill \begin{subfigure}{.58\textwidth}
+\begin{itemize}
+    \item Tthe Helios 96 tv has a 1080p resolution in the L5 family while the Erebus 92 has a 720p resolution in the W2 family. 
+    \item Compared to Erebus 92 which has 720p resolution and is in the W2 product family, Helios 96 has 1080p resolution and is in the L5 product family. Which one do you prefer?
+\end{itemize}
+\caption{Natural language utterances.}
+\label{fig:mr1utt}
+\end{subfigure}
+
+~\\~\\
+
+\begin{subfigure}{.35\textwidth}
+\center
+
+~\\~\\
+
+$\left[\begin{array}{l} 
+    \textsc{Confirm} \\ 
+    \textrm{type=laptop} \\
+    \textrm{drive\_range=medium} \\
+\end{array}\right]$ 
+
+~\\~\\~\\
+
+\caption{\emph{Confirm} dialog act.}\label{fig:confirmexample}
+\end{subfigure}\hfill \begin{subfigure}{.58\textwidth}
+\begin{itemize}
+   \item Just to verify. The laptop needs to have a medium drive range, correct?
+   \item Let me confirm, a laptop in the medium drive range right?
+\end{itemize}
+\caption{Natural language utterances.}
+\label{fig:mr1utt}
+\end{subfigure}
+
+
+
+\caption{Example \meaningrepresentation s (left) and their reference utterances (right)
+from the restaurant, video game, tv, and laptop domains.}
+\label{fig:nlgexamples}
+\end{figure}
+

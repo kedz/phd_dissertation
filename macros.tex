@@ -13,23 +13,31 @@
 \specialterms{faithful,controllable,machine learning}
 
 \newcommand{\latin}[1]{\textit{#1}}
-\newcommand{\argmax}{\ensuremath{\operatorname{arg\;max}}}
 
 \newcommand{\abstractive}{abstractive}
+\newcommand{\alignmenttraining}{alignment training}
+\newcommand{\ancestralsampling}{ancestral sampling}
+\newcommand{\Ancestralsampling}{Ancestral sampling}
+\newcommand{\attributevalue}{attribute-value}
+\newcommand{\attributevalues}{attribute-values}
 \newcommand{\Automaticsummarization}{Automatic summarization}
 \newcommand{\autoregressive}{autoregressive}
 \newcommand{\bidirectional}{bidirectional}
 \newcommand{\contentselection}{content selection}
 \newcommand{\controllable}{controllable}
+\newcommand{\control}{control}
 \newcommand{\controllablegeneration}{controllable generation}
 \newcommand{\Controllablegeneration}{Controllable generation}
 \newcommand{\ConvolutionalNeuralNetwork}{Convolutional Neural Network}
 \newcommand{\convolutionalneuralnetwork}{convolutional neural network}
+\newcommand{\Dialogueacts}{Dialogue acts}
+\newcommand{\dialogueact}{dialogue act}
 \newcommand{\dataandtexttotext}{data- and text-to-text}
 \newcommand{\datatotext}{data-to-text}
 \newcommand{\DeepLearning}{Deep Learning}
 \newcommand{\Deeplearning}{Deep learning}
 \newcommand{\deeplearning}{deep learning}
+\newcommand{\elementwise}{element-wise}
 \newcommand{\encoder}{encoder}
 \newcommand{\extractive}{extractive}
 \newcommand{\extract}{extract}
@@ -44,9 +52,14 @@
 \newcommand{\ignore}{ignore}
 \newcommand{\languagegeneration}{language generation}
 \newcommand{\linearizationstrategies}{linearization strategies}
+\newcommand{\linearizationstrategy}{linearization strategy}
+\newcommand{\linearize}{linearize}
 \newcommand{\machinelearning}{machine learning}
 \newcommand{\machinetranslation}{machine translation}
 \newcommand{\meaningrepresentation}{meaning representation}
+\newcommand{\meaningrepresentations}{meaning representations}
+\newcommand{\MeaningRepresentation}{Meaning Representation}
+\newcommand{\MeaningRepresentations}{Meaning Representations}
 \newcommand{\naturallanguagegeneration}{natural language generation}
 \newcommand{\naturallanguageprocessing}{natural language processing}
 \newcommand{\naturallanguageunderstanding}{natural language understanding}
@@ -70,7 +83,9 @@
 \newcommand{\sentenceencoder}{sentence encoder}
 \newcommand{\sentenceextractor}{sentence extractor}
 \newcommand{\sequencetosequence}{sequence-to-sequence}
+\newcommand{\SequencetoSequence}{Sequence-to-Sequence}
 \newcommand{\surfacerealization}{surface realization}
+\newcommand{\surfacerealizationorder}{surface realization order}
 \newcommand{\taskorienteddialoggeneration}{task oriented dialog generation}
 \newcommand{\taskorienteddialoguegeneration}{task oriented dialogue generation}
 \newcommand{\texttotext}{text-to-text}
@@ -80,6 +95,9 @@
 \newcommand{\updatesummary}{update summary}
 \newcommand{\updates}{updates}
 \newcommand{\update}{update}
+\newcommand{\utteranceplan}{utterance plan}
+\newcommand{\utterance}{utterance}
+\newcommand{\Utterances}{Utterances}
 
 %\definecommand{\sal}{\varsigma}
 
@@ -104,6 +122,8 @@
 \newcommand{\psal}{p}
 \newcommand{\bsals}{\ensuremath{\boldsymbol{y}}}
 \newcommand{\predbsals}{\ensuremath{\boldsymbol{\hat{y}}}}
+\newcommand{\predbsal}{\ensuremath{{\hat{y}}}}
+\newcommand{\embParams}{\boldsymbol{\Lambda}}
 \newcommand{\embLayer}{\operatorname{Emb}}
 \newcommand{\wordEmbChar}{v}
 \newcommand{\wordEmb}{\ensuremath{\mathbf{\wordEmbChar}}}
@@ -111,6 +131,7 @@
 \newcommand{\zeroEmb}{\ensuremath{\mathbf{0}}}
 \newcommand{\doc}{\ensuremath{x}}
 \newcommand{\params}{\ensuremath{\theta}}
+\newcommand{\Params}{\ensuremath{\Theta}}
 \newcommand{\sts}{Seq2Seq}
 \newcommand{\gru}{GRU}
 \newcommand{\fgru}{\operatorname{GRU}}
@@ -275,8 +296,34 @@
 
 
 
+%%% NLG Stuff
 
-
+    \newcommand{\nulltag}{\ensuremath{\emptyset}}
+    \newcommand{\tagger}{T}
+    \newcommand{\planner}{U}
+    \newcommand{\mrtag}{t}
+    \newcommand{\mrtags}{\mathbf{\mrtag}}
+    \newcommand{\denotationset}{\mathcal{I}}
+    \newcommand{\denotes}[1]{\left\llbracket #1 \right\rrbracket}
+    \newcommand{\mr}{\ensuremath{\mu}}
+    \newcommand{\mrtok}{\ensuremath{x}}
+    \newcommand{\mrtoks}{\ensuremath{\mathbf{x}}}
+    \newcommand{\uttSize}{n}
+    \newcommand{\utttok}{y}
+    \newcommand{\utttoks}{\mathbf{y}}
+    \newcommand{\futt}{\utttoks^{(\mr)}}
+    \newcommand{\ufutt}{\utttoks^{(\lnot \mr)}}
+    \newcommand{\predutttoks}{\boldsymbol{\hat{\mathbf{y}}}}
+    \newcommand{\mrspace}{\ensuremath{\mathcal{M}}}
+    \newcommand{\inSpace}{\ensuremath{\mathcal{X}}}
+    \newcommand{\outSpace}{\ensuremath{\mathcal{Y}}}
+    \newcommand{\ls}{\pi}
+    \newcommand{\mrvocab}{\mathcal{V}_\inSpace}
+    \newcommand{\uttvocab}{\mathcal{V}_\outSpace}
+    \newcommand{\nbest}{k}
+    \newcommand{\nbestlist}{\mathcal{K}}
+    \newcommand{\dmodel}{Q}
+    \newcommand{\dparams}{\phi}
 
 
 \newcommand{\xhid}{\ensuremath{z}}
@@ -305,3 +352,88 @@
 \newcommand{\specConvWeight}{W}
 \newcommand{\specConvBias}{b}
 \newcommand{\relu}{\operatorname{ReLU}}
+
+
+\makeatletter
+\newcommand{\MR}[1]{%
+    \begin{singlespace}$\left[\!\!\left[ \begin{array}{l} #1\checknextarg}
+\newcommand{\checknextarg}{\@ifnextchar\bgroup{\gobblenextarg}{  \end{array}\right]\!\!\right]$\end{singlespace} }}
+\newcommand{\gobblenextarg}[1]{ \\ #1\@ifnextchar\bgroup{\gobblenextarg}{ \end{array}\right]\!\!\right]$\end{singlespace} }}
+
+
+
+
+
+\newcommand{\AV}[2]{\textrm{#1=#2}}
+
+
+\newcommand{\mrSize}{\ensuremath{m}}
+\newcommand{\gen}{\ensuremath{p}}
+\newcommand{\encMod}{\ensuremath{f}}
+\newcommand{\decMod}{\ensuremath{g}}
+\newcommand{\encDim}{\ensuremath{{D_\mathcal{E}}}}
+\newcommand{\decDim}{\ensuremath{{D_\mathcal{D}}}}
+\newcommand{\encState}{\ensuremath{\mathbf{h}}}
+\newcommand{\senttok}{\textit{<<$\blacksquare$>>}}
+\newcommand{\stoptok}{\textit{<<e>>}}
+\newcommand{\starttok}{\textit{<<s>>}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\softmax}{softmax}
+
+
+\newcommand{\encEmbs}{\mathbf{M}}
+\newcommand{\decEmbs}{\mathbf{W}}
+\newcommand{\setsize}[1]{{\ensuremath{\left\vert #1 \right\vert}}}
+
+\newcommand{\encWordEmb}{\mathbf{m}} 
+\newcommand{\decWordEmb}{\mathbf{w}} 
+\newcommand{\encHidState}{\mathbf{h}}
+\newcommand{\decHidState}{\mathbf{g}}
+\newcommand{\encFwdHidState}{{\boldsymbol{\overrightarrow{\mathbf{h}}}}}
+\newcommand{\encBwdHidState}{{\boldsymbol{\overleftarrow{\mathbf{h}}}}}
+\newcommand{\numLayer}{\ensuremath{L}}
+\newcommand{\gruEncParams}{\theta_\mathcal{E}}
+\newcommand{\gruDecParams}{\theta_\mathcal{D}}
+\newcommand{\gruEncFwdParams}{{\theta_{\overrightarrow{\mathcal{E}}}}}
+\newcommand{\gruEncBwdParams}{{\theta_{\overleftarrow{\mathcal{E}}}}}
+\newcommand{\fwdgru}{\overrightarrow{\fgru}}
+\newcommand{\astate}{{\boldsymbol{\bar{\mathbf{h}}}}}
+
+\newcommand{\ascore}{s}
+\newcommand{\weight}[1]{\mathbf{W}^{(#1)}}
+\newcommand{\bias}[1]{\mathbf{b}^{(#1)}}
+\newcommand{\attnkernel}{\mathbf{K}}
+\newcommand{\attnff}{\mathbf{k}}
+
+
+\newcommand{\tfEncInput}{\mathbf{H}}
+\newcommand{\tfDecInput}{\mathbf{G}}
+\newcommand{\tfEncInputRow}{\mathbf{h}}
+\newcommand{\tfDecInputRow}{\mathbf{g}}
+\newcommand{\tfEncInputEl}{h}
+\newcommand{\tfFeats}{{\embDim}}
+
+\newcommand{\layerNorm}{\operatorname{LN}}
+\newcommand{\ff}{\operatorname{FF}}
+\newcommand{\lnweight}{\mathbf{a}}
+\newcommand{\lnbias}{\mathbf{b}}
+
+\newcommand{\MultiAttn}{\operatorname{MultiHeadAttn}}
+\newcommand{\MaskedMultiAttn}{\operatorname{MaskedMultiHeadAttn}}
+\newcommand{\Query}{\mathbf{Q}}
+\newcommand{\Key}{\mathbf{K}}
+\newcommand{\Value}{\mathbf{V}}
+\newcommand{\numHeads}{{D_a}}
+\newcommand{\Mask}{\mathbf{M}}
+
+\newcommand{\Attn}{\operatorname{Attn}}
+\newcommand{\feedforwardblock}{\textsc{FeedForwardBlock}}
+\newcommand{\selfattentionblock}{\textsc{SelfAttentionBlock}}
+\newcommand{\maskedselfattentionblock}{\textsc{MaskedSelfAttentionBlock}}
+\newcommand{\encoderattentionblock}{\textsc{EncoderAttentionBlock}}
+
+\newcommand{\posEmb}{\mathbf{P}}
+\newcommand{\mrSizeMax}{m_{max}}
+\newcommand{\temperature}{\tau}
+\newcommand{\nucleusthr}{p}

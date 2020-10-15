@@ -1,0 +1,31 @@
+\begin{table}
+\centering
+\begin{tabular}{rcccc}
+\toprule
+Model  & BLEU & R.-L & MET. \\ \midrule
+Slug   & 66.19 & 67.72 & 44.54  \\  
+DANGNT & 59.90 & 66.34  & 43.46  \\
+TUDA   & 56.57 & 66.14  & 45.29  \\
+        \midrule
+delex. \basegen~~~~~~greedy & 66.91 & 68.27 & 44.95 \\
+                      beam & \textbf{67.13} &  \textbf{68.91} &  45.15  \\
+        \auggen~\ruleclf~greedy   &  65.57 & 67.71 & 45.56  \\
+                             beam & 66.28 &  68.08 &  \textbf{45.78}  \\
+     \learnedclf~greedy & 63.76 &  67.31 &  44.94  \\
+   beam   & 
+ 64.23 &  67.54 &  45.17  \\
+\midrule
+   lex. \basegen~~~~~~greedy & 60.35 &  64.51 & 41.82  \\
+                      beam   & 61.81 &  65.83 & 42.69  \\
+    \auggen~\ruleclf~greedy & 64.74 &  68.21 & 44.46  \\
+       beam & 64.81 &  67.83 &    44.39  \\
+\bottomrule
+\end{tabular}
+\caption{BLEU, ROUGE-L, and METEOR metrics on the E2E test set. Baseline methods all rely
+on at least partial delexicalization, puting our lexicalized models at a relative disadvantage.}
+
+\label{table:autoqual}
+\end{table}
+
+
+

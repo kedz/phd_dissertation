@@ -1,0 +1,770 @@
+\section{\SequencetoSequence~Models for \MeaningRepresentation-to-Text Problems}
+\label{mrtproblemdef}
+
+As is now standard practice, we model the problem of mapping a \meaningrepresentation~to
+a natural language utterance using  neural \sequencetosequence~architectures. 
+%In this chapter, we propose strategies for faithful and controllable
+%generation when using a \sequencetosequence~model to perform 
+%\surfacerealization~of a \meaningrepresentation. Before delving into those 
+%aspects, we first describe generally how a typical \sequencetosequence~model
+%is used to perform \surfacerealization~of a \meaningrepresentation.
+A \sequencetosequence~model is a neural network with parameters $\params$
+that implements a probabilistic mapping
+\[ \gen(\cdot|\cdot;\params) : \inSpace \times \outSpace \rightarrow
+(0,1)\] from input sequences \[\mrtoks = \left[\mrtok_1,\ldots,\mrtok_\mrSize\right] \in \inSpace\]
+to output sequences \[\utttoks = \left[\utttok_1, \ldots, \utttok_\uttSize\right] \in \outSpace.\]
+Tokens from the input sequence are drawn from a finite vocabulary $\mrvocab$ and input sequences its
+Kleene closure $\mrvocab^* = \inSpace$. 
+Analogously, tokens from the output sequence are drawn from a distinct, finite vocabulary $\uttvocab$ and output sequences its
+Kleene closure $\uttvocab^* = \outSpace$. 
+
+Typically, \gen~is implemented as a bi-partite network consisting of distinct
+encoder and decoder networks $\encMod$~and \decMod~respectively. The encoder $\encMod : \inSpace \rightarrow \reals^{*\times\encDim}$ is a mapping of an input sequence $\mrtoks$ of $\mrSize$ tokens to
+$\mrSize$ corresponding  vectors $\encState_1,\ldots\encState_\mrSize \in \reals^\encDim$ and
+\[ \gen(\utttoks|\mrtoks;\params) = \gen(\utttoks|\encMod(\mrtoks); \params) = \gen(\utttoks|\encState_1,\ldots,\encState_\mrSize;\params).\]
+When conditioning on an input sequence, $\gen(\cdot|\mrtoks;\params)$ is a conditional
+language model over utterance tokens that factorizes in a left-to-right fashion, i.e.,
+\[\gen\left( \utttoks| \mrtoks;\params \right) = \prod_{i=1}^\uttSize \gen\left(\utttok_i|\utttoks_{1:i-1},\mrtoks;\params\right). \]
+The decoder $\decMod : \uttvocab^+ \times \reals^{*\times \encDim} \rightarrow (0,1)$ then is 
+a mapping of previously generated tokens $\utttoks_{1:i-1} = \left[\utttok_1,\ldots,\utttok_{i-1}\right]$ and encoder states $\encState_1,\ldots,\encState_\mrSize$ to a probability distribution over
+the output vocabulary $\uttvocab$, where
+\[ \gen(\utttok_i|\utttoks_{1:i-1},\mrtoks;\params) = \decMod\left(\utttok_i, \utttoks_{1:i-1}, \encMod(\mrtoks)\right)   \quad \textrm{and} \quad \sum_{\utttok\in \uttvocab} \decMod\left(\utttok, \utttoks_{1:i-1}, \encMod(\mrtoks)\right) = 1.  \]
+
+
+Notice that the ``inputs'' and ``outputs'' to the \sequencetosequence~model are sequences of tokens, 
+$\mrtoks$ and $\utttoks$ respectively.
+In order to use a \sequencetosequence~model for \naturallanguagegeneration~from a 
+\meaningrepresentation~we need only map our desired inputs and outputs to sequences of discrete tokens. In English, the desired output is relatively straightforward to represent as 
+a sequence as an English language 
+utterance can naturally be represented as a sequence of word tokens. In practice, we also indicate full sentence stops with a special token \senttok and append another token, \stoptok, to indicate the 
+end of the utterance, as well as lower-case all tokens. As an example, the utterance 
+\[\textit{The Vaults pub is near Caf{\'e} Adriatic. It is not a good place for families.} \]
+would be represented as 
+\[\small \utttoks = \left[ \textit{the},\,\textit{vaults},\,\textit{pub},\,\textit{is},\,\textit{near},\,\textit{caf{\'e}},\,\textit{adriatic},\,\textit{.},\,\textit{\senttok},\,\textit{it},\,\textit{is},\,\textit{not},\,\textit{a},\,\textit{good},\,\textit{place},\,\textit{for},\,\textit{families},\,\textit{.},\,\textit{\stoptok}\right]. \]
+
+The \meaningrepresentation~is not 
+itself a sequence, however, so we cannot apply it to a 
+\sequencetosequence~model
+directly.
+%Let $\mr \in \mrspace$ be a \meaningrepresentation. 
+ Instead it must first be ``linearized,'' or mapped to a linear sequence of 
+ tokens. We refer to a function $\ls : \mrspace \rightarrow \inSpace$,
+ as a \linearizationstrategy. We experiment with several 
+ \linearizationstrategies~in this chapter, however, all of them operate over
+ the same {\color{red}domain}, $\mrvocab^+$, where $\mrvocab$ consists of 
+ distinct tokens for each \dialogueact~and \attributevalue~pairs. As an example
+ consider the following \meaningrepresentation,
+ \begin{singlespace}
+  \[ \mr = \left[\!\!\left[\begin{array}{l} \textsc{Inform} \\ \AV{name}{Aromi}\\\AV{area}{city centre} \\ \AV{eat\_type}{coffee shop} \end{array}\right]\!\!\right] \]
+ \end{singlespace}
+\noindent and some possible \linearizationstrategies,
+ \begin{align*}
+     \ls^{(A)}(\mr) & =  \left[\textit{inform},\,\textit{name=Aromi},\,\textit{eat\_type=coffee shop},\,\textit{area=city centre}\right] \\
+     \ls^{(B)}(\mr) & =  \left[\textit{inform},\,\textit{eat\_type=coffee shop},\,\textit{name=Aromi},\,\textit{area=city centre}\right] \\
+     \ls^{(C)}(\mr) & =  \left[\textit{inform},\,\textit{eat\_type=coffee shop},\,\textit{area=city centre},\,\textit{name=Aromi}\right].
+ \end{align*}
+In practice, regardless of the choice of \linearizationstrategy, we prepend a start token, $\starttok$,
+and append and a stop token, $\stoptok$, to all input token sequences, e.g.
+\[ \mrtoks = \left[\starttok,\,\textit{inform},\,\textit{name=Aromi},\,\textit{eat\_type=coffee shop},\,\textit{area=city centre},\,\stoptok\right]. \]
+
+
+\subsection{\SequencetoSequence~Architectures}
+
+The encoder and decoder networks of the \sequencetosequence~model can be implemented with variety
+of architectures. We show two popular architectures in particular, the gated recurrent unit (GRU)
+\cite{cho} and the transformer \cite{vaswani}.
+
+\subsubsection{GRU Architecture}
+The GRU is a form of reccurent neural network \cite{elman}, that operates over discrete 
+sequences, at every step updating a ``hidden state'' or internal representation of the current
+input and the previous hidden state. 
+
+\paragraph{Encoder Embedding Layer}
+Let $\mrtoks = \left[ \mrtok_1,\ldots,\mrtok_\mrSize\right]$ be a linearized 
+\meaningrepresentation~token sequence. We first embed each token. Let $\encEmbs \in \reals^{\setsize{\mrvocab} \times \embDim}$ where each row is an embedding for a token in $\mrvocab$,
+\[ \encEmbs = \left[ \begin{array}{c} \encWordEmb_1\\ \vdots \\ \encWordEmb_\setsize{\mrvocab} \end{array}\right]. \]
+We assume each element in $\mrvocab$ is uniquely identified with a row in $\encEmbs$; let $\mrtok\in\mrvocab$ be identified with the $i$-th row, then we indicate it's embedding by $\encEmbs_\mrtok = \encWordEmb_i$.  The input to the encoder then is 
+\[\left[\encHidState^{(0)}_1,\ldots,\encHidState^{(0)}_\mrSize\right] = \left[\encEmbs_{\mrtok_1},\ldots,
+                                                                            \encEmbs_{\mrtok_\mrSize}\right]. \]
+
+
+\paragraph{Uni-directional Encoder}
+We then compute the GRU hidden states. The encoder can have an arbitray number of layers $\numLayer$.
+For each layer $l \in \{1,\ldots, \numLayer\}$ we compute,
+\begin{align*}
+    \encHidState_0^{(l)} & = \zeroEmb \\
+    \encHidState_i^{(l)} & =\fgru(\encHidState_i^{(l - 1)}, \encHidState_{i-1}^{(l)}; \gruEncParams^{(l)}) & \forall i : i \in \{1,\ldots, \mrSize\}
+\end{align*}
+where $\gruEncParams^{(l)}$ are the GRU encoder parameters for the $l$-th layer and $\encHidState^{(l)}_i \in \reals^{\hidDim}$. The encoder outputs are the last layer, i.e. $\encHidState_i = \encHidState_i^{(\numLayer)} \in \reals^{\encDim}$ (in the uni-directional case, $\hidDim = \encDim$).
+
+\paragraph{Bi-directional Encoder}
+The uni-directional encoder may suffer from a recency bias when creating the initial state for the 
+decoder and for longer input sequences the encoder may ``forget'' information encoded in the 
+early hidden states. In practice to alleviate this another GRU is run in the opposite direction and
+its outputs are concatenated. For the first layer, we have,
+\begin{align*}
+    \encFwdHidState_0^{(1)} & = \zeroEmb, & \encBwdHidState_0^{(1)} &= \zeroEmb, & \\
+    \encFwdHidState_i^{(1)} & =\fgru\left(\encHidState_i^{(0)}, \encFwdHidState_{i-1}^{(1)}; \gruEncFwdParams^{(l)}\right), & \encBwdHidState_i^{(1)} & =\fgru\left(\encHidState_i^{(0)}, \encBwdHidState_{i+1}^{(1)}; \gruEncBwdParams^{(l)}\right)    & \forall i : i \in \{1,\ldots, \mrSize\}\\
+ & & \encHidState^{(1)}_i & = \left[\begin{array}{c} \encFwdHidState_i^{(1)} \\ \encBwdHidState_i^{(1)} \end{array}\right]
+& \forall i : i \in \{1,\ldots, \mrSize\}\\
+\end{align*}
+where $\gruEncFwdParams$ and $\gruEncBwdParams$ are forward and backward GRU parameters respectively,
+$\encFwdHidState^{(1)}_i,\encBwdHidState^{(1)}_i\in\reals^{\hidDim}$, and first layer hidden state,
+$\encHidState^{(1)}_i\in\reals^{2\hidDim}$, is a concatenation of the forward and backward hidden
+states at step $i$. 
+The subsequent layers are computed similarly, but the input to the GRUs are $2\hidDim$-dimensional.
+Like before, the encoder outputs are the hidden state outputs of the last layer, $\encHidState_i = \encHidState_i^{(\numLayer)} \in \reals^{\encDim}$ where $\encDim = 2\hidDim$.
+
+
+\paragraph{Decoder Embedding Layer}
+We analogously embed the utterance token sequence, 
+$\utttoks = \left[ \utttok_1,\ldots,\utttok_\uttSize\right]$,
+before feeding it to the encoder. 
+We first embed each token. Let $\decEmbs \in \reals^{\setsize{\uttvocab} \times \embDim}$ where each row is an embedding for a token in $\uttvocab$ (analogous to $\encEmbs$),
+\[ \decEmbs = \left[ \begin{array}{c} \decWordEmb_1\\ \vdots \\ \decWordEmb_\setsize{\uttvocab} \end{array}\right]. \]
+%We assume each element in $\uttvocab$ is uniquely identified with a row in $\encEmbs$; let $\mrtok\in\mrvocab$ be identified with the $i$-th row, then we indicate it's embedding by $\encEmbs_\mrtok = \encWordEmb_i$.  
+The input to the decoder then is 
+\[\left[\decHidState^{(0)}_1,\ldots,\decHidState^{(0)}_\uttSize\right] = \left[\decEmbs_{\mrtok_1},\ldots,
+                                                                            \decEmbs_{\utttok_\uttSize}\right]. \]
+
+\paragraph{Decoder GRU}
+We initialize the decoder hidden state with the final (i.e. $\mrSize$-th) state of the encoder GRU.
+In the case where $\encDim \ne \hidDim$, we need to project $\encHidState_\mrSize^{(l)}$ to $\hidDim$
+dimensions,
+\[ \decHidState_0^{(l)} = \begin{cases} \tanh\left(\weight{br}_l \encHidState_\mrSize^{(l)} + \bias{br}_l\right) & \encDim \ne \hidDim  \\
+\encHidState_\mrSize^{(l)} & \textrm{otherwise} \end{cases},\]
+where $\weight{br}_l \in \reals^{\hidDim \times \encDim}$ and $\bias{br}_l \in \reals^{\hidDim}$
+for $l \in \{1,\ldots,\numLayer\}$
+are the weight and bias parameters for the ``bridge layer'' between the encoder and decoder networks.
+
+The decoder GRU is then computed analogously to the uni-directional encoder GRU,
+\begin{align*}
+    \decHidState_i^{(l)} & =\fgru\left(\decHidState_i^{(l - 1)}, \decHidState_{i-1}^{(l)}; \gruDecParams^{(l)}\right) & \forall i : i \in \{1,\ldots, \uttSize-1\},
+\end{align*}
+where $\gruDecParams^{(l)}$ are the decoder GRU parameters and
+$ \decHidState_i^{(l)} \in \reals{\hidDim}$ for $i \in \{1,\ldots,\uttSize-1\}$ and $l \in \{1,\ldots,\numLayer\}$.
+The decoder outputs are the decoder hidden states of the last decoder layer, i.e. $\decHidState_i = \decHidState^{(\numLayer)}_i \in \reals^{\decDim}$ where $\decDim=\hidDim$.
+
+\paragraph{Attention Mechanism}
+
+As mentioned before, one drawback of the recurrent neural network design is that information
+from earlier states my not be preserved in later states. To ameliorate this, the attention
+mechanism was proposed to allow an arbitrary decoder state to retrieve information from an arbitrary
+encoder state \citep{bahdanau2015}. This works by taking a weighted average of the encoder states,
+\begin{align*}
+    \astate_i & = \sum^{\mrSize}_{j=1}\alpha_{i,j}\encHidState_j & \forall i : i \in \{1,\ldots, \uttSize\}
+\end{align*}
+where $\alpha_{i,j} \in (0,1)$ is proportional to a score function $\ascore(\decHidState_i,\encHidState_j)$ which 
+measures some notion of ``relevance'' for decoder state $i$ to encoder start $j$,
+\[\alpha_{i,j} = \frac{\exp \ascore(\decHidState_i, \encHidState_j) }{ \sum_{j^\prime=1}^\mrSize \exp \ascore(\decHidState_i, \encHidState_{j^\prime})} \quad \forall i,j : j \in \{1,\ldots,\mrSize\}, i \in \{1,\ldots,\uttSize-1\}.\]
+
+There are several popular ways to implement $\ascore$ which we consider; we refer to three of them
+using the names given in \citet{luong2015}. When the encoder and decoder
+hidden states are of the same dimension, the simplest function is just the dot product, which 
+we refer to as ``dot-style'' attention,\\
+\textit{(Dot-Style Attention)}
+\[ \quad \ascore(\decHidState_i,\encHidState_j) = \decHidState_i \cdot \encHidState_j. \]
+If they are not the same dimension, one can insert a parameter matrix in place of the dot product,\\
+\textit{(General-Style Attention)}
+\[ \quad \ascore(\decHidState_i,\encHidState_j) = \decHidState_i \attnkernel \encHidState_j \]
+where $\attnkernel \in \reals^{\decDim \times \encDim}$ is a learned parameter of the model.
+
+The third method called ``concat'' by \citet{luong2015} but also commonly
+referred to as ``Bahdanau,'' since it was introduced in the 
+\citet{bahdanau2015}, uses a \feedforward~layer to project the pair of states
+down to a scalar,\\
+\textit{(Concat-Style Attention)}
+\[ \ascore(\decHidState_i, \encHidState_j) = \attnff\cdot\tanh\left(\attnkernel\left[ \begin{array}{c} \decHidState_i \\ \encHidState_j \end{array} \right] \right),  \]
+    where $\attnkernel \in \reals^{\hidDim \times (\decDim + \encDim)}$
+    and $\attnff \in \reals^{\hidDim}$ are learned parameters.
+
+
+
+\paragraph{Prediction Head}
+Finally, the attention output $\astate_i$ and decoder state $\decHidState_i$
+are run through a two~layer \feedforward~network to produce a distribution
+over the utterance token vocabulary $\uttvocab$,
+\[ \gen\left(\utttok_{i+1}|\utttoks_{1:i},\ls(\mr);\params\right) = \softmax\left(   \weight{2}\cdot \tanh\left(\weight{1} \left[ \begin{array}{c}\decHidState_i \\ \encHidState_j \end{array} \right] + \bias{1}\right) + \bias{2} \right)_{\utttok_{i+1}}\quad \forall i: i \in \{1,\ldots,\uttSize-1\} \]
+    where $\weight{1} \in \reals^{\hidDim \times \left(\decDim + \encDim\right)}$,
+    $\bias{1} \in \reals^{\hidDim}$, $\weight{2} \in \reals^{\setsize{\uttvocab} \times \hidDim}$, and $\bias{2}\in\reals^{\setsize{\uttvocab}}$ are learned
+    parameters and we associate each utterance token $\utttok$ with a unique 
+    element in the final $\softmax$ distribution (similar to how we indexed
+    into the embeddings matrices $\encEmbs$ and $\decEmbs$). 
+
+
+
+    The complete set parameters associated with the GRU architecture 
+    with uni-directional encoder is
+    \[ \params = \left\{ \gruEncParams^{(1)},
+    \ldots, \gruEncParams^{(\numLayer)}, 
+    \weight{1}, \bias{1}, \weight{2}, \bias{2}
+    \right\}  \]
+    while the GRU
+    with bi-directional encoder parameters are
+    \[ \params = \left\{ \gruEncFwdParams^{(1)}, \gruEncBwdParams^{(1)},
+            \weight{br}_1, \bias{br}_1,
+    \ldots, \gruEncFwdParams^{(\numLayer)}, \gruEncBwdParams^{(\numLayer)},
+    \weight{br}_\numLayer, \bias{br}_\numLayer, \weight{1}, \bias{1}, \weight{2}, \bias{2}
+    \right\}  \]
+    TODO add attention params.
+    
+
+\subsubsection{Transformer Architecture}
+
+The transformer \sequencetosequence~model of $\numLayer$ 
+distinct transformer encoder
+layers and decoder layers which are applied to $\mrtoks$ and $\utttoks_{1:i}$
+respectively in order to compute $\gen\left(\utttok_{i+1}|\utttoks_{1:i},\mrtoks;\params\right)$. 
+
+Each encoder layers repeatedly apply ``self-attention'' to the encoder
+input to obtain a representation of the input. Unlike 
+\recurrentneuralnetwork~architectures like the GRU, the representation 
+of each encoder input $\mrtok_i$ can incorporate information to its left
+and right, regardless of how far away it is in the sequence.
+When predicting the next utteratnce token $\utttok_{i+1}$ 
+the decoder performs self-attention on the previously generated tokens
+$\utttoks_{1:i}$ while also attending to the encoder output. Again
+the use of attention rather than a recurrence allows for the propagation
+of information from any part of the input sequence or previously generate output sequence to influence the next word prediction. 
+
+The components of each transformer layer rely on basic elements which we define
+first. The first is layer normalization
+ \cite{ba2016}.
+ Let $\tfEncInputRow = \left[\tfEncInputEl_1,\ldots,\tfEncInputEl_\tfFeats\right] \in \reals^{\tfFeats}$ be a vector, representing
+ an embedding of an item with $\tfFeats$ features, and with mean and standard deviation
+\[\bar{\tfEncInputEl}= \frac{1}{\tfFeats} \sum_{i=1}^\tfFeats \tfEncInputEl_i
+    \quad \textrm{and} \quad
+  \tfEncInputEl_\sigma = \left(
+      \frac{1}{\tfFeats-1} \sum_{k=1}^\tfFeats \left( 
+  \tfEncInputEl_k - \bar{\tfEncInputEl} \right)^2  + \epsilon\right)^\frac{1}{2},\]
+  respectively 
+  (the $\epsilon$ term is a small constant for numerical stability,
+  set to $10^{-5}$).
+Layer normalization, 
+$\layerNorm : \reals^{\tfFeats} \rightarrow \reals^{\tfFeats}$,
+normalizes the input have zero mean/unit variance before scaling each element
+and adding a bias,
+\[\layerNorm(\tfEncInputRow; \lnweight, \lnbias) = \lnweight \odot \left(\tfEncInputRow - \bar{\tfEncInputEl}\right) \cdot \tfEncInputEl_\sigma^{-1} + \lnbias \]
+where $\lnweight, \lnbias \in \reals^{\tfFeats}$ are learned parameters
+and $\odot$ is the \elementwise~product.
+When applying layer normalization to a matrix $\tfEncInput =\left[\tfEncInputRow_1,\ldots,\tfEncInputRow_\mrSize \right]\in \reals^{\mrSize \times \tfFeats}$, where $\tfEncInput$ is a sequence $\mrSize$ embeddings
+with $\tfFeats$ features, layer normalization is applied independently to 
+each row,
+\[ \layerNorm(\tfEncInput;\lnweight, \lnbias) = \layerNorm\left( \left[ \begin{array}{c}\tfEncInputRow_1 \\ \vdots \\ \tfEncInputRow_\mrSize  \end{array} \right]; \lnweight, \lnbias\right) =  \left[ \begin{array}{c} \layerNorm\left( \tfEncInputRow_1;\lnweight,\lnbias\right) \\ \vdots \\ \layerNorm\left( \tfEncInputRow_\mrSize;\lnweight,\lnbias\right)  \end{array} \right].  \]
+
+The next bulding block is an in-place \feedforward~layer, $\ff$, which is a simple single-layer perceptron  with $\relu$ activation, applied independently 
+to each row. Let $\tfEncInput =\left[\tfEncInputRow_1,\ldots,\tfEncInputRow_\mrSize \right]\in \reals^{\mrSize \times \tfFeats}$, where $\tfEncInput$ is a sequence $\mrSize$ embeddings
+with $\tfFeats$ features, the output of the $\ff$ layer is then computed
+%%  ($\relu(\encInput) = \max\left(\zeroEmb, \encInput\right)$) \cite{nair2010}, 
+%applied to each row of an $m \times n$ input matrix, i.e. a sequence of $m$ objects
+%%  with $n$ features,\\
+%%  
+%%  
+\[\ff\left(\tfEncInput;\weight{i},\weight{j},\bias{i},\bias{j}\right) = 
+\relu\left(\tfEncInput\weight{i} + \bias{i}\right)\weight{j} + \bias{j}.     \]
+where $\weight{i} \in \reals^{\embDim \times \hidDim}$, $\bias{i} \in \reals^{\hidDim}$,
+$\weight{j} \in \reals^{\hidDim \times \embDim}$, $\bias{j} \in \reals^{\embDim}$ are learned parameters and 
+ matrix-vector additions (i.e. $\mathbf{X} + \mathbf{b}$) are broadcast across  the matrix rows.
+
+%
+
+
+%%  Each Transformer layer is divided into blocks which each have three
+%%  parts, (i) layer norm, (ii) feed-forward/attention, and  (iii) skip-connection.
+%%  We first define the components used in the transformer blocks before
+%%  describing the overall S2S transformer. 
+%%  Starting with layer norm \cite{ba2016}, %%  
+%  
+The final component to be defined is the multi-head attention, $\MultiAttn$.
+Let $\Query \in \reals^{\uttSize \times \embDim}$ be the ``query matrix,''
+which consists of $\uttSize$ query vectors, each of which will be attending
+to the ``key matrix,'' $\Key \in \reals^{\mrSize \times \embDim}$ which
+consists of $\mrSize$ key vectors. For each query vector, multi-head attention
+computes 
+$\numHeads$ attentative reads of $\Key$ and concatenates them together,
+%which is defined
+%%  as\\
+\noindent $\MultiAttn(\Query, \Key; \weight{a_1}, \weight{a_2}) =$
+\[ \Bigg(\Attn\left(\Query\weight{a_1}_{1,1}, \Key\weight{a_1}_{2,1}, \Key \weight{a_1}_{3,1} \right) \oplus 
+      \ldots \oplus
+  \Attn\left(\Query\weight{a_1}_{1,\numHeads}, \Key\weight{a_1}_{2,\numHeads}, \Key \weight{a_1}_{3,\numHeads} \right)\Bigg) \weight{a_2}
+  \]
+  where $\oplus$ indicates column-wise concatenation,  $\weight{a_1} \in \reals^{3 \times \numHeads \times \embDim\times \embDim / \numHeads}$
+  and $\weight{a_2} \in \reals^{\embDim\times \embDim}$ are learned parameters,
+  and  
+$\Attn$ is defined,
+  
+  \[\Attn\left(\Query, \Key, \Value\right) = \softmax\left(\frac{\Query \Key^T}{\sqrt{\embDim}} \right)\Value. \]
+
+
+  Additionally, there is a masked variant of attention, $\MaskedMultiAttn$
+  where the attention is computed 
+  \[\Attn\left(\Query, \Key, \Value\right) = \softmax\left(\frac{\Query \Key^T \odot \Mask }{\sqrt{\embDim}} \right)\Value \]
+where $\Mask \in \reals^{\uttSize \times \mrSize}$ 
+ is a lower triangular matrix, i.e. values on or below the diagonal are 1
+  and all other values are $-\infty$.  The masked multi-head attention
+  is used for the decoder self-attention and prevents the $i$-th decoder
+  step from attending to future steps.
+
+  Each transformer layer is built using two or three ``blocks.''
+  There are three distinct block types, a self-attention block, an encoder-attention block, and a \feedforwardblock. Each block consists of three layers
+    \begin{enumerate}
+        \item Layer Normalization
+        \item Processing
+        \item Skip-Connections
+    \end{enumerate}
+    where the processing layer is determined by the block type. For instance,
+    let $\tfEncInput \in \reals^{\mrSize \times \embDim}$ be an input
+    matrix; the \feedforwardblock~is defined as 
+
+   \begin{align*}
+       \textbf{Feed-Forward Block} & \\
+       \textit{(Layer Normalization)} & & 
+            \boldsymbol{\check{\tfEncInput}} &
+            =  \layerNorm\left(\tfEncInput; \lnweight, \lnbias \right) \\
+            \textit{(Processing Layer)} &  & \boldsymbol{\bar{\tfEncInput}} &= \ff\left(\boldsymbol{\check{\tfEncInput}};\weight{in},\weight{out},\bias{in},\bias{out}\right)\\
+        \textit{(Skip-Connection)} & & \boldsymbol{\hat{\tfEncInput}} &= \tfEncInput + \boldsymbol{\bar{\tfEncInput}}\end{align*}
+        \begin{center}$\feedforwardblock(\tfEncInput)  =   \boldsymbol{\hat{\tfEncInput}}.$ \end{center}
+
+\noindent   The \selfattentionblock~and \maskedselfattentionblock s are similarly defined as,
+   \begin{align*}
+       \textbf{Self-Attention Block} & \\
+       \textit{(Layer Normalization)} & & 
+            \boldsymbol{\check{\tfEncInput}} &
+            =  \layerNorm\left(\tfEncInput; \lnweight, \lnbias \right) \\
+            \textit{(Processing Layer)} &  & \boldsymbol{\bar{\tfEncInput}} &=  \MultiAttn\left(\boldsymbol{\check{\tfEncInput}}, \boldsymbol{\check{\tfEncInput}}; \weight{a_1},  \weight{a_2}\right)  \\
+        \textit{(Skip-Connection)} & & \boldsymbol{\hat{\tfEncInput}} &= \tfEncInput + \boldsymbol{\bar{\tfEncInput}}\end{align*}
+       \begin{center}  {$\selfattentionblock(\tfEncInput) =  {\boldsymbol{\hat{\tfEncInput}}}$}\end{center}
+
+         \noindent  and 
+
+         \begin{align*}
+       \textbf{Masked Self-Attention Block} & \\
+       \textit{(Layer Normalization)} & & 
+            \boldsymbol{\check{\tfEncInput}} &
+            =  \layerNorm\left(\tfEncInput; \lnweight, \lnbias \right) \\
+            \textit{(Processing Layer)} &  & \boldsymbol{\bar{\tfEncInput}} &=  \MaskedMultiAttn\left(\boldsymbol{\check{\tfEncInput}}, \boldsymbol{\check{\tfEncInput}}; \weight{a_1},  \weight{a_2}\right)  \\
+        \textit{(Skip-Connection)} & & \boldsymbol{\hat{\tfEncInput}} &= \tfEncInput + \boldsymbol{\bar{\tfEncInput}}\end{align*}
+       \begin{center}  {$\maskedselfattentionblock(\tfEncInput) =  {\boldsymbol{\hat{\tfEncInput}}}$.}\end{center}
+
+           \noindent Finally, let $\tfDecInput \in \reals^{\uttSize \times \embDim}$ be a sequence of $\uttSize$ embeddings. The \encoderattentionblock~is
+           defined as,
+   \begin{align*}
+       \textbf{Self-Attention Block} & \\
+       \textit{(Layer Normalization)} & & 
+            \boldsymbol{\check{\tfDecInput}} &
+            =  \layerNorm\left(\tfDecInput; \lnweight, \lnbias \right) \\
+            \textit{(Processing Layer)} &  & \boldsymbol{\bar{\tfDecInput}} &=  \MultiAttn\left(\boldsymbol{\check{\tfDecInput}}, \tfEncInput; \weight{a_1},  \weight{a_2}\right)  \\
+        \textit{(Skip-Connection)} & & \boldsymbol{\hat{\tfDecInput}} &= \tfDecInput + \boldsymbol{\bar{\tfDecInput}}\end{align*}
+       \begin{center}  {$\encoderattentionblock(\tfDecInput, \tfEncInput) =  {\boldsymbol{\hat{\tfDecInput}}}$.}\end{center}
+
+           \paragraph{Encoder/Decoder Input}
+           Let $\mrtoks = \left[ \mrtok_1,\ldots,\mrtok_\mrSize\right]$ and 
+           $\utttoks = \left[\utttok_1,\ldots,\utttoks_\mrSize\right]$ be 
+           input and output sequences, with elements $\mrtok_i$ and $\utttok_i$
+           drawn from vocabularies $\mrvocab$ and $\uttvocab$ respectively.
+           With each vocabulary we associate an embedding matrix,
+          %Let $\mrvocab$ be the \meaningrepresentation~token vocabulary, and 
+          $\encEmbs \in \reals^{\setsize{\mrvocab} \times \embDim}$ 
+          and 
+          $\decEmbs \in \reals^{\setsize{\uttvocab} \times \embDim}$ 
+          respectively. Let $\encEmbs_\mrtok \in \reals^{\embDim}$ denotes the $\embDim$-dimensional  embedding for each $\mrtok \in \mrvocab$; similarly,  
+let $\decEmbs_\utttok \in \reals^{\embDim}$ denotes the $\embDim$-dimensional  embedding for each $\utttok \in \uttvocab$.
+
+  Additionally let $\posEmb \in \reals^{\mrSizeMax \times \embDim}$ be a sinusoidal position embedding matrix
+  defined elementwise with 
+ \begin{align*}
+     \posEmb_{i,j} & = \sin\left(\frac{i}{10,000^{ \frac{2(j-1)}{\embDim} }}\right) & \forall i,j : i \in \{1,\ldots,\mrSizeMax\}, j \in \{1,3,\ldots, \embDim - 1\} \\
+     \posEmb_{i,j} & = \cos\left(\frac{i}{10,000^{ \frac{2(j-1)}{\embDim} }}\right) & \forall i,j : i \in \{1,\ldots, \mrSizeMax\}, j \in \{2,4,\ldots,\embDim\}. 
+  \end{align*} $\posEmb$ is not updated during training. The rows of $\posEmb$
+  function as an encoding of the relative position of token in the encoder/decoder inputs. The number of total positions $\mrSizeMax$ is a hyperparameter
+  and represented the longest sequence the encoder/decoder can take as input.
+
+Before being fed into the transformer encoder/decoder, each sequence is 
+embedded in its respective embedding space and add it to the corresponding
+position embeddings,
+\[\tfEncInput^{(0)} = \left[ \begin{array}{c}\encEmbs_{\mrtok_1} + \posEmb_1\\
+\vdots \\ \encEmbs_{\mrtok_\mrSize} + \posEmb_\mrSize \end{array}\right] 
+\quad \textrm{and} \quad 
+\tfDecInput^{(0)} = \left[ \begin{array}{c}\decEmbs_{\utttok_1} + \posEmb_1\\
+\vdots \\ \decEmbs_{\utttok_\uttSize} + \posEmb_\uttSize \end{array}\right].
+\]
+
+  \paragraph{Transformer Encoder}
+    A transformer encoder layer consists of a \selfattentionblock~followed
+    by a \feedforwardblock. A transformer encoder with $\numLayer$ layers
+    then computes
+\begin{align*} 
+    {\boldsymbol{\bar{\tfEncInput}}^{(l)}} & = \selfattentionblock^{(l)}
+\left(\tfEncInput^{(l-1)}\right) \\
+    \tfEncInput^{(l)} & = \feedforwardblock^{(l)}\left({\boldsymbol{\bar{\tfEncInput}}^{(l)}}\right)
+\end{align*} for $l \in \{1,\ldots,\numLayer\}$.
+We indicate the final encoder output as $\tfEncInput =  \tfEncInput^{(\numLayer)}$.
+    
+  \paragraph{Transformer Decoder}
+    A transformer deccoder layer consists of a \maskedselfattentionblock~followed
+    by an \encoderattentionblock~and a \feedforwardblock. Note that the \maskedselfattentionblock~means that though we can compute all decoder states
+    in parallel during training, it is equivalent to computing each decoder state sequentially (which we must do at test time). 
+    A transformer deccoder with $\numLayer$ layers
+    is computed as
+\begin{align*} 
+    {\boldsymbol{\check{\tfDecInput}}}^{(l)} & = \maskedselfattentionblock^{(l)}\left(\tfDecInput^{(l-1)}\right) \\
+    {\boldsymbol{\bar{\tfDecInput}}}^{(l)} & = \encoderattentionblock^{(l)}\left(\boldsymbol{\check{\tfDecInput}}^{(l)}, \tfEncInput\right) \\
+    \tfDecInput^{(l)} & = \feedforwardblock^{(l)}\left({\boldsymbol{\bar{\tfDecInput}}^{(l)}}\right)
+\end{align*} for $l \in \{1,\ldots,\numLayer\}$.
+We indicate the final decoder output as $\tfDecInput =  \tfDecInput^{(\numLayer)}$.
+
+\paragraph{Prediction Head}
+    Let $\tfDecInputRow_i$ be the $i$-th row of $\tfDecInput$ corresponding
+to the decoder representation of the $i$-th decoder state. The probability of 
+  the next word is
+   \[ \gen\left(\utttok_{i+1}|\utttoks_{1:i},\ls(\mr)\right) 
+   = \softmax\left( \weight{o}\tfDecInputRow_i + \bias{o} \right)_{\utttok_{i+1}} \quad \forall i : i \in \{1,\ldots, \uttSize-1\}\]
+  where $\weight{o} \in \reals^{\setsize{\uttvocab} \times \embDim}$ 
+  and $\bias{o} \in \reals^{\embDim}$ are learned parameters. 
+Each block from each encoder and decoder layer has separate learned parameters.
+Because each operation in the transformer is built around matrix 
+multiplication, its computation can be parallelized more heavily than
+\recurrentneuralnetwork~models like the GRU architecture.
+ 
+  
+  
+%
+
+
+
+%%  
+
+          
+
+%%  Given a linearized MR $\lin(\mr) = \inseq= \left[ \da, \attr_1, \attr_2, \ldots,
+%%  \attr_{\size{\mr}}\right] \in \Attrs^{\inSize}$ where the length
+%%  of the sequence is $\inSize = \size{\mr} + 1$,
+%%  let $\encWordEmb_i = \encEmbs_{\inseq_i}$ for $i \in \{1, \ldots \inSize\}$.
+%%  
+%%  Additionally let $\posEmb \in \reals^{\inSize_{max} \times \embDim}$ be a sinusoidal position embedding matrix
+%%  defined elementwise with 
+%%  \begin{align*}
+%%      \posEmb_{i,2j} & = \sin\left(\frac{i}{10,000^{ \frac{2j}{\embDim} }}\right) \\
+%%      \posEmb_{i,2j+1} & = \cos\left(\frac{i}{10,000^{ \frac{2j}{\embDim} }}\right). 
+%%  \end{align*}
+%%  The encoder input sequence $\encInput^{(0)} \in \reals^{\inSize \times \embDim}$ is then defined by
+%%  \[\encInput^{(0)} = \left[\begin{array}{c} 
+%%              \encWordEmb_1 + \posEmb_1,\\
+%%              \encWordEmb_2 + \posEmb_2,\\
+%%              \vdots \\
+%%          \encWordEmb_\inSize + \posEmb_\inSize
+%%      \end{array}
+%%                          \right] \]
+%
+ 
+
+%%  
+%
+
+
+    %%  Each encoder transformer layer computes the following, \\
+%%  
+%%  \noindent \textit{(Self-Attention Block)}\\
+%%  \[\tfeA = \layerNorm\left(\encInput^{(i)}; \lnweightv^{(i,1)}, \lnbias^{(i,1)}\right)\]
+%%  \[\tfeB = \MultiAttn\left(\tfeA, \tfeA; \weight{i,a_1},  \weight{i,a_2}\right)\]
+%%  \[\tfeC = \encInput^{(i)} + \tfeB\]
+%%  
+
+ %Given these layers ($\layerNorm, \ff, \MultiAttn$, and $\MaskedMultiAttn$) we now define the transformer encoder and decoder layers.
+%%  Let $\Attrs$ be the encoder input vocabulary, and  $\encEmbs \in
+%%  \reals^{\size{\Attrs} \times \embDim}$ an associated word embedding matrix
+%%  where $\encEmbs_\attr \in \reals^{\embDim}$ denotes the $\embDim$-dimensional
+%%  embedding for each $\attr \in \Attrs$. 
+%%  Given a linearized MR $\lin(\mr) = \inseq= \left[ \da, \attr_1, \attr_2, \ldots,
+%%  \attr_{\size{\mr}}\right] \in \Attrs^{\inSize}$ where the length
+%%  of the sequence is $\inSize = \size{\mr} + 1$,
+%%  let $\encWordEmb_i = \encEmbs_{\inseq_i}$ for $i \in \{1, \ldots \inSize\}$.
+%%  
+%%  Additionally let $\posEmb \in \reals^{\inSize_{max} \times \embDim}$ be a sinusoidal position embedding matrix
+%%  defined elementwise with 
+%%  \begin{align*}
+%%      \posEmb_{i,2j} & = \sin\left(\frac{i}{10,000^{ \frac{2j}{\embDim} }}\right) \\
+%%      \posEmb_{i,2j+1} & = \cos\left(\frac{i}{10,000^{ \frac{2j}{\embDim} }}\right). 
+%%  \end{align*}
+%%  The encoder input sequence $\encInput^{(0)} \in \reals^{\inSize \times \embDim}$ is then defined by
+%%  \[\encInput^{(0)} = \left[\begin{array}{c} 
+%%              \encWordEmb_1 + \posEmb_1,\\
+%%              \encWordEmb_2 + \posEmb_2,\\
+%%              \vdots \\
+%%          \encWordEmb_\inSize + \posEmb_\inSize
+%%      \end{array}
+%%                          \right] \]
+%%  
+%%   A sequence of $l$ transformer encoder layers are then applied to the encoder
+%%   input, i.e. $\encInput^{(i+1)} = \operatorname{TF}^{(i)}_{enc}\left(\encInput^{(i)}\right)$.
+%%  Each encoder transformer layer computes the following, \\
+%%  
+%%  \noindent \textit{(Self-Attention Block)}\\
+%%  \[\tfeA = \layerNorm\left(\encInput^{(i)}; \lnweightv^{(i,1)}, \lnbias^{(i,1)}\right)\]
+%%  \[\tfeB = \MultiAttn\left(\tfeA, \tfeA; \weight{i,a_1},  \weight{i,a_2}\right)\]
+%%  \[\tfeC = \encInput^{(i)} + \tfeB\]
+%%  
+%%  \noindent \textit{(Feed-Forward Block)}\\
+%%  \[\tfeD = \layerNorm\left(\tfeC; \lnweightv^{(i,2)}, \lnbias^{(i,2)}\right)\]
+%%  \[\tfeE = \feedforward\left(\tfeD;\weight{i,1},\weight{i,2},\bias{i,1},\bias{i,2}\right)\]
+%%  \[ \encInput^{(i+1)} = \tfeC + \tfeE \]
+%%  
+%%  
+%%  We denote the final encoder output for $l$ layers as $\encInput = \encInput^{(l)}$.  
+%%  
+%%  Let $\uttVocab$ be the vocabulary of utterance tokens, and 
+%%  $\decEmbs \in \reals^{\size{\uttVocab} \times \embDim}$
+%%  an associated embedding matrix, where
+%%  $\decEmbs_\utttok \in \reals^{\embDim}$ denotes a  $\embDim$-dimensional embedding for
+%%  each $\utttok \in \uttVocab$.
+%%  
+%%  %\placeholder{TODO: Make this true for all layers}
+%%  Given the decoder input sequence $\utt = \utttok_1, \utttok_2, \ldots, 
+%%  \utttok_\size{\utt}$, 
+%%  let $\decWordEmb_i = \decEmbs_{\utttok_i}$ for $i \in \{1, \ldots \outSize\}$.
+%%  where $\outSize = \size{\utt} - 1$
+%%  
+%%  \[\decInput^{(0)} = \left[\begin{array}{c} 
+%%              \decWordEmb_1 + \posEmb_1,\\
+%%              \decWordEmb_2 + \posEmb_2,\\
+%%              \vdots \\
+%%          \decWordEmb_\outSize + \posEmb_\outSize
+%%      \end{array}
+%%                          \right]. \]
+%%  
+%%  
+%%  A sequence of $l$ transformer decoder layers are then applied to the decoder
+%%   input, i.e. $\decInput^{(i+1)} = \operatorname{TF}^{(i)}_{dec}\left(\decInput^{(i)}\right)$.
+%%  Each decoder transformer layer computes the following, \\
+%%  
+%%  ~\\~\\ ~\\
+%%  
+%%  \noindent \textit{(Masked Self-Attention Block)}\\
+%%  \[\tfdA = \layerNorm\left(\decInput^{(i)}; \lnweightv^{(i,1)}, \lnbias^{(i,1)}\right)\]
+%%  \[\tfdB = \MultiAttn_M\left(\tfdA, \tfdA; \weight{i,a_1}, \weight{i,a_2} \right)\]
+%%  \[\tfdC = \decInput^{(i)} + \tfdB\]
+%%  
+%%  \noindent \textit{(Encoder-Attention Block)}\\
+%%  \[\tfdD = \layerNorm\left(\tfdC; \lnweightv^{(i,2)}, \lnbias^{(i,2)}\right)\]
+%%  \[\tfdE = \MultiAttn\left(\tfdD, \encInput; \weight{i,a_3}, \weight{i,a_4}\right)\]
+%%  \[\tfdF = \tfdC + \tfdE\]
+%%  
+%%  \noindent \textit{(Feed-Forward Block)}\\
+%%  \[\tfdG = \layerNorm\left(\tfdF; \lnweightv^{(i,3)}, \lnbias^{(i,3)}\right)\]
+%%  \[\tfdH = \feedforward\left(\tfdG;\weight{i,1},\weight{i,2},\bias{i,1},\bias{i,2}\right)\]
+%%  \[ \decInput^{(i+1)} = \tfdF + \tfdH \]
+%%  
+%%  Let the $\decInput = \decInput^{(l)}$ denote the final decoder output,
+%%  and let $\decInputi$ be the $i$-th row of $\decInput$ corresponding
+%%  to the decoder representation of the $i$-th decoder state. The probability of 
+%%  the next word is\\
+%%  
+%%  \noindent $\model\left(\utttok_{i+1}|\utttok_{\le i},\lin(\mr)\right)$
+%%  \[  = \softmax\left( \weight{o}\decInputi + \bias{o} \right)_{\utttok_{i+1}} \]
+%%  where $\weight{o} \in \reals^{\size{\uttVocab} \times \embDim}$ 
+%%  and $\bias{o} \in \reals^{\embDim}$ are learned parameters. 
+%%  
+%%  
+%%  %We used the Transformer S2S as implemented in 
+%%  %\href{https://pytorch.org/}{PyTorch}.
+%%  The input embedding dimension is $\embDim= 512$ and inner hidden layer size 
+%%  is $\hidDim=2048$. The encoder and decoder have separate parameters.
+%%  We used $H=8$ heads in all multi-head attention layers. 
+%%   We used Adam with the learning
+%%  rate schedule provided in  \citet{rush2018} (factor=1, warmup=8000).
+%%  Dropout was set to 0.1 was applied to input embeddings and each skip 
+%%  connection (i.e. the third line in each block definition). As a 
+%%  hyperparameter, we optionally tie the decoder input and output embeddings,
+%%  i.e. $\decEmbs = \weight{o}$.
+
+
+
+
+
+\subsection{Learning}
+
+Given a dataset of \meaningrepresentation/utterance pairs, $\corpus = \left\{\left(\mr^{(1)}, \utttoks^{(1)}\right), \ldots, \left(\mr^{(\corpusSize)},\utttoks^{(\corpusSize)} \right)\right\}$, 
+and a 
+\linearizationstrategy, $\ls$, the parameters, $\params$, of $\gen$~can be learned by approximately
+minimizing the negative log-likelihood of the data,
+\[ \hat{\params} \approx \argmin_{\params \in \Params} -\frac{1}{\corpusSize}\sum_{\left(\mr, \utttoks \right) \in \corpus} 
+    \log \gen\left(\utttoks|\ls\left(\mr\right);\params\right).
+\]
+In practice, this is done with some variant of mini-batch stochastic gradient descent, e.g., Adam
+\cite{adam}.
+TODO label smoothing
+TODO learning rates.
+
+
+\subsubsection{Inference}
+
+As stated above, $\gen\left(\cdot|\ls\left(\mr\right);\params\right)$ is a conditional language model.
+Given some \meaningrepresentation~$\mr$, a natural utterance one might want to infer is the 
+maximum a posteriori (MAP)
+ utterance \[\predutttoks = \argmax_{\utttoks\in\uttSize} \log\gen\left(\utttoks|\ls\left(\mr\right);\params \right) \] under the model.\footnote{Technically, we are only considering valid finite utterances, i.e. $\utttoks$ with $\utttok_\uttSize = \stoptok$. } Unfortunately, the search implied by the $\argmax$
+is intractable. Instead an approximate search is performed. The most commonly used search
+is called \textit{beam search} \citep{reddy1977} or beam decoding. 
+Under beam search, a set $\nbestlist$ 
+of $\nbest$-best
+candidate utterances is maintained throughtout the search. At each step of the search,
+the next word continuations are computed for each utterance, yielding $\nbest \times \lvert\uttvocab\rvert$ utterances,
+which are then reranked according to some search criterion and $\nbestlist$ is updated the with
+the $\nbest$ utterances under this reranking. 
+See \autoref{?} for a formal descrition of beam search.
+The search termination and reranking criterion
+are heuristic. \cite{neuraltextpractical} offer some popular reranking criterion. When the beam size
+is 1, we refer to algorithm as greedy search or greedy decoding.
+
+Despite its wide adoption and empirical success, there are many known issues. 
+The output may repeat phrases or words \citep{soemthig}, or may never even terminate \citep{cho}.
+While these issues are often linked to differences in the maximum likelihood learning objective
+and test-time search procedure \citep{andor,mccallum}, the problems are possibly deeper as 
+increasing the beam size often leads to worse empirical performance \citep{kohn}; the biases present in beam search are even beneficial when compared to exact search \citet{exactsearch}.
+The set of output
+beam candidates may lack diversity and only differ by a small number of words \citep{somebody},
+
+\subsubsection{Sampling}
+
+As an alterantive to deterministic decoding, one may sample from the conditional distribution, $\gen\left(\cdot|\ls(\mr);\params\right)$. The typical
+method for doing this is called \ancestralsampling. \Ancestralsampling~is
+very similar to greedy decoding, and works by sequentially sampling the 
+next word $\utttok_{i+1} \sim \gen\left(\cdot|\utttoks_{1:i},\ls(\mr);\params\right)$, and terminating when $\utttok_{i+1} = \stoptok$. See \autoref{ancsampl} for pseudo code. There are several modifications one might make to \ancestralsampling~in practice. To encourage more diversity in the sampled outputs,
+a temperature parameter $\temperature$ is sometimes added to the final $\softmax$ layer, 
+\[ \gen\left(\utttok_{i+1}| \utttoks_{1:i},\ls(\mr); \temperature, \params) \right) = 
+\softmax\left( \frac{\weight{o}\tfDecInputRow_i + \bias{o}}{\temperature} \right)_{\utttok_{i+1}}.\]
+As the $\temperature$ tends toward $+\infty$, the conditional distribution becomes less peaked and the differences in probability between any two words diminish, making it easier to sample an unusual continuation of the utterance sequence.
+In the limit, each word becomes equally likely,
+\[ \lim_{\temperature\rightarrow +\infty} 
+\gen\left(\utttok| \utttoks_{1:i},\ls(\mr); \temperature, \params) \right) =
+\frac{1}{\setsize{\uttvocab}}.\]
+As $\temperature$ approaches zero, the distribution becomes a ``one-hot''
+distribution,
+\[ \lim_{\temperature\rightarrow +0} 
+\gen\left(\utttok| \utttoks_{1:i},\ls(\mr); \temperature, \params) \right) =
+\mathds{1}\{\utttok = \argmax_{\utttok^\prime} \gen\left(\utttok^\prime| \utttoks_{1:i},\ls(\mr); \params\right)  \}\] where the probability is zero
+for every word except the most likely next word in the original distribution,
+which has probability one.
+
+While ancestral sampling can lead to more diverse outputs. The next word
+distributions are often quite peaked meaning most of the vocabulary accounts
+for less than
+0.05 of the cumulative distribution function. For a 20 word sentence,
+this means that on average at least one word will be sampled from the long-tail, effectively choosing a word uniformly at random from the vocabulary.
+To avoid this issue, two heuristic modifications are often made to ancestral
+sampling, top-$k$ sampling \citep{somebody} and \textit{nucleus} sampling 
+\citep{nuke}. 
+
+In top-$k$ sampling, $p(\utttok|\utttoks_{1:i},\ls(\mr);\params)$ is 
+restricted to the top $k$ most likely word. Let ${\uttvocab}_i^{(k)} \subset \uttvocab$ be 
+the set of $k$ most likely next words at sampling step $i$, i.e.,
+\[{\uttvocab}_i^{(k)} = \argmax_{S \subset \uttvocab, \setsize{S} = k} \sum_{\utttok \in S} \log\gen(\utttok|\utttoks_{1:i},\ls(\mr);\params). \]
+The next word $\utttok_{i+1}$ is then sampled from the following distribution,
+\[
+    \gen_k(\utttok_{i+1}|\utttoks_{1:i},\ls(\mr);\params)
+    =
+    \begin{cases} 
+   \frac{
+   \gen(\utttok_{i+1}|\utttoks_{1:i},\ls(\mr);\params)
+   }{ 
+       \sum_{\utttok^\prime \in {\uttvocab}_i^{(k)}}
+   \gen(\utttok^\prime|\utttoks_{1:i},\ls(\mr);\params)  
+   }  & \utttok_{i+1} \in {\uttvocab}_i^{(k)} \\ 
+0 & \textrm{otherwise}. \end{cases} 
+\]
+
+\citet{nucleus} show that picking the right $k$ for top-$k$ sampling is 
+difficult because next word distribution can alternate from very flat (which would suggest a large $k$) to very peaked (which would suggest a small $k$).
+Instead they propose restricting the subset of vocabulary to sample 
+from to the smallest set of words such that their cumulative probability
+is greater than a threshold $\nucleusthr$,
+\[ {\uttvocab}_i^{(\nucleusthr)} = \argmin_{\substack{S \subset {\uttvocab}_i^{(\nucleusthr)} \\ \sum_{\utttok \in S} \gen(\utttok|\utttoks_{1:i},\ls(\mr);\params) \ge \nucleusthr  }} \setsize{S}. \] The the sampling distribution
+for this method which they call nucleus sampling, is computed similary to top-$k$ sampling,
+\[
+    \gen_\nucleusthr(\utttok_{i+1}|\utttoks_{1:i},\ls(\mr);\params)
+    =
+    \begin{cases} 
+   \frac{
+   \gen(\utttok_{i+1}|\utttoks_{1:i},\ls(\mr);\params)
+   }{ 
+       \sum_{\utttok^\prime \in {\uttvocab}_i^{(\nucleusthr)}}
+   \gen(\utttok^\prime|\utttoks_{1:i},\ls(\mr);\params)  
+   }  & \utttok_{i+1} \in {\uttvocab}_i^{(\nucleusthr)} \\ 
+0 & \textrm{otherwise}. \end{cases} 
+\]
+Nucleus sampling helps avoid sampling from the long tail of the distribution.
+
+
+
+
+
+%\lim_{\temperature\rightarrow +\infty} \gen\left(\utttok^\prime| \utttoks_{1:i},\ls(\mr); \temperature, \params) \right) \quad \forall \utttok, \utttok^\prime : \utttok,\utttok^\prime \in \uttvocab \wedge \utttok \ne \utttok^\prime\]
+
+ ~\\~\\
+ possible \linearizationstrategy would be
+ \begingroup
+ \renewcommand*\arraystretch{.6}
+ \begin{align}
+     \mr &=
+\left[\begin{array}{l} 
+        \textsc{Inform} \\
+        \textrm{name=The Vaults} \\
+        \textrm{eat\_type=pub} \\
+    \textrm{customer\_rating=5 out of 5} \\
+    \textrm{near=Caf{\'e} Adriatic} \\
+    \textrm{price\_range=more than \pounds 30}
+\end{array}\right] \\
+\ls(\mr) & = \mrtoks \\
+        & = \left[x_1,x_2,x_3,x_4,x_5,x_6\right] \\
+        & = \left[\begin{array}{l}
+        \textrm{``inform''}, \\
+        \textrm{``name=The Vaults''}, \\
+        \textrm{``eat\_type=pub''}, \\
+        \textrm{``near=Caf{\'e} Adriatic''}, \\
+        \textrm{``customer\_rating=5 out of 5''}, \\
+        \textrm{``price\_range=more than \pounds 30''},
+\end{array}\right]
+ \end{align}\endgroup
+ where $x_1=\textrm{``inform''}$, $x_2=\textrm{``name=The Vaults''}$, etc., and 
+``inform'' $\in \mrvocab$, ``name=The Vaults'' $\in \mrvocab$, etc.
+Given a \linearizationstrategy~for the \meaningrepresentations,
+we can now apply a \sequencetosequence~model to input output pairs $(\ls(\mr),\utttoks)$.
+
+
+
+
+%~\\~\\
+%
+% 
+%and output tokens are drawn from distinct finite vocabularies. That is,
+%$\mrtok_i \in \mrvocab$ and $\utttok_i \in \uttvocab$, implying that 
+%$\mrvocab^+ = \inSpace$ and $\uttvocab^+ = \outSpace$.
+%$\model(\utttoks|\mrtoks;\theta)$ is effectively a neural conditional language
+%model with a semi-Markovian factorization, $\model(\utttoks|\mrtoks;\theta) = 
+%\prod_{i=1}^\uttSize \model(\utttok_i|\utttok_1,\ldots,\utttok_{i-1},\mrtoks;\params)$.
+%
+%In order to use a \sequencetosequence~model for the \surfacerealization~problem
+%we need only map our desired inputs and outputs to sequences of discrete tokens. 
+%In English, the desired output is relatively straightforward to represent as 
+%a sequence as an English language 
+%utterance can naturally be represented as a sequence of word tokens, for example, \[ some words in a sequence \].
+%
+
+
+\subsection{Overgenerate and Rerank}
+
+Because it is a well known problem that the model $\model\left(\cdot|\mrtoks;\params\right)$ is not sufficient to generate faithful utterances, in practice
+most implementations of a \sequencetosequence~model for \surfacerealization~do
+so using some form of overgeneration with reranking to produce the final
+utterance. That is, a $\nbest$-best list of utterances $\nbestlist = \left\{\utttoks^{(1)},\ldots,
+\utttoks^{(\nbest)}\right\}$ is produced by the model using beam search. Then 
+a descriminiative model $\dmodel$ is used to rerank $\nbestlist$ such
+that the final return utterance is \[
+\predutttoks = \argmax_{\utttoks \in \nbestlist} \dmodel(\mrtoks|\utttoks;\dparams). \]
+In this setting, $\dmodel$ can be understood as a 
+\meaningrepresentation~parser, and we are selecting the utterance that 
+that most likey denotes the input $\mr$. While this reduces the risk of
+generating an incorrect utterance with respect to $\mr$, it can still fail
+when either $\dmodel$ is not accurate or when $\nbestlist$ does not contain
+a completely correct utterance.
+

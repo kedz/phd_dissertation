@@ -1,0 +1,47 @@
+\begin{table}[t!]
+    \centering
+    \begin{tabular}{ll cccc}
+    \toprule
+    \multicolumn{2}{c}{Model}&B$\uparrow$&R$\uparrow$&SER$\downarrow$&OA$\uparrow$    \\
+    \midrule
+    \multicolumn{2}{c}{TGen+} & \multirow{2}{*}{66.0} & \multirow{2}{*}{67.6} &
+    \multirow{2}{*}{0.03} & \multirow{2}{*}{---}\\
+    \multicolumn{2}{c}{\footnotesize \cite{dusek2019}} & \\
+    \midrule
+    \parbox[t]{2mm}{\multirow{8}{*}{\rotatebox[origin=c]{90}{biGRU}}}
+     & \lsshort{Rnd}  & \textbf{66.8} & 68.3 & 2.64 & --- \\
+     & \lsshort{Fp}  & \uline{63.4} & \uline{65.6} & \uline{6.54} & --- \\
+     & \lsshort{If}  & 59.2 & 62.7 & 12.64 & --- \\
+     & \lsshort{If{\small+p}}  & 65.8 & 68.1 & 0.24 & --- \\
+     & \lsshort{At\small{+BgUP}}  & \uline{66.4} & 68.3 & 0.26 & 98.2 \\
+     & \lsshort{At\small{+NUP}}  & \uline{66.3} & 68.9 & 0.26 & 98.3 \\
+     & \lsshort{At\small{+NUP+p}}  & \uline{66.5} & \textbf{69.1} & \textbf{0.00} & \textbf{100.0} \\
+     & \lsshort{At \small{Oracle}}  & 69.8 & 77.3 & 0.84 & 94.3 \\
+    \midrule
+    \parbox[t]{2mm}{\multirow{8}{*}{\rotatebox[origin=c]{90}{Transformer}}}
+     & \lsshort{Rnd}  & \textbf{67.4} & 68.2 & \uline{1.06} & --- \\
+     & \lsshort{Fp}  & \textbf{67.4} & \uline{68.7} & \uline{3.10} & --- \\
+     & \lsshort{If}  & \uline{67.1} & 68.1 & \uline{0.66} & --- \\
+     & \lsshort{If\small{+p}}  & \uline{66.8} & 68.3 & \uline{0.28} & --- \\
+     & \lsshort{At\small{+BgUP}}  & \uline{66.8} & 68.4 & \textbf{0.00} & \uline{99.9} \\
+     & \lsshort{At\small{+NUP}}  & \uline{67.0} & \uline{69.0} & \textbf{0.00} & \textbf{100.0} \\
+     & \lsshort{At\small{+NUP+p}}  & \uline{66.7} & \textbf{69.1} & \textbf{0.00} & \textbf{100.0} \\
+     & \lsshort{At \small{Oracle}}  & 69.3 & 77.0 & 0.76 & 95.0 \\
+    \midrule
+    \parbox[t]{2mm}{\multirow{8}{*}{\rotatebox[origin=c]{90}{BART}}}
+     & \lsshort{Rnd}  & \uline{66.5} & 68.3 & \uline{0.14} & --- \\
+     & \lsshort{Fp}  & 65.5 & 67.2 & \uline{0.16} & --- \\
+     & \lsshort{If}  & \uline{65.6} & 67.4 & \uline{0.18} & --- \\
+     & \lsshort{If\small{+p}}  & \uline{65.9} & 68.2 & \uline{0.30} & --- \\
+     & \lsshort{At\small{+BgUP}}  & \uline{66.2} & 68.7 & 0.20 & 98.6 \\
+     & \lsshort{At\small{+NUP}}  & \textbf{66.6} & \uline{69.2} & 0.20 & 98.6 \\
+     & \lsshort{At\small{+NUP+p}}  & \uline{66.3} & \textbf{69.3} & \textbf{0.00} & \textbf{100.0} \\
+     & \lsshort{At \small{Oracle}}  & 68.3 & 77.1 & 0.70 & 95.3 \\
+    \bottomrule
+\end{tabular}
+
+
+
+\caption{E2E test set (B) \bleu, (R) \rougel, SER, and OA. All numbers are percents. }
+\label{tab:main.e2e.test}
+\end{table}

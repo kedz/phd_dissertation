@@ -1,0 +1,28 @@
+\begin{table}
+    \centering
+%    \resizebox{0.48\textwidth}{!}{
+\begin{tabular}{ll c c c c }
+\toprule
+ & Model & 1 & 2 & 3 & Avg. \\
+\midrule
+    \parbox[t]{2mm}{\multirow{3}{*}{\rotatebox[origin=c]{90}{E2E}}}
+%E2E & \small{\lsshort{At+NUP+p}} & 123 & 33 & 44 & \textbf{1.61} \\
+ & \small{\lsshort{At+NUP+p}} & 61.5 & 16.5 & 22.0 & \textbf{1.61} \\
+ %   & \small{\lsshort{At+p}}  & 60 & 88 & 52 & 1.96 \\
+    & \small{\lsshort{At+p}}  & 30.0 & 44.0 & 26.0 & 1.96 \\
+    %& \small{\lsshort{At}} & 50 & 99 & 51 & 2.01 \\
+    & \small{\lsshort{At}} & 25.0 & 49.5 & 25.5 & 2.01 \\
+\midrule
+    \parbox[t]{2mm}{\multirow{3}{*}{\rotatebox[origin=c]{90}{ViGGO}}}
+%ViGGO & \small{\lsshort{At+NUP+p}} & 115 & 55 & 30 & \textbf{1.58} \\
+ & \small{\lsshort{At+NUP+p}} & 57.5 & 27.5 & 15.0 & \textbf{1.58} \\
+%      & \small{\lsshort{At+p}} & 20 & 59 & 121 & 2.51\\
+      & \small{\lsshort{At+p}} & 10.0 & 29.5 & 60.5 & 2.51\\
+%      & \small{\lsshort{At}}  &  86 & 92 & 22 & 1.68\\
+      & \small{\lsshort{At}}  &  43.0 & 46.0 & 11.0 & 1.68\\
+\bottomrule
+\end{tabular}
+%}
+\caption{Human Evaluation results. Table shows the percent of times each model was ranked 1 (best), 2, 3 (worst) in terms of naturalness and average rank.}
+\label{tab:human}
+\end{table}
