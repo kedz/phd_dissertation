@@ -1,0 +1,147 @@
+\subsection{Sampling}
+
+As an alterantive to deterministic decoding, one may sample from the conditional distribution, $\gen\left(\cdot|\ls(\mr)\right)$. The typical
+method for doing this is called \ancestralsampling. \Ancestralsampling~is
+very similar to greedy decoding, and works by sequentially sampling the 
+next word $\utttok_{i+1} \sim \gen\left(\cdot|\utttoks_{1:i},\ls(\mr)\right)$, and terminating when $\utttok_{i+1} = \stoptok$. There are several modifications one might make to \ancestralsampling~in practice. To encourage more diversity in the sampled outputs,
+a temperature parameter $\temperature$ is sometimes added to the final $\softmax$ layer, 
+\[ \gen\left(\utttok_{i+1}| \utttoks_{1:i},\ls(\mr); \temperature) \right) = 
+\softmax\left( \frac{\weight{o}\tfDecInputRow_i + \bias{o}}{\temperature} \right)_{\utttok_{i+1}}.\]
+As the $\temperature$ tends toward $+\infty$, the conditional distribution becomes less peaked and the differences in probability between any two words diminish, making it easier to sample an unusual continuation of the utterance sequence.
+In the positive limit, each word becomes equally likely,
+\[ \lim_{\temperature\rightarrow +\infty} 
+\gen\left(\utttok| \utttoks_{1:i},\ls(\mr); \temperature) \right) =
+\frac{1}{\setsize{\uttvocab}}.\]
+As $\temperature$ approaches zero, the distribution becomes a ``one-hot''
+distribution,
+\[ \lim_{\temperature\rightarrow +0} 
+\gen\left(\utttok| \utttoks_{1:i},\ls(\mr); \temperature) \right) =
+\mathds{1}\{\utttok = \argmax_{\utttok^\prime} \gen\left(\utttok^\prime| \utttoks_{1:i},\ls(\mr)\right)  \}\] where the probability is zero
+for every word except the most likely next word in the original distribution,
+which has probability one.
+
+While ancestral sampling can lead to more diverse outputs, the next word
+distributions are often quite peaked meaning most of the vocabulary accounts
+for less than
+0.05 of the cumulative distribution function. For a 20 word sentence,
+this means that on average at least one word will be sampled from the long-tail, effectively choosing a word uniformly at random from the vocabulary.
+To avoid this issue, two heuristic modifications are often made to ancestral
+sampling, \textit{top-$k$} sampling \citep{somebody} and \textit{nucleus} sampling 
+\citep{nuke}. 
+
+In top-$k$ sampling, $p(\utttok|\utttoks_{1:i},\ls(\mr))$ is 
+restricted to the top $k$ most likely words. Let ${\uttvocab}_i^{(k)} \subset \uttvocab$ be 
+the set of $k$ most likely next words at sampling step $i$, i.e.,
+\[{\uttvocab}_i^{(k)} = \argmax_{S \subset \uttvocab, \setsize{S} = k} \sum_{\utttok \in S} \log\gen(\utttok|\utttoks_{1:i},\ls(\mr)). \]
+The next word $\utttok_{i+1}$ is then sampled from the following distribution,
+\[
+    \gen\left(\utttok_{i+1}|\utttoks_{1:i},\ls(\mr);{\uttvocab}_i^{(k)}\right)
+    =
+    \begin{cases} 
+   \frac{
+   \gen(\utttok_{i+1}|\utttoks_{1:i},\ls(\mr))
+   }{ 
+       \sum_{\utttok^\prime \in {\uttvocab}_i^{(k)}}
+   \gen(\utttok^\prime|\utttoks_{1:i},\ls(\mr))  
+   }  & \utttok_{i+1} \in {\uttvocab}_i^{(k)} \\ 
+0 & \textrm{otherwise}. \end{cases} 
+\]
+
+\citet{nucleus} show that picking the right $k$ for top-$k$ sampling is 
+difficult because the next word distribution can alternate from very flat 
+(which would suggest a large $k$) to very peaked 
+(which would suggest a small $k$).
+Instead they propose restricting the subset of vocabulary to sample 
+from to the smallest set of words such that their cumulative probability
+is greater than a threshold $\nucleusthr$,
+\[ {\uttvocab}_i^{(\nucleusthr)} = \argmin_{\substack{S \subset {\uttvocab}_i^{(\nucleusthr)} \\ \sum_{\utttok \in S} \gen(\utttok|\utttoks_{1:i},\ls(\mr)) \ge \nucleusthr  }} \setsize{S}. \] The the sampling distribution
+for this method which they call nucleus sampling, is computed similary to top-$k$ sampling,
+\[
+\gen\left(\utttok_{i+1}|\utttoks_{1:i},\ls(\mr);  {\uttvocab}_i^{(\nucleusthr)} \right)
+    =
+    \begin{cases} 
+   \frac{
+   \gen(\utttok_{i+1}|\utttoks_{1:i},\ls(\mr))
+   }{ 
+       \sum_{\utttok^\prime \in {\uttvocab}_i^{(\nucleusthr)}}
+   \gen(\utttok^\prime|\utttoks_{1:i},\ls(\mr))  
+   }  & \utttok_{i+1} \in {\uttvocab}_i^{(\nucleusthr)} \\ 
+0 & \textrm{otherwise}. \end{cases} 
+\]
+Nucleus sampling helps avoid sampling from the long tail of the distribution
+which can produce disfluent outputs while still producing diverse samples.
+
+
+
+
+
+%\lim_{\temperature\rightarrow +\infty} \gen\left(\utttok^\prime| \utttoks_{1:i},\ls(\mr); \temperature, \params) \right) \quad \forall \utttok, \utttok^\prime : \utttok,\utttok^\prime \in \uttvocab \wedge \utttok \ne \utttok^\prime\]
+
+% ~\\~\\
+% possible \linearizationstrategy would be
+% \begingroup
+% \renewcommand*\arraystretch{.6}
+% \begin{align}
+%     \mr &=
+%\left[\begin{array}{l} 
+%        \textsc{Inform} \\
+%        \textrm{name=The Vaults} \\
+%        \textrm{eat\_type=pub} \\
+%    \textrm{customer\_rating=5 out of 5} \\
+%    \textrm{near=Caf{\'e} Adriatic} \\
+%    \textrm{price\_range=more than \pounds 30}
+%\end{array}\right] \\
+%\ls(\mr) & = \mrtoks \\
+%        & = \left[x_1,x_2,x_3,x_4,x_5,x_6\right] \\
+%        & = \left[\begin{array}{l}
+%        \textrm{``inform''}, \\
+%        \textrm{``name=The Vaults''}, \\
+%        \textrm{``eat\_type=pub''}, \\
+%        \textrm{``near=Caf{\'e} Adriatic''}, \\
+%        \textrm{``customer\_rating=5 out of 5''}, \\
+%        \textrm{``price\_range=more than \pounds 30''},
+%\end{array}\right]
+% \end{align}\endgroup
+% where $x_1=\textrm{``inform''}$, $x_2=\textrm{``name=The Vaults''}$, etc., and 
+%``inform'' $\in \mrvocab$, ``name=The Vaults'' $\in \mrvocab$, etc.
+%Given a \linearizationstrategy~for the \meaningrepresentations,
+%we can now apply a \sequencetosequence~model to input output pairs $(\ls(\mr),\utttoks)$.
+%
+%
+%
+%
+%%~\\~\\
+%%
+%% 
+%%and output tokens are drawn from distinct finite vocabularies. That is,
+%%$\mrtok_i \in \mrvocab$ and $\utttok_i \in \uttvocab$, implying that 
+%%$\mrvocab^+ = \inSpace$ and $\uttvocab^+ = \outSpace$.
+%%$\model(\utttoks|\mrtoks;\theta)$ is effectively a neural conditional language
+%%model with a semi-Markovian factorization, $\model(\utttoks|\mrtoks;\theta) = 
+%%\prod_{i=1}^\uttSize \model(\utttok_i|\utttok_1,\ldots,\utttok_{i-1},\mrtoks;\params)$.
+%%
+%%In order to use a \sequencetosequence~model for the \surfacerealization~problem
+%%we need only map our desired inputs and outputs to sequences of discrete tokens. 
+%%In English, the desired output is relatively straightforward to represent as 
+%%a sequence as an English language 
+%%utterance can naturally be represented as a sequence of word tokens, for example, \[ some words in a sequence \].
+%%
+%
+%
+%\subsection{Overgenerate and Rerank}
+%
+%Because it is a well known problem that the model $\model\left(\cdot|\mrtoks;\params\right)$ is not sufficient to generate faithful utterances, in practice
+%most implementations of a \sequencetosequence~model for \surfacerealization~do
+%so using some form of overgeneration with reranking to produce the final
+%utterance. That is, a $\nbest$-best list of utterances $\nbestlist = \left\{\utttoks^{(1)},\ldots,
+%\utttoks^{(\nbest)}\right\}$ is produced by the model using beam search. Then 
+%a descriminiative model $\dmodel$ is used to rerank $\nbestlist$ such
+%that the final return utterance is \[
+%\predutttoks = \argmax_{\utttoks \in \nbestlist} \dmodel(\mrtoks|\utttoks;\dparams). \]
+%In this setting, $\dmodel$ can be understood as a 
+%\meaningrepresentation~parser, and we are selecting the utterance that 
+%that most likey denotes the input $\mr$. While this reduces the risk of
+%generating an incorrect utterance with respect to $\mr$, it can still fail
+%when either $\dmodel$ is not accurate or when $\nbestlist$ does not contain
+%a completely correct utterance.
+%

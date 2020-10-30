@@ -1,0 +1,92 @@
+\begin{figure}[t]
+
+\begin{tikzpicture}
+
+    \node[align=left,text width=\textwidth] (a) at (0,0) 
+    {(a) The \attributevalue~eat\_type=pub occurs in multiple locations 
+    of the utterance.};
+
+    \node[anchor=west] at ($(a.west)+(0,2.5)$) {
+        $\left[\!\!\left[\begin{array}{l}
+                    \textsc{Inform}\\
+            \AV{name}{Wildwood}\\
+            \AV{food}{Italian}\\
+            \textrm{eat\_type=}\redbox{\textrm{pub}}\\
+            \AV{price\_range}{£20-25}\\
+            \AV{customer\_rating}{high}
+        \end{array}\right]\!\!\right]$};
+
+    \node[draw,dotted,text width=0.5\textwidth,align=left,anchor=east] 
+        at ($(a.east)+(0,2.5)$) 
+        {\textit{Wildwood is an Italian \redbox{pub} with a price range of
+        £20-25. The \redbox{pub} has a very high customer rating.}};
+
+%    \node[align=left,text width=\textwidth] (b) at (0,-6) 
+%    {(b) The utterance fails to mention the customer rating or that the 
+%    establishment is family friendly.};
+%
+%    \node[anchor=west] at ($(b.west)+(0,3)$) {
+%        $\left[\!\!\left[\begin{array}{l}
+%                    \textsc{Inform}\\
+%            \AV{name}{Blue Spice}\\
+%            \AV{eat\_type}{coffee shop}\\
+%            \AV{price\_range}{cheap}\\
+%            \AV{customer\_rating}{average}\\
+%            \AV{area}{riverside}\\
+%            \AV{family\_friendly}{yes}\\
+%            \AV{near}{Avalon}
+%        \end{array}\right]\!\!\right]$};
+%
+%    \node[draw,dotted,text width=0.5\textwidth,align=left,anchor=east] 
+%        at ($(b.east)+(0,3)$) 
+%        {\textit{Blue Spice is a cheap coffee shop located  
+%         in the riverside, near Avalon.}};
+
+
+    \node[align=left,text width=\textwidth] (b) at (0,-5) 
+    {(b) The utterance claims the restaurant serves sushi even though this
+         is not stated in the \meaningrepresentation. Not all Japanese 
+         restaurants serve sushi so this inference is not justified.};
+
+    \node[anchor=west] at ($(b.west)+(0,2.5)$) {
+        $\left[\!\!\left[\begin{array}{l}
+          \textsc{Inform} \\
+          \AV{name}{The Waterman}\\ 
+          \textrm{food=}\redbox{\textrm{Japanese}}\\ 
+          \AV{price\_range}{high}\\
+    %      \AV{customer\_rating}{3 out of 5}\\
+          \AV{area}{riverside}%\\
+  %        \AV{family\_friendly}{yes}
+  \end{array}\right]\!\!\right]$};
+
+    \node[draw,dotted,text width=0.5\textwidth,align=left,anchor=east] 
+        at ($(b.east)+(0,2.5)$) 
+          {\textit{Near the river there is an expensive \redbox{sushi} 
+          place called The Waterman.}}; %It is family friendly and rated 3 
+           %out of 5.}};
+
+%
+
+%
+%%name[Blue Spice], eatType[coffee shop], priceRange[cheap], customer rating[average], area[riverside], familyFriendly[yes], near[Avalon]"
+%
+%
+%
+%
+%
+%%
+%%
+%%
+%%
+%%
+%%
+%
+%
+%
+%
+
+\end{tikzpicture}
+
+\caption{Example training set errors.}
+\label{fig:nlgerrors}
+\end{figure}

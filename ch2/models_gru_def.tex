@@ -1,7 +1,7 @@
 The \gatedrecurrentunit~function $\gruFuncDef{\embDim}{\hidDim}$~is defined as
 \begin{align}
 \fgru(\wordEmb, \sentEmb; \varphi) & 
-    = (1-\GRUupdategate) \odot \GRUcandgate + \GRUupdategate \odot \sentEmb\\
+    = (1-\GRUupdategate) \odot \GRUcandgate + \GRUupdategate \odot \sentEmb \label{eqn:gru}\\
     \textit{(Reset gate)} & \nonumber \\
 \GRUresetgate &= 
     \sigma\left(

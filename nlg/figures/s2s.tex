@@ -1,0 +1,186 @@
+\begin{figure}[t]
+
+    \resizebox{\textwidth}{!}{
+\begin{tikzpicture}[
+    dhid/.style={draw,minimum height=2cm,fill=white,text width=5mm,font=\footnotesize,fill=green!20,draw=green,rounded corners},
+    emb/.style={draw,minimum height=2cm,fill=white,text width=5mm,font=\small,rounded corners},
+    emb.enc/.style={emb,fill=red!20,draw=red},
+    emb.dech/.style={emb,fill=blue!20,draw=blue},
+    emb.dec/.style={emb,fill=orange!20,draw=orange},
+    emb.bridge/.style={emb,fill=violet!20,draw=violet},
+    emb.attn/.style={emb,fill=cyan!20,draw=cyan},
+    emb.pred/.style={emb,fill=purple!20,draw=purple},
+    con/.style={line width=0.5mm}]
+
+\node (x1) at (0,0) {$\mrtok_1$};
+\node (x2) at (2,0) {$\mrtok_2$};
+\node (x3) at (4,0) {$\mrtok_3$};
+\node (x4) at (6,0) {$\mrtok_4$};
+
+\node[emb.enc] (m1) at ($(x1)+(0,2)$) {$\encEmbs_{\mrtok_1}$};
+\node[emb.enc] (m2) at ($(x2)+(0,2)$) {$\encEmbs_{\mrtok_2}$};
+\node[emb.enc] (m3) at ($(x3)+(0,2)$) {$\encEmbs_{\mrtok_3}$};
+\node[emb.enc] (m4) at ($(x4)+(0,2)$) {$\encEmbs_{\mrtok_4}$};
+
+\draw[con,->] (x1.north) -- (m1.south);
+\draw[con,->] (x2.north) -- (m2.south);
+\draw[con,->] (x3.north) -- (m3.south);
+\draw[con,->] (x4.north) -- (m4.south);
+
+\node[draw=red,dotted,fill=red!20,text width=2cm,align=left] at ($(m1)+(-2.25,0)$) {Encoder\\ Embedding\\ Layer};
+
+\node[draw=green,dotted,fill=green!20,text width=2cm,align=left] at ($(m1)+(-2.25,6.75)$) {Encoder\\ GRU\\ Layer 2};
+
+\node[draw=green,dotted,fill=green!20,text width=2cm,align=left] at ($(m1)+(-2.25,3)$) {Encoder\\ GRU\\ Layer 1};
+
+\node[emb.bridge] (g10) at ($(m4)+(2,3)$) {$\decHidState^{(1)}_0$};
+\node[emb.bridge] (g20) at ($(m4)+(2,6.75)$) {$\decHidState^{(2)}_0$};
+
+\node[draw=violet,dotted,fill=violet!20,text width=1.5cm,align=left] at (8,6.9) {Bridge\\ Layers};
+
+
+\node (y1) at (10,0) {$\utttok_1$};
+\node (y2) at (12,0) {$\utttok_2$};
+\node (y3) at (14,0) {$\utttok_3$};
+
+\node[emb.dec] (w1) at ($(y1)+(0,2)$) {$\decWordEmb_1$};
+\node[emb.dec] (w2) at ($(y2)+(0,2)$) {$\decWordEmb_2$};
+\node[emb.dec] (w3) at ($(y3)+(0,2)$) {$\decWordEmb_3$};
+
+\node[draw=orange,dotted,fill=orange!20,text width=2cm,align=left] at ($(w3)+(2.25,0)$) {Decoder\\ Embedding\\ Layer};
+
+\draw[con,->] (y1.north) -- (w1.south);
+\draw[con,->] (y2.north) -- (w2.south);
+\draw[con,->] (y3.north) -- (w3.south);
+
+\node[emb.dech] (g11) at ($(w1)+(0,3)$) {$\decHidState^{(1)}_1$};
+\node[emb.dech] (g12) at ($(w2)+(0,3)$) {$\decHidState^{(1)}_2$};
+\node[emb.dech] (g13) at ($(w3)+(0,3)$) {$\decHidState^{(1)}_3$};
+
+\node[emb.dech] (g21) at ($(w1)+(0,6.75)$) {$\decHidState^{(2)}_1$};
+\node[emb.dech] (g22) at ($(w2)+(0,6.75)$) {$\decHidState^{(2)}_2$};
+\node[emb.dech] (g23) at ($(w3)+(0,6.75)$) {$\decHidState^{(2)}_3$};
+
+
+\node[dhid] (rh11) at ($(m1)+(-0.5,3+.25)$) {$\encBwdHidState^{(1)}_1$};
+\node[dhid] (rh12) at ($(m2)+(-0.5,3+.25)$) {$\encBwdHidState^{(1)}_2$};
+\node[dhid] (rh13) at ($(m3)+(-0.5,3+.25)$) {$\encBwdHidState^{(1)}_3$};
+\node[dhid] (rh14) at ($(m4)+(-0.5,3+.25)$) {$\encBwdHidState^{(1)}_4$};
+\draw[con,->] (rh14.west) -- (rh13.east);
+\draw[con,->] (rh13.west) -- (rh12.east);
+\draw[con,->] (rh12.west) -- (rh11.east);
+\draw[con,->] (rh14.east) -- (g10.west);
+
+
+
+
+\node[dhid] (fh11) at ($(m1)+(0.5,3-.25)$) {$\encFwdHidState^{(1)}_1$};
+\node[dhid] (fh12) at ($(m2)+(0.5,3-.25)$) {$\encFwdHidState^{(1)}_2$};
+\node[dhid] (fh13) at ($(m3)+(0.5,3-.25)$) {$\encFwdHidState^{(1)}_3$};
+\node[dhid] (fh14) at ($(m4)+(0.5,3-.25)$) {$\encFwdHidState^{(1)}_4$};
+
+
+\draw[con,->] (fh11.east) -- (fh12.west);
+\draw[con,->] (fh12.east) -- (fh13.west);
+\draw[con,->] (fh13.east) -- (fh14.west);
+\draw[con,->] (fh14.east) -- (g10.west);
+
+\node[dhid] (rh21) at ($(m1)+(-0.5,2.25*3+.25)$) {$\encBwdHidState^{(2)}_1$};
+\node[dhid] (rh22) at ($(m2)+(-0.5,2.25*3+.25)$) {$\encBwdHidState^{(2)}_2$};
+\node[dhid] (rh23) at ($(m3)+(-0.5,2.25*3+.25)$) {$\encBwdHidState^{(2)}_3$};
+\node[dhid] (rh24) at ($(m4)+(-0.5,2.25*3+.25)$) {$\encBwdHidState^{(2)}_4$};
+\draw[con,->] (rh24.west) -- (rh23.east);
+\draw[con,->] (rh23.west) -- (rh22.east);
+\draw[con,->] (rh22.west) -- (rh21.east);
+\draw[con,->] (rh24.east) -- (g20.west);
+
+
+
+
+\node[dhid] (fh21) at ($(m1)+(0.5,2.25*3-.25)$) {$\encFwdHidState^{(2)}_1$};
+\node[dhid] (fh22) at ($(m2)+(0.5,2.25*3-.25)$) {$\encFwdHidState^{(2)}_2$};
+\node[dhid] (fh23) at ($(m3)+(0.5,2.25*3-.25)$) {$\encFwdHidState^{(2)}_3$};
+\node[dhid] (fh24) at ($(m4)+(0.5,2.25*3-.25)$) {$\encFwdHidState^{(2)}_4$};
+
+
+\draw[con,->] (fh21.east) -- (fh22.west);
+\draw[con,->] (fh22.east) -- (fh23.west);
+\draw[con,->] (fh23.east) -- (fh24.west);
+\draw[con,->] (fh24.east) -- (g20.west);
+
+
+
+\draw[con,->] (m1.north) -- (fh11.south);
+\draw[con,->] (m2.north) -- (fh12.south);
+\draw[con,->] (m3.north) -- (fh13.south);
+\draw[con,->] (m4.north) -- (fh14.south);
+\draw[con,->] (m1.north) -- (rh11.south);
+\draw[con,->] (m2.north) -- (rh12.south);
+\draw[con,->] (m3.north) -- (rh13.south);
+\draw[con,->] (m4.north) -- (rh14.south);
+
+\foreach \i in {1,...,4} {
+    \draw[con,->] (fh1\i.north) -- ($(fh1\i)!0.5!(rh1\i)+(0,1.75)$) -- 
+        ($(fh1\i)!0.5!(rh1\i)+(0,2.05)$) -- (fh2\i.south);
+
+    \draw[con,->] (rh1\i.north) -- ($(fh1\i)!0.5!(rh1\i)+(0,1.75)$) -- 
+        ($(fh1\i)!0.5!(rh1\i)+(0,2.05)$) -- (rh2\i.south);
+}
+
+
+\draw[con,->] (g10) -- (g11);
+\draw[con,->] (g20) -- (g21);
+\draw[con,->] (w1) -- (g11);
+\draw[con,->] (w2) -- (g12);
+\draw[con,->] (w3) -- (g13);
+\draw[con,->] (g11) -- (g21);
+\draw[con,->] (g12) -- (g22);
+\draw[con,->] (g13) -- (g23);
+\draw[con,->] (g11) -- (g12);
+\draw[con,->] (g12) -- (g13);
+\draw[con,->] (g21) -- (g22);
+\draw[con,->] (g22) -- (g23);
+
+\node[emb.attn] (attn) at ($(g22)+(0,3)$) {$\astate_3$};
+
+
+\draw[con,->] (rh21.north) -- ($(rh21.north)!0.5!(fh21.north)+(0,2.0)$) 
+    -- (attn.west);
+\draw[con,->] (fh21.north) -- ($(rh21.north)!0.5!(fh21.north)+(0,2.0)$) 
+    -- (attn.west);
+
+\draw[con,->] (rh22.north) -- ($(rh22.north)!0.5!(fh22.north)+(0,1.5)$) 
+    -- (attn.west);
+\draw[con,->] (fh22.north) -- ($(rh22.north)!0.5!(fh22.north)+(0,1.5)$) 
+    -- (attn.west);
+
+\draw[con,->] (rh23.north) -- ($(rh23.north)!0.5!(fh23.north)+(0,1.0)$) 
+    -- (attn.west);
+\draw[con,->] (fh23.north) -- ($(rh23.north)!0.5!(fh23.north)+(0,1.0)$) 
+    -- (attn.west);
+
+\draw[con,->] (rh24.north) -- ($(rh24.north)!0.5!(fh24.north)+(0,0.5)$) 
+    -- (attn.west);
+\draw[con,->] (fh24.north) -- ($(rh24.north)!0.5!(fh24.north)+(0,0.5)$) 
+    -- (attn.west);
+
+\draw[con,->] (g23.north) -- (attn.south);
+
+\node[emb.pred] (z) at ($(g23)+(0,3)$) {\phantom{$z_3$}};
+
+\node (p) at ($(z)+(0,3)$) {$\gen(\utttok_4|\utttoks_{1:3},\mrtoks)$};
+\draw[con,->] (z.north) -- (p.south);
+\draw[con,->] (g23.north) -- (z.south);
+\draw[con,->] (attn.east) -- (z.west);
+
+\node[draw=blue,dotted,fill=blue!20,text width=2cm,align=left] at ($(w3)+(2.25,3)$) {Decoder\\ GRU\\ Layer 1};
+\node[draw=blue,dotted,fill=blue!20,text width=2cm,align=left] at ($(w3)+(2.25,6.75)$) {Decoder\\ GRU\\ Layer 2};
+
+
+\node[draw=cyan,dotted,fill=cyan!20,text width=2cm,align=left] at ($(attn)+(-2,1)$) {Attention\\ Layer};
+\node[draw=purple,dotted,fill=purple!20,text width=2cm,align=left] at ($(z)+(2.25,1)$) {Prediction\\ Layer};
+\end{tikzpicture}
+}
+\caption{Schematic of the bi-directional GRU-based \sequencetosequence~model.}
+\label{fig:s2s}
+\end{figure}

@@ -18,6 +18,8 @@
 \newcommand{\alignmenttraining}{alignment training}
 \newcommand{\ancestralsampling}{ancestral sampling}
 \newcommand{\Ancestralsampling}{Ancestral sampling}
+\newcommand{\attribute}{attribute}
+\newcommand{\attributes}{attributes}
 \newcommand{\attributevalue}{attribute-value}
 \newcommand{\attributevalues}{attribute-values}
 \newcommand{\Automaticsummarization}{Automatic summarization}
@@ -46,6 +48,7 @@
 \newcommand{\faithfulness}{faithfulness}
 \newcommand{\faithfulgeneration}{faithful generation}
 \newcommand{\featurebased}{feature-based}
+\newcommand{\FeedForward}{Feed-Forward}
 \newcommand{\feedforward}{feed-forward}
 \newcommand{\gatedrecurrentunit}{gated recurrent unit}
 \newcommand{\kernelwidth}{kernel width}
@@ -84,6 +87,7 @@
 \newcommand{\sentenceextractor}{sentence extractor}
 \newcommand{\sequencetosequence}{sequence-to-sequence}
 \newcommand{\SequencetoSequence}{Sequence-to-Sequence}
+\newcommand{\Sequencetosequence}{Sequence-to-sequence}
 \newcommand{\surfacerealization}{surface realization}
 \newcommand{\surfacerealizationorder}{surface realization order}
 \newcommand{\taskorienteddialoggeneration}{task oriented dialog generation}
@@ -313,7 +317,15 @@
     \newcommand{\utttoks}{\mathbf{y}}
     \newcommand{\futt}{\utttoks^{(\mr)}}
     \newcommand{\ufutt}{\utttoks^{(\lnot \mr)}}
+    \newcommand{\predutttok}{\hat{{y}}}
     \newcommand{\predutttoks}{\boldsymbol{\hat{\mathbf{y}}}}
+    \newcommand{\samplmr}{\tilde{\mr}}
+    \newcommand{\pdaMrDist}{\corpus_{\mr}^{-1}}
+    \newcommand{\pdaCandUtts}{\mathcal{\tilde{\outSpace}}}
+    \newcommand{\pdaCandUtt}{\boldsymbol{\tilde{\utttoks}}^{(i)}}
+    \newcommand{\pdaCandEps}{\boldsymbol{\epsilon}^{(i)}}
+    \newcommand{\pdaPredMr}{\hat{\mr}}
+  %  \newcommand{\samutttoks}{\boldsymbol{\tilde{\mathbf{y}}}}
     \newcommand{\mrspace}{\ensuremath{\mathcal{M}}}
     \newcommand{\inSpace}{\ensuremath{\mathcal{X}}}
     \newcommand{\outSpace}{\ensuremath{\mathcal{Y}}}
@@ -322,7 +334,7 @@
     \newcommand{\uttvocab}{\mathcal{V}_\outSpace}
     \newcommand{\nbest}{k}
     \newcommand{\nbestlist}{\mathcal{K}}
-    \newcommand{\dmodel}{Q}
+    \newcommand{\dmodel}{q}
     \newcommand{\dparams}{\phi}
 
 
@@ -364,19 +376,21 @@
 
 
 
+\newcommand{\Atr}[1]{\textrm{#1}}
 \newcommand{\AV}[2]{\textrm{#1=#2}}
 
 
 \newcommand{\mrSize}{\ensuremath{m}}
 \newcommand{\gen}{\ensuremath{p}}
-\newcommand{\encMod}{\ensuremath{f}}
-\newcommand{\decMod}{\ensuremath{g}}
+\newcommand{\encMod}{\ensuremath{\operatorname{Enc}}}
+\newcommand{\decMod}{\ensuremath{\operatorname{Dec}}}
 \newcommand{\encDim}{\ensuremath{{D_\mathcal{E}}}}
 \newcommand{\decDim}{\ensuremath{{D_\mathcal{D}}}}
 \newcommand{\encState}{\ensuremath{\mathbf{h}}}
 \newcommand{\senttok}{\textit{<<$\blacksquare$>>}}
 \newcommand{\stoptok}{\textit{<<e>>}}
 \newcommand{\starttok}{\textit{<<s>>}}
+\DeclareMathOperator*{\pmi}{PMI}
 \DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\softmax}{softmax}
@@ -437,3 +451,48 @@
 \newcommand{\mrSizeMax}{m_{max}}
 \newcommand{\temperature}{\tau}
 \newcommand{\nucleusthr}{p}
+\newcommand{\topkVocab}[2]{{\mathcal{T}}_{#1}^{(#2)}}
+\newcommand{\nucleusVocab}[2]{{\mathcal{N}}_{#1}^{(#2)}}
+
+\newcommand{\GEN}{\ensuremath{G}}
+\newcommand{\daMrDist}{M}
+\newcommand{\daUttDist}{Y}
+\newcommand{\augdata}{{\ensuremath{\mathcal{A}}}}
+\newcommand{\numSamples}{N}
+\newcommand{\filter}{\operatorname{filter}}
+\newcommand{\ruledmodel}{\ensuremath{{\dmodel_{\mathfrak{R}}  }}}
+\newcommand{\learndmodel}{\ensuremath{{\dmodel_{\phi}  }}}
+
+\newcommand{\basegen}{\ensuremath{\gen_0}}
+\newcommand{\auggen}{\ensuremath{\gen_1}}
+
+\newtcbox{\orangebox}[1][]{colframe=orange, colback=orange!15, boxrule=0.1mm,
+                       nobeforeafter, tcbox raise base, shrink tight, extrude
+                       by=0.32mm, #1}
+\newtcbox{\violetbox}[1][]{colframe=violet, colback=violet!15, boxrule=0.1mm,
+                       nobeforeafter, tcbox raise base, shrink tight, extrude
+                       by=0.32mm, #1}
+
+\newtcbox{\bluebox}[1][]{colframe=blue, colback=blue!15, boxrule=0.1mm,
+                       nobeforeafter, tcbox raise base, shrink tight, extrude
+                       by=0.32mm, #1}
+
+\newtcbox{\cyanbox}[1][]{colframe=cyan, colback=cyan!15, boxrule=0.1mm,
+                       nobeforeafter, tcbox raise base, shrink tight, extrude
+                       by=0.32mm, #1}
+
+\newtcbox{\purplebox}[1][]{colframe=purple, colback=purple!5, boxrule=0.1mm,
+                       nobeforeafter, tcbox raise base, shrink tight, extrude
+                       by=0.32mm, #1}
+
+\newtcbox{\pinkbox}[1][]{colframe=pink, colback=pink!15, boxrule=0.1mm,
+                       nobeforeafter, tcbox raise base, shrink tight, extrude
+                       by=0.32mm, #1}
+
+\newtcbox{\tealbox}[1][]{colframe=teal, colback=teal!15, boxrule=0.1mm,
+                       nobeforeafter, tcbox raise base, shrink tight, extrude
+                       by=0.32mm, #1}
+
+\newtcbox{\limebox}[1][]{colframe=lime, colback=lime!15, boxrule=0.1mm,
+                       nobeforeafter, tcbox raise base, shrink tight, extrude
+                       by=0.32mm, #1}

@@ -1,0 +1,51 @@
+
+\newtcbox{\truttbox}[1][]{colframe=green, colback=green!15, boxrule=0.1mm,
+                       nobeforeafter, tcbox raise base, shrink tight, extrude
+                       by=0.32mm, #1}
+\newtcbox{\mrdistbox}[1][]{colframe=orange, colback=orange!15, boxrule=0.1mm,
+                       nobeforeafter, tcbox raise base, shrink tight, extrude
+                       by=0.32mm, #1}
+
+\newtcbox{\ninjbox}[1][]{colframe=purple, colback=purple!15, boxrule=0.1mm,
+                       nobeforeafter, tcbox raise base, shrink tight, extrude
+                       by=0.32mm, #1}
+\newtcbox{\correctbox}[1][]{colframe=blue, colback=blue!15, boxrule=0.1mm,
+                       nobeforeafter, tcbox raise base, shrink tight, extrude
+                       by=0.32mm, #1}
+\newtcbox{\filterbox}[1][]{colframe=cyan, colback=cyan!15, boxrule=0.1mm,
+                       nobeforeafter, tcbox raise base, shrink tight, extrude
+                       by=0.32mm, #1}
+
+\newtcbox{\returnbox}[1][]{colframe=violet, colback=violet!15, boxrule=0.1mm,
+                       nobeforeafter, tcbox raise base, shrink tight, extrude
+                       by=0.32mm, #1}
+
+\begin{figure}[t]
+\begin{singlespace}
+\begin{algorithm}[H]
+\truttbox{$\gen_0 \gets \operatorname{Train}_\utttoks\left(\corpus\right)$} \\
+\truttbox{$\dmodel \gets \operatorname{Train}_\mr\left(\corpus\right)$} \\
+$\augdata \gets \left\{ \right\}$\\
+\While{$\setsize{\augdata} < \numSamples$}{
+\mrdistbox{$\samplmr \sim \pdaMrDist$}\\
+\ninjbox{$\pdaCandUtts\gets \left\{ \pdaCandUtt \sim 
+            \gen_0\left(\cdot|\ls(\samplmr), \pdaCandEps\right) 
+            \quad \forall i : i \in \{1,\ldots, k\} \right\} $}\label{lst:pdacand}\\
+\ninjbox{$\predutttoks \gets
+    \argmax_{\pdaCandUtt \in \pdaCandUtts} 
+    \frac{\log \gen_0\left(\pdaCandUtt|\ls(\samplmr),\pdaCandEps \right)}{\setsize{\pdaCandUtt}}$}\label{lst:pdacandselect}\\
+\correctbox{$\pdaPredMr \gets \dmodel\left(\predutttoks\right)$}\\
+\If{\filterbox{$\lnot \operatorname{Filter}\left(\pdaPredMr, \predutttoks\right)$}}{
+    $\augdata \gets \augdata \cup \left\{ \left(\pdaPredMr, \predutttoks\right) \right\}$
+}
+~\\
+}
+\returnbox{$\gen_1 \gets \operatorname{Train}_\utttoks(\corpus \cup \augdata)$}\\
+\KwResult{$\gen_1$}
+    \caption{Data Augmentation with Noise-Injection Sampling and Self-Training }
+%\label{alg:idealda}
+\end{algorithm}
+\end{singlespace}
+\caption{A comparison of greedy decoding, ancestral sampling, and noise injection sampling.}
+\label{fig:practda}
+\end{figure}

@@ -1,0 +1,176 @@
+\subsection{GRU Architecture}
+
+\input{nlg/figures/s2s.tex}
+
+The GRU is a form of reccurent neural network \citep{elman1990} that operates over discrete 
+sequences, which upon receiving a new input token, updates a ``hidden state'' 
+or internal representation using the current
+input and the previous hidden state. In the \sequencetosequence~paradigm,
+both the encoder and decoder are built upon distinct GRU layers. 
+
+The encoder consists of an embedding layer which maps the discrete input
+sequence to a sequence embeddings. The encoder input embedding sequence 
+is then fed through one or more GRU layers. Optionally, the encoder GRUs
+can be run uni-directionally (i.e., proceeding left-to-right), or bi-directionally (i.e. distinct left-to-right and right-to-left 
+GRUs process the input sequence and concatenate the output). We describe 
+both cases below. After encoding the input, the final state of the encoder 
+is optionally run through a bridge layer to project it to a compatible size
+for the decoder. 
+
+The decoder also has an embedding layer which it uses to map previously
+generated output tokens to embeddings which are then fed into the 
+one or more uni-directional decoder GRUs. The decoder hidden state at 
+each step attends to the encoder hidden states, producing an ``attention vector,'' i.e. a weighted sum of the encoder hidden states. The decoder state
+and the attention vector are concatenated and fed through a \feedforward~layer
+with softmax output to produce a probability distribution over the next
+token. 
+
+See \autoref{fig:s2s} for a schematic example of the GRU-based
+\sequencetosequence~model. We now describe the individual components in 
+detail.
+
+\paragraph{\redbox{Encoder Embedding Layer}}
+Let $\mrtoks = \left[ \mrtok_1,\ldots,\mrtok_\mrSize\right]$ be a linearized 
+\meaningrepresentation~token sequence. Before feeding $\mrtoks$ into the encoder
+GRU layer, we first embed each token. Let $\encEmbs \in \reals^{\setsize{\mrvocab} \times \embDim}$ be the encoder input embedding matrix, where each row, $\encWordEmb_i$, is a $\embDim$-dimensional embedding for a token in $\utttok \in \mrvocab$, i.e.,
+\[ \encEmbs = \left[ \begin{array}{c} \encWordEmb_1\\ \vdots \\ \encWordEmb_\setsize{\mrvocab} \end{array}\right]. \]
+    We assume each element $\mrtok \in \mrvocab$ is uniquely identified with a row   $i \in \left\{1, \ldots, \setsize{\mrvocab}\right\}$. We indicate
+    the embedding of $\mrtok$ as $\encEmbs_\mrtok = \encWordEmb_i$.
+%    in $\encEmbs$; let $\mrtok\in\mrvocab$ be identified with the $i$-th row, then we indicate it's embedding by $\encEmbs_\mrtok = \encWordEmb_i$.  
+    The input to the encoder GRU layer then is 
+\[\left[\encHidState^{(0)}_1,\ldots,\encHidState^{(0)}_\mrSize\right] = \left[\encEmbs_{\mrtok_1},\ldots,
+                                                                            \encEmbs_{\mrtok_\mrSize}\right]. \]
+
+
+\paragraph{\greenbox{Encoder Uni-directional GRU Layers}}
+We then compute the GRU hidden states. The encoder can have an arbitray number of layers $\numLayer$.
+For each layer $l \in \{1,\ldots, \numLayer\}$ we compute,
+\begin{align*}
+    \encHidState_0^{(l)} & = \zeroEmb \\
+    \encHidState_i^{(l)} & =\fgru(\encHidState_i^{(l - 1)}, \encHidState_{i-1}^{(l)}; \gruEncParams^{(l)}) & \forall i : i \in \{1,\ldots, \mrSize\}
+\end{align*}
+where $\gruEncParams^{(l)}$ are the GRU encoder parameters\footnote{See \autoref{eqn:gru} for the definition of the GRU function.} for the $l$-th layer and $\encHidState^{(l)}_i \in \reals^{\hidDim}$. The encoder GRU layers output the 
+sequence of hidden states, $\encHidState_1,\ldots,\encHidState_\mrSize$, used by the decoder to represent the input; 
+in the uni-directional case, these are simply the last GRU layer outputs, i.e. $\encHidState_i = \encHidState_i^{(\numLayer)} \in \reals^{\encDim}$ (in the uni-directional case, $\hidDim = \encDim$).
+
+\paragraph{\greenbox{Encoder Bi-directional GRU Layers}}
+The uni-directional encoder may suffer from a recency bias when creating the initial state for the 
+decoder and for longer input sequences the encoder may ``forget'' information encoded in the 
+early hidden states. In practice to alleviate this another GRU is run in the opposite direction and
+its outputs are concatenated. For the first layer, we have,
+\begin{align*}
+    \textit{(Encoder Forward GRU)}\\
+    \encFwdHidState_0^{(1)} & = \zeroEmb,\\ 
+    \encFwdHidState_i^{(1)} & =\fgru\left(\encHidState_i^{(0)}, \encFwdHidState_{i-1}^{(1)}; \gruEncFwdParams^{(l)}\right), & \forall i : i \in \{1,\ldots, \mrSize\}\\
+    \textit{(Encoder Backward GRU)}\\
+     \encBwdHidState_0^{(1)} &= \zeroEmb, \\
+    \encBwdHidState_i^{(1)} & =\fgru\left(\encHidState_i^{(0)}, \encBwdHidState_{i+1}^{(1)}; \gruEncBwdParams^{(l)}\right)    & \forall i : i \in \{1,\ldots, \mrSize\}\\
+  \encHidState^{(1)}_i & = \left[\begin{array}{c} \encFwdHidState_i^{(1)} \\ \encBwdHidState_i^{(1)} \end{array}\right]
+& \forall i : i \in \{1,\ldots, \mrSize\}\\
+\end{align*}
+where $\gruEncFwdParams$ and $\gruEncBwdParams$ are forward and backward GRU parameters respectively,
+$\encFwdHidState^{(1)}_i,\encBwdHidState^{(1)}_i\in\reals^{\hidDim}$, and first layer hidden state,
+$\encHidState^{(1)}_i\in\reals^{2\hidDim}$, is a concatenation of the forward and backward hidden
+states at step $i$. 
+The subsequent layers are computed similarly, but the input to the GRUs are $2\hidDim$-dimensional.
+Like before, the encoder outputs are the hidden state outputs of the last layer, $\encHidState_i = \encHidState_i^{(\numLayer)} \in \reals^{\encDim}$ where $\encDim = 2\hidDim$.
+
+
+\paragraph{\orangebox{Decoder Embedding Layer}}
+We then embed the utterance token sequence, 
+$\utttoks = \left[ \utttok_1,\ldots,\utttok_\uttSize\right]$,
+before feeding it to the decoder GRU layers.. 
+Let $\decEmbs \in \reals^{\setsize{\uttvocab} \times \embDim}$ be an
+embedding matrix of the utterance tokens $\utttok \in \uttvocab$ defined
+analogously to the encoder embedding matrix $\encEmbs$. 
+%where each row is an embedding for a token in $\uttvocab$ (analogous to $\encEmbs$),
+%\[ \decEmbs = \left[ \begin{array}{c} \decWordEmb_1\\ \vdots \\ \decWordEmb_\setsize{\uttvocab} \end{array}\right]. \]
+%We assume each element in $\uttvocab$ is uniquely identified with a row in $\encEmbs$; let $\mrtok\in\mrvocab$ be identified with the $i$-th row, then we indicate it's embedding by $\encEmbs_\mrtok = \encWordEmb_i$.  
+The input to the decoder then is 
+\[\left[\decHidState^{(0)}_1,\ldots,\decHidState^{(0)}_{\uttSize-1}\right] = \left[\decEmbs_{\utttok_1},\ldots,
+\decEmbs_{\utttok_{\uttSize-1}}\right].\footnote{The decoder input sequences have length $\uttSize-1$ since the $\uttSize^\textrm{th}$ token is always the stop token \stoptok, which is never fed into the decoder input. } \]
+
+\paragraph{\violetbox{Bridge Layer}}
+We initialize the decoder hidden state with the final (i.e. $\mrSize$-th) state of the encoder GRU.
+In the case where $\encDim \ne \hidDim$, we need to project $\encHidState_\mrSize^{(l)}$ to $\hidDim$
+dimensions,
+\[ \decHidState_0^{(l)} = \begin{cases} \tanh\left(\weight{br}_l \encHidState_\mrSize^{(l)} + \bias{br}_l\right) & \encDim \ne \hidDim  \\
+\encHidState_\mrSize^{(l)} & \textrm{otherwise} \end{cases},\]
+where $\weight{br}_l \in \reals^{\hidDim \times \encDim}$ and $\bias{br}_l \in \reals^{\hidDim}$
+for $l \in \{1,\ldots,\numLayer\}$
+are the weight and bias parameters for the ``bridge layer'' between the encoder and decoder networks.
+
+\paragraph{\bluebox{Decoder GRU Layers}}
+The decoder GRU is then computed analogously to the uni-directional encoder GRU,
+\begin{align*}
+    \decHidState_i^{(l)} & =\fgru\left(\decHidState_i^{(l - 1)}, \decHidState_{i-1}^{(l)}; \gruDecParams^{(l)}\right) & \forall i : i \in \{1,\ldots, \uttSize-1\},
+\end{align*}
+where $\gruDecParams^{(l)}$ are the decoder GRU parameters and
+$ \decHidState_i^{(l)} \in \reals^{\hidDim}$ for $i \in \{1,\ldots,\uttSize-1\}$ and $l \in \{1,\ldots,\numLayer\}$.
+The decoder outputs, $\decHidState_1,\ldots,\decHidState_{\uttSize-1}$, are the decoder hidden states of the last decoder layer, i.e. $\decHidState_i = \decHidState^{(\numLayer)}_i \in \reals^{\decDim}$ where $\decDim=\hidDim$.
+
+\paragraph{\cyanbox{Attention Layer}}
+
+As mentioned before, one drawback of the recurrent neural network design is that information
+from earlier states my not be preserved in later states. To ameliorate this, the attention
+mechanism was proposed to allow an arbitrary decoder state to retrieve information from an arbitrary
+encoder state \citep{bahdanau2015}. This works by taking a weighted average of the encoder states,
+\begin{align*}
+    \astate_i & = \sum^{\mrSize}_{j=1}\alpha_{i,j}\encHidState_j & \forall i : i \in \{1,\ldots, \uttSize-1\}
+\end{align*}
+where $\alpha_{i,j} \in (0,1)$ is proportional to a score function $\ascore(\decHidState_i,\encHidState_j)$ which 
+measures some notion of ``relevance'' for decoder state $i$ to encoder start $j$,
+\[\alpha_{i,j} = \frac{\exp \ascore(\decHidState_i, \encHidState_j) }{ \sum_{j^\prime=1}^\mrSize \exp \ascore(\decHidState_i, \encHidState_{j^\prime})} \quad \forall i,j : j \in \{1,\ldots,\mrSize\}, i \in \{1,\ldots,\uttSize-1\}.\]
+
+There are several popular ways to implement $\ascore$ which we consider; we refer to three of them
+using the names given in \citet{luong2015}. When the encoder and decoder
+hidden states are of the same dimension, the simplest function is just the dot product, which 
+we refer to as ``dot-style'' attention,\\
+\textit{(Dot-Style Attention)}
+\[ \quad \ascore(\decHidState_i,\encHidState_j) = \decHidState_i \cdot \encHidState_j. \]
+If they are not the same dimension, one can insert a parameter matrix in place of the dot product,\\
+\textit{(General-Style Attention)}
+\[ \quad \ascore(\decHidState_i,\encHidState_j) = \decHidState_i \attnkernel \encHidState_j \]
+where $\attnkernel \in \reals^{\decDim \times \encDim}$ is a learned parameter of the model.
+
+The third method called ``concat'' by \citet{luong2015} but also commonly
+referred to as ``Bahdanau,'' since it was introduced in the 
+\citet{bahdanau2015}, uses a \feedforward~layer to project the pair of states
+down to a scalar,\\
+\textit{(Concat-Style Attention)}
+\[ \ascore(\decHidState_i, \encHidState_j) = \attnff\cdot\tanh\left(\attnkernel\left[ \begin{array}{c} \decHidState_i \\ \encHidState_j \end{array} \right] \right),  \]
+    where $\attnkernel \in \reals^{\hidDim \times (\decDim + \encDim)}$
+    and $\attnff \in \reals^{\hidDim}$ are learned parameters.
+
+
+
+\paragraph{\purplebox{Prediction Layer}}
+Finally, the attention output $\astate_i$ and decoder state $\decHidState_i$
+are run through a two~layer \feedforward~network to produce a distribution
+over the utterance token vocabulary $\uttvocab$,
+\[ \gen\left(\utttok_{i+1}|\utttoks_{1:i},\ls(\mr);\params\right) = \softmax\left(   \weight{2}\cdot \tanh\left(\weight{1} \left[ \begin{array}{c}\decHidState_i \\ \encHidState_j \end{array} \right] + \bias{1}\right) + \bias{2} \right)_{\utttok_{i+1}}\quad \forall i: i \in \{1,\ldots,\uttSize-1\} \]
+    where $\weight{1} \in \reals^{\hidDim \times \left(\decDim + \encDim\right)}$,
+    $\bias{1} \in \reals^{\hidDim}$, $\weight{2} \in \reals^{\setsize{\uttvocab} \times \hidDim}$, and $\bias{2}\in\reals^{\setsize{\uttvocab}}$ are learned
+    parameters and we associate each utterance token $\utttok$ with a unique 
+    element in the final $\softmax$ distribution (similar to how we indexed
+    into the embeddings matrices $\encEmbs$ and $\decEmbs$). 
+
+
+
+    The complete set parameters associated with the GRU architecture 
+    with uni-directional encoder is
+    \[ \params = \left\{ \gruEncParams^{(1)},
+    \ldots, \gruEncParams^{(\numLayer)}, 
+    \weight{1}, \bias{1}, \weight{2}, \bias{2}
+    \right\}  \]
+    while the GRU
+    with bi-directional encoder parameters are
+    \[ \params = \left\{ \gruEncFwdParams^{(1)}, \gruEncBwdParams^{(1)},
+            \weight{br}_1, \bias{br}_1,
+    \ldots, \gruEncFwdParams^{(\numLayer)}, \gruEncBwdParams^{(\numLayer)},
+    \weight{br}_\numLayer, \bias{br}_\numLayer, \weight{1}, \bias{1}, \weight{2}, \bias{2}
+    \right\}  \]
+    TODO add attention params.
+    
+
+
