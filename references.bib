@@ -1411,3 +1411,170 @@ series = {AAAI'16}
   journal={arXiv preprint arXiv:1506.05869},
   year={2015}
 }
+
+@inproceedings{puzikov2018,
+    title = "{E}2{E} {NLG} Challenge: Neural Models vs. Templates",
+    author = "Puzikov, Yevgeniy  and
+      Gurevych, Iryna",
+    booktitle = "Proceedings of the 11th International Conference on Natural Language Generation",
+    month = nov,
+    year = "2018",
+    address = "Tilburg University, The Netherlands",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/W18-6557",
+    doi = "10.18653/v1/W18-6557",
+    pages = "463--471",
+    abstract = "E2E NLG Challenge is a shared task on generating restaurant descriptions from sets of key-value pairs. This paper describes the results of our participation in the challenge. We develop a simple, yet effective neural encoder-decoder model which produces fluent restaurant descriptions and outperforms a strong baseline. We further analyze the data provided by the organizers and conclude that the task can also be approached with a template-based model developed in just a few hours.",
+}
+
+@inproceedings{dusek2019,
+    title = "Semantic Noise Matters for Neural Natural Language Generation",
+    author = "Du{\v{s}}ek, Ond{\v{r}}ej  and
+      Howcroft, David M.  and
+      Rieser, Verena",
+    booktitle = "Proceedings of the 12th International Conference on Natural Language Generation",
+    month = oct # "{--}" # nov,
+    year = "2019",
+    address = "Tokyo, Japan",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/W19-8652",
+    doi = "10.18653/v1/W19-8652",
+    pages = "421--426",
+    abstract = "Neural natural language generation (NNLG) systems are known for their pathological outputs, i.e. generating text which is unrelated to the input specification. In this paper, we show the impact of semantic noise on state-of-the-art NNLG models which implement different semantic control mechanisms. We find that cleaned data can improve semantic correctness by up to 97{\%}, while maintaining fluency. We also find that the most common error is omitting information, rather than hallucination.",
+}
+
+@inproceedings{gardner2020,
+  author    = {Matt Gardner and Yoav Artzi and Victoria Basmova and Jonathan Berant and Ben Bogin and Sihao Chen and Pradeep Dasigi and Dheeru Dua and Yanai Elazar and Ananth Gottumukkala and Nitish Gupta and Hanna Hajishirzi and Gabriel Ilharco and Daniel Khashabi and Kevin Lin and Jiangming Liu and Nelson F. Liu and Phoebe Mulcaire and Qiang Ning and Sameer Singh and Noah A. Smith and Sanjay Subramanian and Reut Tsarfaty and Eric Wallace and Ally Quan Zhang and Ben Zhou},
+  booktitle = {Findings of Empirical Methods in Natural Language Processing},
+  title     = {Evaluating Models' Local Decision Boundaries via Contrast Sets},
+  year      = {2020}
+}
+
+@inproceedings{mccoy2019,
+    title = "Right for the Wrong Reasons: Diagnosing Syntactic Heuristics in Natural Language Inference",
+    author = "McCoy, Tom  and
+      Pavlick, Ellie  and
+      Linzen, Tal",
+    booktitle = "Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics",
+    month = jul,
+    year = "2019",
+    address = "Florence, Italy",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/P19-1334",
+    doi = "10.18653/v1/P19-1334",
+    pages = "3428--3448",
+    abstract = "A machine learning system can score well on a given test set by relying on heuristics that are effective for frequent example types but break down in more challenging cases. We study this issue within natural language inference (NLI), the task of determining whether one sentence entails another. We hypothesize that statistical NLI models may adopt three fallible syntactic heuristics: the lexical overlap heuristic, the subsequence heuristic, and the constituent heuristic. To determine whether models have adopted these heuristics, we introduce a controlled evaluation set called HANS (Heuristic Analysis for NLI Systems), which contains many examples where the heuristics fail. We find that models trained on MNLI, including BERT, a state-of-the-art model, perform very poorly on HANS, suggesting that they have indeed adopted these heuristics. We conclude that there is substantial room for improvement in NLI systems, and that the HANS dataset can motivate and measure progress in this area.",
+}
+
+
+@article{fodor1988,
+title = "Connectionism and cognitive architecture: A critical analysis",
+journal = "Cognition",
+volume = "28",
+number = "1",
+pages = "3 - 71",
+year = "1988",
+issn = "0010-0277",
+doi = "https://doi.org/10.1016/0010-0277(88)90031-5",
+url = "http://www.sciencedirect.com/science/article/pii/0010027788900315",
+author = "Jerry A. Fodor and Zenon W. Pylyshyn",
+}
+
+@article{phillips1998,
+author = { Steven   Phillips },
+title = {Are Feedforward and Recurrent Networks Systematic? Analysis and Implications for a Connectionist Cognitive Architecture},
+journal = {Connection Science},
+volume = {10},
+number = {2},
+pages = {137-160},
+year  = {1998},
+publisher = {Taylor & Francis},
+doi = {10.1080/095400998116549},
+
+URL = { 
+        https://doi.org/10.1080/095400998116549
+    
+},
+eprint = { 
+        https://doi.org/10.1080/095400998116549
+    
+}
+
+}
+
+@book{marcus2003,
+  title={The algebraic mind: Integrating connectionism and cognitive science},
+  author={Marcus, Gary F},
+  year={2003},
+  publisher={MIT press}
+}
+
+@inproceedings{andreas2020,
+    title = "Good-Enough Compositional Data Augmentation",
+    author = "Andreas, Jacob",
+    booktitle = "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics",
+    month = jul,
+    year = "2020",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/2020.acl-main.676",
+    doi = "10.18653/v1/2020.acl-main.676",
+    pages = "7556--7566",
+    abstract = "We propose a simple data augmentation protocol aimed at providing a compositional inductive bias in conditional and unconditional sequence models. Under this protocol, synthetic training examples are constructed by taking real training examples and replacing (possibly discontinuous) fragments with other fragments that appear in at least one similar environment. The protocol is model-agnostic and useful for a variety of tasks. Applied to neural sequence-to-sequence models, it reduces error rate by as much as 87{\%} on diagnostic tasks from the SCAN dataset and 16{\%} on a semantic parsing task. Applied to n-gram language models, it reduces perplexity by roughly 1{\%} on small corpora in several languages.",
+}
+
+
+@inproceedings{wen2016,
+    title = "Multi-domain Neural Network Language Generation for Spoken Dialogue Systems",
+    author = "Wen, Tsung-Hsien  and
+      Ga{\v{s}}i{\'c}, Milica  and
+      Mrk{\v{s}}i{\'c}, Nikola  and
+      Rojas-Barahona, Lina M.  and
+      Su, Pei-Hao  and
+      Vandyke, David  and
+      Young, Steve",
+    booktitle = "Proceedings of the 2016 Conference of the North {A}merican Chapter of the Association for Computational Linguistics: Human Language Technologies",
+    month = jun,
+    year = "2016",
+    address = "San Diego, California",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/N16-1015",
+    doi = "10.18653/v1/N16-1015",
+    pages = "120--129",
+}
+
+@article{nguyen2018,
+      title={Structure-based Generation System for E2E NLG Challenge},
+        author={Nguyen, Dang Tuan and Tran, Trung},
+      year={2018}
+}
+
+@article{lu2009automatic,
+  title={Automatic measurement of syntactic complexity in child language acquisition},
+  author={Lu, Xiaofei},
+  journal={International Journal of Corpus Linguistics},
+  volume={14},
+  number={1},
+  pages={3--28},
+  year={2009},
+  publisher={John Benjamins}
+}
+
+@article{rosenberg1987indicators,
+  title={Indicators of linguistic competence in the peer group conversational behavior of mildly retarded adults 1},
+  author={Rosenberg, Sheldon and Abbeduto, Leonard},
+  journal={Applied Psycholinguistics},
+  volume={8},
+  number={1},
+  pages={19--32},
+  year={1987},
+  publisher={Cambridge University Press}
+}
+
+@article{covington2006complex,
+  title={How complex is that sentence? A proposed revision of the Rosenberg and Abbeduto D-Level Scale},
+  author={Covington, Michael A and He, Congzhou and Brown, Cati and Naci, Lorina and Brown, John},
+  year={2006},
+  publisher={University of Georgia Artificial Intelligence Center}
+}
+

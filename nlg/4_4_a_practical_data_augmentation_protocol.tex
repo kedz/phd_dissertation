@@ -1,0 +1,65 @@
+\subsection{A Practical Data-Augmentation Protocol}
+\label{sec:daprotos}
+
+
+\input{nlg/figures/practicaldataaug.tex}
+
+Because of its ability to generate semantically divergent and novel
+outputs while maintaining fluency, we adopt this noise-injection
+sampling as our method of sampling utterances, $\daUttDist$, for 
+data-augmentation. We show our actual data-augmentation scheme in
+\autoref{fig:practda} and now walk through some of the implementation details.
+
+\paragraph{\truttbox{Train base generator $\gen_0$ and \meaningrepresentation~parser $\dmodel$.}}
+The algorithm begins by training the base generator, i.e. na{\"i}ve 
+\sequencetosequence~model, and \meaningrepresentation~parser $\dmodel$. 
+Both models are trained on the same data, with the only real change to the 
+$\operatorname{Train}$ sub-routine being which part of a training example
+is the ouput and which is the input. Alternatively, $\dmodel$ can 
+also be implemented using regular-expression-based rules. We defer detailed 
+explanation of $\dmodel$ until the experiments; it suffices to understand
+$\dmodel$ as a mapping from utterances to \meaningrepresentations.
+
+
+
+
+\paragraph{\mrdistbox{Sampling a \meaningrepresentation, $\samplmr$}}
+We use the meaning representation described in \autoref{sec:ideal} to implement
+ the distribution $\corpus_\mr^{-1}$. 
+
+\paragraph{\ninjbox{Generating a novel utterance with noise-injection 
+    sampling.}}
+    In \autoref{lst:pdacand} we take $200$ noise-injection samples to construct
+    a candidate set of utterances, $\pdaCandUtts_{200}$. 
+    From these we use only the top 20 utterances, $\pdaCandUtts_{20}$ by average log-likelihood,
+    $\frac{\log\gen(\pdaCandUtt|\ls(\samplmr), \boldsymbol{\epsilon}^{(i)})}{\setsize{\pdaCandUtt}}$ (\autoref{lst:pdacandselect}).
+%    From $\pdaCandUtts$ we
+%    select as our noise-injection sample, the utterance $\predutttoks$
+%    which has the highest average token log-likelihood (\autoref{lst:pdacandselect}). 
+    We do this selection step so as to be extra cautious and avoid adding
+    any potentially disfluent utterances to $\augdata$.
+    
+    \paragraph{\correctbox{Predict \meaningrepresentation~$\pdaPredMr$ from
+    $\predutttoks$.}} Because the noise-injection sampling produces highly
+semanticly divergent utterances, it is unlikely that $\denotes{\predutttoks } = \samplmr$. Instead we use the \meaningrepresentation~parser, $\dmodel$, to
+recover the most likely \meaningrepresentation, $\pdaPredMr = \dmodel\left(\predutttoks\right)$.
+
+\paragraph{\filterbox{Check synthetic datapoint $(\pdaPredMr,\predutttoks)$.}}
+We do one last quality check on the synthetic example $(\pdaPredMr,\predutttoks)$ before adding it to the augmented dataset, $\augdata$. We make sure that
+the probability of $\pdaPredMr$ under $\dmodel$ is above 0.5 when using
+a model-based \meaningrepresentation~parser. When using a rule-based
+\meaningrepresentation~parser, we check to make sure that there are no
+repeated \attributevalue-pairs in $\predutttoks$, e.g., ``Aromi is a 
+coffee shop and it is a coffee shop.'' Meaning representation/utterances that
+have been previously generated are also discarded. If the \meaningrepresentation/utterance
+pair passes these final quality checks, we add it to $\augdata$.
+
+\paragraph{\returnbox{Train an augmented generator $\auggen$ on $\corpus \cup \augdata$.}} After generating a synthetic dataset, $\augdata$, we train a new 
+generation model, $\auggen$, on the union of the original training data
+and the newly generated synthetic data. We refer to this model as 
+the augmented generator and, as we will show empirically, the augmented
+generator is more faithful than the base generator, $\gen_0$.
+We call this process self-training because $\auggen$ and $\gen_0$ share 
+the same architecture, and $\auggen$ is trained on data produced by $\gen_0$.
+
+

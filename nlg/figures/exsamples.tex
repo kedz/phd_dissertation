@@ -1,0 +1,33 @@
+\begin{figure}[t]
+\small
+\textbf{Ancestral Sampling}\\
+\textit{\starttok~the eagle is a non family - friendly italian food establishment . \stoptok}\\
+\textit{\starttok~the eagle is a italian food place and is not family - friendly . \stoptok}\\
+\textit{\starttok~some italian food can be found at the eagle . \senttok~it 's not family - friendly . \stoptok}\\
+\textit{\starttok~the eagle serves italian food . \senttok~it has a \unktok~\unktok~and is not family friendly . \stoptok}\\
+\textit{\starttok~the eagle is a family friendly place for italian food . \stoptok}\\
+~\\
+\textbf{Top-K Sampling ($k=100$)}\\
+\textit{\starttok~the eagle serves italian food . \senttok~it is not family - friendly . \stoptok}\\
+\textit{\starttok~the eagle serves italian cuisine . \senttok~it is not family - friendly . \stoptok}\\
+\textit{\starttok~the eagle has italian food and is not family - friendly \stoptok}\\
+\textit{\starttok~the eagle is italian place . \senttok~it is not family - friendly . \stoptok}\\
+\textit{\starttok~the eagle provides fast food . \senttok~it is not family - friendly . \stoptok}\\
+~\\
+\textbf{Nucleus Sampling ($p=0.95$)}\\
+\textit{\starttok~the eagle serves italian food and is not family - friendly . \stoptok}\\
+\textit{\starttok~the eagle is not family - friendly and serves italian food . \stoptok}\\
+\textit{\starttok~the eagle is not family - friendly . \senttok~they serve italian food . \stoptok}\\
+\textit{\starttok~italian food is served at the eagle . \senttok~not family - friendly . \stoptok}\\
+\textit{\starttok~the eagle is a good place to eat italian food . \senttok~it is not family - friendly . \stoptok}\\
+~\\
+\textbf{Noise-Injection Sampling ($\sigma=2.0$)}\\
+\textit{\starttok~the eagle in the city centre . \senttok~it is not family - friendly . \senttok~it is located near the burger king . \stoptok}\\
+\textit{\starttok~the eagle serves italian food . \stoptok}\\
+\textit{\starttok~the waterman is not family friendly and is located near burger king . \stoptok}\\
+\textit{\starttok~the eagle is located near the burger king . \stoptok}\\
+\textit{\starttok~the eagle is a non family - friendly italian food place . \stoptok}\\
+\caption{Example samples taken after conditioning on the following  meaning representation: 
+$\left[\!\!\left[\textsc{Inform};\quad    \AV{name}{The Eagle};\quad \AV{food}{Italian};\quad \AV{family\_friendly}{yes}\right]\!\!\right]$. }
+\label{fig:examplesamples}
+\end{figure}

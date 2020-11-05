@@ -325,7 +325,7 @@
     \newcommand{\pdaCandUtt}{\boldsymbol{\tilde{\utttoks}}^{(i)}}
     \newcommand{\pdaCandEps}{\boldsymbol{\epsilon}^{(i)}}
     \newcommand{\pdaPredMr}{\hat{\mr}}
-  %  \newcommand{\samutttoks}{\boldsymbol{\tilde{\mathbf{y}}}}
+   \newcommand{\samutttoks}{\boldsymbol{\tilde{\mathbf{y}}}}
     \newcommand{\mrspace}{\ensuremath{\mathcal{M}}}
     \newcommand{\inSpace}{\ensuremath{\mathcal{X}}}
     \newcommand{\outSpace}{\ensuremath{\mathcal{Y}}}
@@ -390,6 +390,8 @@
 \newcommand{\senttok}{\textit{<<$\blacksquare$>>}}
 \newcommand{\stoptok}{\textit{<<e>>}}
 \newcommand{\starttok}{\textit{<<s>>}}
+\newcommand{\unktok}{\textit{<<?>>}}
+
 \DeclareMathOperator*{\pmi}{PMI}
 \DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}
@@ -464,7 +466,28 @@
 \newcommand{\learndmodel}{\ensuremath{{\dmodel_{\phi}  }}}
 
 \newcommand{\basegen}{\ensuremath{\gen_0}}
-\newcommand{\auggen}{\ensuremath{\gen_1}}
+\newcommand{\auggen}{\ensuremath{\gen_*}}
+
+
+\newcommand{\parEmb}{\ensuremath{\mathbf{w}}}
+\newcommand{\parHid}{\ensuremath{\mathbf{h}}}
+\newcommand{\parEmbs}{\ensuremath{\mathbf{W}}}
+\newcommand{\parEmbsDims}{\ensuremath{D_w}}
+\newcommand{\parFtrDims}{\ensuremath{D_f}}
+\newcommand{\attr}{\ensuremath{a}}
+\newcommand{\aval}{\ensuremath{v}}
+\newcommand{\attrvocab}{\ensuremath{{\mathcal{V}_\attr}}}
+\newcommand{\parFeat}{\ensuremath{{h}}}
+\newcommand{\parkwidth}{\ensuremath{{k}}}
+\newcommand{\convbias}[1]{\ensuremath{{b^{(#1)}}}}
+\newcommand{\convweight}[1]{\ensuremath{{\mathbf{u}^{(#1)}}}}
+
+\newcommand{\cbias}[1]{\ensuremath{{\mathbf{b}^{(#1)}}}}
+\newcommand{\cweight}[1]{\ensuremath{{\mathbf{U}^{(#1)}}}}
+\newcommand{\convRange}[2]{\left\{ 
+    1 - \left\lfloor \frac{#1}{2} \right\rfloor, 
+    \ldots, #2 +  
+    \left\lfloor \frac{#1}{2} \right\rfloor - #1 + 1 \right\}}
 
 \newtcbox{\orangebox}[1][]{colframe=orange, colback=orange!15, boxrule=0.1mm,
                        nobeforeafter, tcbox raise base, shrink tight, extrude

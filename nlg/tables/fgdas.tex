@@ -1,0 +1,49 @@
+\begin{table}
+\centering
+\begin{tabular}{llll}
+\toprule
+Dataset & Dialog Acts & \multicolumn{2}{c}{Attributes} \\
+\midrule
+ \multirow{8}{*}{E2E Challenge} & \textsc{Inform} & name \\
+ & & near \\
+ & & eat\_type \\
+ & & food \\
+ & & area \\
+ & & price\_range \\
+ & & customer\_rating \\
+ & & family\_friendly \\
+\midrule
+\multirow{14}{*}{Laptops} & \textsc{Inform} & family & weight\\
+& \textsc{InformOnlyMatch} & price\_range & platform\\
+& \textsc{InformOnMatch} & battery\_rating & memory\\
+& \textsc{InformAll} & drive\_range & drive \\ 
+& \textsc{InformCount} & weight\_range & processor \\
+& \textsc{InformNoInfo} & is\_for\_business\_computing\\
+& \textsc{Recommend} &name\\ 
+& \textsc{Compare}& type \\
+& \textsc{Select}& price\\
+& \textsc{Suggest}& warranty\\
+& \textsc{Confirm} & battery\\ 
+& \textsc{Request}&design\\
+& \textsc{RequestMore} &dimension \\
+& \textsc{Goodbye} & utility\\
+\midrule
+ \multirow{14}{*}{TVs} & \textsc{Inform} & family & audio \\
+& \textsc{InformOnlyMatch} & price\_range \\
+& \textsc{InformOnMatch} & screen\_size\_range \\
+& \textsc{InformAll} & eco-rating\\ 
+& \textsc{InformCount}& hdmi-port\\
+& \textsc{InformNoInfo}& has\_usb-port\\
+& \textsc{Recommend} & name \\ 
+& \textsc{Compare} & type \\
+& \textsc{Select} &price\\
+& \textsc{Suggest} & resolution\\
+& \textsc{Confirm} & power\_consumption\\ 
+& \textsc{Request} & accessories\\
+& \textsc{RequestMore}& color \\
+& \textsc{Goodbye} & screen\_size\\
+\bottomrule
+\end{tabular}
+\caption{The dialogue acts and attributes for the E2E Challenge, Laptops, and TVs datasets.}
+\label{tab:fgdas}
+\end{table}

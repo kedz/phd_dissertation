@@ -1,0 +1,132 @@
+\input{nlg/tables/e2e_autoqual.tex}
+
+\input{nlg/tables/e2e_autosem.tex}
+
+
+\subsection{Results}
+\subsubsection{E2E Challenge}
+
+Automatic evaluation metrics are shown in \autoref{tab:fgautoqual}.
+Surprisingly, \basegen~using greedy decoding surpases all of the 
+baseline systems on all three automatic metrics. 
+This is quite shocking as the Slug baseline ensembles
+three different sequence-to-sequence models producing 10 outputs each using beam search and reranking based on slot alignment to select the final generation
+output. The $\auggen$/$\ruledmodel$~model remains competitive with Slug, 
+again even using greedy decoding.
+The $\auggen$/$\learndmodel$~starts underperforming Slug on \textsc{Bleu} 
+score but
+remains competitive on \textsc{Rouge-L} and \textsc{Meteor} again when using 
+greedy decoding.
+Overall the augmented training data tends to hurt generation with respect
+to automatic quality measures.
+In this regard, the added noise of the model-based parser, $\learndmodel$,
+ exacerbates things
+as it reduces quality more than the rule-based parser, $\ruledmodel$. 
+
+In the lexicalized setting,
+$\basegen$~produces lower quality output than the Slug system.
+However, the augmented training procedure increases
+the quality of the lexicalized $\auggen$~model which beats Slug on \textsc{Rouge-L}.
+
+
+The automatic quality evaluations are somewhat misleading, however. To gain
+more insight into model performance
+we apply our rule based parser to estimate attribute realization error
+for all system outputs on the test set,
+similarly to \cite{dusek2019}
+(e.g., if the MR specifies \AV{food}{French},
+we check to make sure the generated utterance says so). 
+The results of this evaluation are shown in \autoref{table:autosem}.
+Immediately, it is revealed that \basegen~is far worse than the baseline 
+methods making 115 and 83 errors using greedy and beam decoding respectively.
+
+It is here that we see the benefits of the data-augmentation.
+The $\auggen$/$\ruledmodel$~model achieves zero test set
+errors even when using the greedy 
+decoding. The $\auggen$/$\learndmodel$~model is slightly worse (in agreement 
+with the automatic quality measurements), but its greedy search is still
+superior to the more sophisticated Slug decoder, achieving 19 total
+test set errors compared to Slug's 67 errors.
+
+
+
+The lexicalized $\basegen$~model has especially high error rates, 
+particularly on the \Atr{name} and \Atr{near} attributes.
+With augmented data training, the $\auggen$~model reduces these errors
+ to zero when using greedy search and 2 with beam search. Unfortunately,
+the augmented training is more unstable in the lexicalized setting, 
+as it produces a large spike in \Atr{food} attribute errors, although
+the $\auggen$~models still have lower overall error than  $\basegen$.
+
+
+\subsubsection{Laptops and TVs}
+The results are more mixed here. Our \textsc{Bleu} scores are about 15 points 
+below the baselines on the Laptops dataset and 20 points below the 
+baselines on the TVs dataset. 
+Upon examing  the evaluation script in detail we see that 
+\textsc{Bleu} score is calculated using 5 model outputs which \citet{juraska2018}
+and \citet{wen2016} do. We only produce the 1-best output
+at test time,
+perhaps explaining the difference.
+
+Looking through our model
+outputs we see mostly good utterances, often nearly exactly matching the 
+references.
+Our models outperform the state of the art models on errors. The best state of the art models  make errors by generating sentences that do not match the input representation 0.79\%  and 1.67\% of the time on the Laptops and TVs datasets
+respectively. Our \auggen~model reduces that error to only 0.13\% and 
+0.20\%.
+
+%We do achieve the lowest error rates, with \auggen~beam
+%decoding achieving a 0.2\% error rate versus the previous best of 1.67\%
+%on the TVs dataset, and \auggen~greedy decoding achieving a 0.13\% error
+%rate compared the 0.79\% baseline rate.
+
+\input{nlg/tables/latopstvs_autoqual.tex}
+
+
+\subsection{Experiment Human Evaluation} 
+
+\paragraph{E2E Dataset} We had two undergraduate students not involved with 
+the research look at 100 random test set utterances for six
+of our model variants. They were shown
+both the Slug output and one of our model outputs and asked to select
+which output was of better linguistic quality and correctness or 
+indicate that they were equally good.
+ We resolved disagreements in favor of the baseline,
+i.e. if any annotator thought the baseline was better we considered it so.
+If an annotator marked one of our 
+systems as better and the other marked it as equal, we considered it 
+equal to the baseline. Inter-annotator agreement was high, with 92\% agreement on correctness
+and 88\% agreement on quality.
+
+\autoref{humane2e} shows the results of the evaluation.
+We find that the \auggen~model outputs are indistinguishable from the Slug
+model in terms of linguistic quality, regardless of the setting.
+In terms of correctness, the lexicalized \auggen~model is as good as or better than the Slug model 98\%
+of the time. 
+%We again stress that the \auggen~model only uses beam search 
+%with beam size 8, while Slug is delexicalized, and consists of an ensemble of 
+%three DNN models each producing 10 outputs via beam search, and reranking 
+%to select the candidate that minimizes attribute realization error.
+When using the delexicalized models, we don't even need beam search.
+The delexicalized \auggen~greedy decoder is as good as or better 
+than Slug 100\% of the time.
+
+\input{nlg/tables/table_human_eval.tex}
+
+\paragraph{Laptops Dataset} We had the same annotators look at 100 random 
+\textit{Inform}
+DAs from the Laptops test set since they are the majority DA type and we 
+could use the same annotator
+guidelines from the E2E experiment. We do not have access to the Slug
+or SCLSTM outputs on this dataset, so we compared to one of the two
+test set reference sentences (picking at random) vs. 
+the $\auggen$/$\ruledmodel$~with greedy decoding. \autoref{humanlaptop}
+shows the results. Despite the low BLEU scores, we find our outputs
+to be of comparable quality to references 91\% of the time. Moreover,
+they are equally as correct as the human references 100\% of the time.
+Annotators agreed 99\% and 87\% of the time on correctness and quality 
+respectively.
+
+
+

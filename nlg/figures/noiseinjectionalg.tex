@@ -1,0 +1,102 @@
+\newtcbox{\stochbox}[1][]{colframe=blue, colback=blue!15, boxrule=0.1mm,
+                       nobeforeafter, tcbox raise base, shrink tight, extrude
+                       by=0.32mm, #1}
+\newtcbox{\detbox}[1][]{colframe=red, colback=red!15, boxrule=0.1mm,
+                       nobeforeafter, tcbox raise base, shrink tight, extrude
+                       by=0.32mm, #1}
+
+
+\renewcommand{\algorithmcfname}{Alg.}
+
+\begin{figure}[t]
+\begin{center}\small \detbox{Deterministic operation}~~~~\stochbox{Stochastic operation}\end{center}
+\resizebox{\textwidth}{!}{%
+\begin{minipage}{0.33\textwidth}
+\small
+\begin{singlespace}
+\begin{algorithm}[H]
+$\encHidState_{1:\mrSize} \gets \operatorname{enc}(\ls(\mr))$\\
+$\predutttok_1 \gets \starttok$\\
+$\predutttoks \gets \left[ \predutttok_1\right]$\\
+$i \gets 1$\\
+\While{$\predutttok_i \ne \stoptok$}{
+$\decHidState_i \gets \operatorname{dec}(\predutttoks, \encHidState_{1:\mrSize})$\\
+$\vphantom{\boldsymbol{\epsilon_i} \sim \operatorname{Normal}(\zeroEmb, \frac{\sigma}{i})}$\\
+\detbox{$\predutttok_{i+1} \gets \argmax_\utttok \gen(\utttok|\decHidState_i)$}\\
+$\predutttoks \gets \predutttoks \oplus \left[ \predutttok_{i+1}\right]$\\
+$i \gets i + 1$\\
+}
+%$\gen_* \gets \operatorname{Train}(\corpus \cup \augdata)$\\
+\KwResult{$\predutttoks$}
+    \caption{\small Greedy Decoding}
+%\label{alg:idealda}
+\end{algorithm}
+\end{singlespace}
+\end{minipage}\begin{minipage}{0.33\textwidth}
+\small
+\begin{singlespace}
+\begin{algorithm}[H]
+$\encHidState_{1:\mrSize} \gets \operatorname{enc}(\ls(\mr))$\\
+$\predutttok_1 \gets \starttok$\\
+$\predutttoks \gets \left[ \predutttok_1\right]$\\
+$i \gets 1$\\
+\While{$\predutttok_i \ne \stoptok$}{
+$\decHidState_i \gets \operatorname{dec}(\predutttoks, \encHidState_{1:\mrSize})$\\
+$\vphantom{\boldsymbol{\epsilon_i} \sim \operatorname{Normal}(\zeroEmb, \frac{\sigma}{i})}$\\
+\stochbox{$\predutttok_{i+1} \sim \vphantom{\argmax_\utttok}\gen(\cdot|\decHidState_i)$}\\
+$\predutttoks \gets \predutttoks \oplus \left[ \predutttok_{i+1}\right]$\\
+$i \gets i + 1$\\
+}
+%$\gen_* \gets \operatorname{Train}(\corpus \cup \augdata)$\\
+\KwResult{$\predutttoks$}
+\caption{\small Ancestral Sampling}
+%\label{alg:idealda}
+\end{algorithm}
+\end{singlespace}
+\end{minipage}\begin{minipage}{0.38\textwidth}
+\small
+\begin{singlespace}
+\begin{algorithm}[H]
+$\encHidState_{1:\mrSize} \gets \operatorname{enc}(\ls(\mr))$\\
+$\predutttok_1 \gets \starttok$\\
+$\predutttoks \gets \left[ \predutttok_1\right]$\\
+$i \gets 1$\\
+\While{$\predutttok_i \ne \stoptok$}{
+$\decHidState_i \gets \operatorname{dec}(\predutttoks, \encHidState_{1:\mrSize})$\\
+\stochbox{$\boldsymbol{\epsilon_i} \sim \operatorname{Normal}(\zeroEmb, \frac{\sigma}{i})$}\\
+\detbox{$\predutttok_{i+1} \gets \argmax_\utttok \gen(\utttok|\decHidState_i + \boldsymbol{\epsilon_i})$}\\
+$\predutttoks \gets \predutttoks \oplus \left[ \predutttok_{i+1}\right]$\\
+$i \gets i + 1$\\
+}
+%$\gen_* \gets \operatorname{Train}(\corpus \cup \augdata)$\\
+\KwResult{$\predutttoks$}
+\caption{\small Noise Injection Sampling}
+%\label{alg:idealda}
+\end{algorithm}
+\end{singlespace}
+\end{minipage}
+}
+\caption{A comparison of greedy decoding, ancestral sampling, and noise injection sampling.}
+\label{fig:noiseinj}
+
+%?\begin{minipage}{0.3\textwidth}
+%?\begin{singlespace}
+%?\begin{algorithm}[H]
+%?$\predutttok_1 \gets \starttok$\\
+%?$i \gets 1$\\
+%?\While{$\predutttok_i \ne \stoptok$}{
+%?$\tilde{\mr} \sim \daMrDist$ \\
+%?%\If{ $\lnot \filter(\tilde{\mr}, \boldsymbol{\tilde{\utttoks}})$}{ $\augdata \gets \augdata \cup \{(\tilde{\mr}, \boldsymbol{\tilde{\utttoks}}) \}$ }
+%?$\augdata \gets \augdata \cup \{(\tilde{\mr}, \boldsymbol{\tilde{\utttoks}}) \}$
+%?}
+%?%    \KwResult{Salience judgements $\bsals = \left[ \bsal_1, \ldots, \bsal_\docSize\right]$}
+%?$\gen_* \gets \operatorname{Train}(\corpus \cup \augdata)$\\
+%?\KwResult{$\gen_*$}
+%?    \caption{Noise-Injection Sampling}
+%?\label{alg:idealda}
+%?\end{algorithm}
+%?\end{singlespace}
+%?\end{minipage}
+\end{figure}
+
+

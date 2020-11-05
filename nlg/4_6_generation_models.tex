@@ -1,0 +1,15 @@
+\subsection{Text Generation Models}
+
+We use a two-layer, unidirectional GRU architecture with Bahdanau style
+attention for our 
+ \sequencetosequence~\meaningrepresentation-to-text model. We set $\embDim = \hidDim = \encDim = \decDim = 512$, that is, we use 512-dimensional embedding and hidden states as 
+described in \autoref{sec:nlggru}.
+We fit model parameters, $\params$, by minimizing the negative log-likelihood
+of the training set, $\corpus$, i.e. \[\mathcal{L}(\params) = - \sum_{(\mr, \utttoks) \in \corpus  }  \log \gen\left(\utttoks|\ls(\mr);\params\right).\]
+When generating utterances for evaluation (i.e. not for use in noise-injection sampling) we use either greedy decoding or beam decoding with a 
+beam size of eight.
+The beam search terminates after eight candidates have been generated;
+the candidates are reranked by average token log-likelihood, $\frac{\log \gen\left(\utttoks|\ls(\mr)\right)}{\setsize{\utttoks}}$. In these experiments, we \textbf{do not} use a discriminative reranker to ensure the faithfulness of the 
+selected beam candidate. 
+
+
