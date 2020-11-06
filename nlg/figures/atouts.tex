@@ -1,0 +1,137 @@
+\tikzset{mynode/.style={anchor=center, minimum height=1.5em, 
+      text height=1.5ex, text depth=.25ex, align=center}}
+
+      \begin{figure}[p]
+    \fbox{\begin{minipage}{\textwidth}
+            ~\\
+        \center
+        \scalebox{0.75}{
+    \begin{tikzpicture}
+        \def\titlex{-3.0}
+        \def\colwidth{1.25}
+        \def\utttitleheight{2}
+        \def\uttheightA{0.0}
+        \def\uttheightB{-1.0}
+        \def\tagtitleheight{-3.0}
+        \def\tagheightA{-5.0}
+        \def\tagheightB{-6.0}
+        \def\nullsegtitleheight{-12.0}
+        \def\nullsegheightA{-14.0}
+        \def\mrsegtitleheight{-12.0}
+        \def\mrsegheightA{-14.0}
+        \def\attitleheight{-16.0}
+        \def\atheightA{-18.0}
+        \def\atheightB{-19.0}
+
+
+
+        \def\city{{area=city centre}};
+        \def\coffee{{eat\_type=coffee shop}};
+       % \def\nulltag{{$\emptyset$}};
+        \def\name{{name=Aromi}};
+        \def\words{For, coffee, in, the, centre, of, the, city, {,}, try, 
+                   Aromi, .};
+        \def\tags{\coffee, \coffee, \city, \city, \city, \city, \city, \city,
+                     \nulltag, \nulltag, \name, \nulltag};
+
+        %%% Input Utterance
+        \node[mynode,anchor=west] at (\titlex*\colwidth,\utttitleheight) 
+            {\Large (a) Input Utterance};
+
+        \foreach \w [count=\wi from 1] in \words {
+            \node[mynode] at (\wi*\colwidth,\uttheightA) 
+                {$\utttok_{\wi}\ifthenelse{\wi = 12}{}{,}$};
+            \node[mynode] at (\wi*\colwidth,\uttheightB) {\w};
+        }
+        \node[mynode] at (0*\colwidth,\uttheightA) {$\utttoks = \Bigg[$};
+        \node[mynode] at (12*\colwidth+0.5,\uttheightA) {$\Bigg]$};
+
+
+        %%% Tagged Utterance
+        \node[mynode,anchor=west] at (\titlex*\colwidth,\tagtitleheight) 
+            {\Large (b) Tagged Utterance};
+        \foreach \t [count=\ti from 1] in \tags {
+            \node[mynode] at (\ti*\colwidth,\tagheightA) 
+                {$\mrtag_{\ti}\ifthenelse{\ti = 12}{}{,}$};
+            \node[mynode,rotate=90,anchor=east] at 
+                (\ti*\colwidth,\tagheightB) {\t};
+        }
+        \node[mynode] at (0*\colwidth,\tagheightA) {$\mrtags^{(1)} = \Bigg[$};
+        \node[mynode] at (12*\colwidth+0.5,\tagheightA) {$\Bigg]$};
+
+
+%        %%% Null Segmented Tags
+%        \node[mynode,anchor=west] at (\titlex*\colwidth,\nullsegtitleheight) 
+%            {\Large (c) Null Segmented Tags};
+%        \node[mynode] at (0*\colwidth,\nullsegheightA) 
+%            {$\mrtags^{(2)} = \Bigg[$};
+%        \node[mynode] at (12*\colwidth+0.5,\nullsegheightA) {$\Bigg]$};        
+%        \foreach \tprime in {1,...,8} {
+%            \node[mynode] at (\tprime*\colwidth,\nullsegheightA) 
+%            {$\mrtag_{\tprime}\ifthenelse{\tprime = 8}{}{,}$};
+%        }
+%        \foreach \tprime in {11} {
+%            \node[mynode] at (\tprime*\colwidth,\nullsegheightA) 
+%                {$\mrtag_{\tprime}$};
+%        }
+%
+%        \node[mynode] at (\colwidth-0.50,\nullsegheightA) {$\bigg[$};
+%        \node[mynode] at (8*\colwidth+0.50,\nullsegheightA) {$\bigg],$};
+%        \node[mynode] at (11*\colwidth-0.50,\nullsegheightA) {$\bigg[$};
+%        \node[mynode] at (11*\colwidth+0.50,\nullsegheightA) {$\bigg]$};
+
+
+        %%% MR Segmented Tags
+        \node[mynode,anchor=west] at (\titlex*\colwidth,\mrsegtitleheight) 
+            {\Large (c) MR Segmented Tags};
+        \node[mynode] at (0*\colwidth,\mrsegheightA) 
+            {$\mrtags^{(2)} = \Bigg[$};
+        \node[mynode] at (12*\colwidth+0.5,\mrsegheightA) {$\Bigg]$};        
+        \foreach \tprime in {1,...,2} {
+            \node[mynode] at (\tprime*\colwidth,\mrsegheightA) 
+            {$\mrtag_{\tprime}\ifthenelse{\tprime = 2}{}{,}$};
+        }
+        \foreach \tprime in {3,...,8} {
+            \node[mynode] at (\tprime*\colwidth,\mrsegheightA) 
+            {$\mrtag_{\tprime}\ifthenelse{\tprime = 8}{}{,}$};
+        }
+        \foreach \tprime in {11} {
+            \node[mynode] at (\tprime*\colwidth,\mrsegheightA) 
+                {$\mrtag_{\tprime}$};
+        }
+
+        \node[mynode] at (\colwidth-0.50,\mrsegheightA) {$\bigg[$};
+        \node[mynode,anchor=center] at (2*\colwidth+0.65,\mrsegheightA) {$\Bigg]_1, \Bigg[$};
+    \node[mynode] at (8*\colwidth+0.50,\mrsegheightA) {$\bigg]_2,$};
+        \node[mynode] at (11*\colwidth-0.50,\mrsegheightA) {$\bigg[$};
+        \node[mynode] at (11*\colwidth+0.50,\mrsegheightA) {$\bigg]_3$};
+
+
+        %%% Alignment Training Linearization
+        \node[mynode,anchor=west] at (\titlex*\colwidth,\attitleheight) 
+            {\Large (d) Alignment Training Linearization};
+        \node[mynode,anchor=east] at (-1.5*\colwidth-0.5,\atheightA) 
+            {$\mrtoks = \Bigg[$};
+        \node[mynode] at (-1.5*\colwidth,\atheightA) {$\mrtok_0,$};
+        \node[mynode] at (1.5*\colwidth,\atheightA) {$\mrtok_1,$};
+        \node[mynode] at (5.5*\colwidth,\atheightA) {$\mrtok_2,$};
+        \node[mynode] at (11*\colwidth,\atheightA) {$\mrtok_3$};
+        \node[mynode] at (11*\colwidth+0.5,\atheightA) {$\Bigg]$};
+%
+        \node[mynode] at (-1.5*\colwidth,\atheightB) {inform,};
+        \node[mynode] at (1.5*\colwidth,\atheightB) {eat\_type=coffee shop,};
+        \node[mynode] at (5.5*\colwidth,\atheightB) {area=city centre,};
+        \node[mynode] at (11*\colwidth,\atheightB) {name=Aromi};
+
+
+
+    \end{tikzpicture}
+    }
+    ~\\
+    \caption{Example steps of the \alignmenttraining~linearization algorithm
+        for producing a linearized \meaningrepresentation~$\mrtoks$.}
+        \label{fig:at}
+\end{minipage}}
+\end{figure}
+
+

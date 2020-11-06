@@ -1,335 +1,124 @@
-\section{Controllable Generation}
-\label{sec:nlgcg}
-
-Let $\mr \in \mrspace$ be a \meaningrepresentation~with a \dialogueact~$\mrtok_0$
-and $\mrSize$ \attributevalues~$\mrtok_1,\ldots,\mrtok_\mrSize$, and let
-$\utttoks = \left[\utttok_1,\ldots,\utttok_\uttSize\right]$ be 
-an utterance that denotes $\mr$, which we write as $\denotes{\utttoks} = \mr$.
-A contiguous span of utterance tokens $\utttoks_{i:j} = \left[\utttok_i,\ldots,\utttok_j\right]$, for $i \le j$, 
-can denote zero or more \attributevalues, that is,
-$\denotes{\utttoks_{i:j}} = \{\mrtok_{k_1}, \mrtok_{k_2}, \ldots\}$. We further define a ``denotation
-set'' of $\mr$ and $\utttoks$ as $\denotationset = \left\{(i^{(k)},j^{(k)}): k \in \left\{1,\ldots,\mrSize\right\} \right\}$ where 
-$\denotes{\utttoks_{i^{(k)}:j^{(k)}}} = \{ \mrtok_k \}$. In other words,
-$\denotationset$ is the set of utterance token spans that denote a single
-\attributevalue.
-
-We say that a \surfacerealization~model $\model$ is controllable if 
-we can specify the \surfacerealizationorder~for $\model$ to follow. That is,
-given a \linearizationstrategy~$\ls$ such that $\ls(\mr) = \mrtoks = \left[\mrtok_0, \mrtok_{\pi_1}, \ldots, \mrtok_{\pi_\mrSize}\right]$, a controllable
-\surfacerealization~model $\model\left(\cdot|\mrtoks;\params\right)$
-will put more probability mass on utterances $\utttoks$ where the 
-$\denotationset_{\mr,\utttoks}$ has the property that $j^{(\pi_k)} < i^{(\pi_{k+1})}$. In other words, the \surfacerealizationorder~of the \attributevalues~follows the permutation implied by $\ls$.
-
-\autoref{fig:explans} shows an example of controllable \surfacerealization~for the \meaningrepresentation
- \begingroup
- \renewcommand*\arraystretch{.6}
-\begin{align} \mr =  \left[\!\!\left[ \begin{array}{l} (\mrtok_0)\; \textsc{Inform} \\ (\mrtok_1)\; \textrm{name=Aromi} \\ (\mrtok_2)\; \textrm{area=city centre} \\ (\mrtok_3)\; \textrm{eat\_type=coffee shop} \end{array} \right]\!\!\right]\label{eqn:mr1}\end{align}
-\endgroup
-when following either one of two different linearizations \[\ls^{(1)}(\mr) = \left[ \mrtok_0, \mrtok_1, \mrtok_3, \mrtok_2 \right]\quad \textrm{and} \quad \ls^{(2)}(\mr) = \left[ \mrtok_0, \mrtok_3, \mrtok_2, \mrtok_1 \right].\] When using a controllable model, 
-we refer to a linearization $\ls$ as an \utteranceplan. In this work, 
-a \linearizationstrategy~will only permute the location of \attributevalue~tokens, while the \dialogueact~token $\mrtok_0$ will always occupy the first
-position of any \meaningrepresentation~token sequence $\mrtoks$. 
-
-
-
-\begin{figure}
-\begin{subfigure}{\textwidth}
-\caption{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
-\center
-\fbox{\begin{minipage}{0.87\textwidth}
-\begin{tabular}{cccccc}
-\multirow{2}{*}{$\ls^{(1)}(\mr) = \Bigg[$} & $x_0$ &   $x_{\pi_1}$ & $x_{\pi_2}$ & $x_{\pi_3}$ & \multirow{2}{*}{$\Bigg]$}\\
-& inform & name=Aromi & eat\_type=coffee shop & area=city center \\
-\end{tabular}
-
-~\\[5pt]
-
-\begin{tabular}{cccccccccccc}
-\multirow{2}{*}{~~~~~~$\utttoks^{(1)} = \Bigg[$} & $y_1$ & $y_2$ & $y_3$ & $y_4$ & $y_5$ & $y_6$ & $y_7$ & $y_8$ & $y_9$ & $y_{10}$ & \multirow{2}{*}{$\Bigg]$} \\
-&Aromi & is & a & coffee & shop & in & the & city & centre & . \\
-\end{tabular}
-
-~\\[5pt]
-
-\begin{tabular}{ccccc}
- \multirow{2}{*}{~~$\denotationset_{\mr,\utttoks^{(1)}} = \Bigg\{$} & $(i^{(\pi_1)},j^{(\pi_1)})$ & 
-    $(i^{(\pi_2)},j^{(\pi_2)})$ & 
-    $(i^{(\pi_3)},j^{(\pi_3)})$ & \multirow{2}{*}{$\Bigg\}$}  \\
-   &  (1, 1) & (2, 5) & (6, 9) 
-\end{tabular}
-
-
-\begin{center}
-\begin{tabular}{ccc}
-$\utttoks^{(1)}_{i^{(\pi_1)}:j^{(\pi_1)}}$ & 
-$\utttoks^{(1)}_{i^{(\pi_2)}:j^{(\pi_2)}}$ &
-$\utttoks^{(1)}_{i^{(\pi_3)}:j^{(\pi_3)}}$   \\
-\cmidrule(lr){1-1}
-\cmidrule(lr){2-2}
-\cmidrule(lr){3-3}
-    $\left[\textrm{Aromi}\right]$ & $\left[\textrm{is a coffee shop}\right]$ &
-        $\left[\textrm{in the city center}\right]$ \\ 
-\end{tabular}
-\end{center}
-\end{minipage}}
-\end{subfigure}
-
-%Aromi\textsubscript{1} is\textsubscript{2} a\textsubscript{3} coffee\textsubscript{4} shop\textsubscript{5} in\textsubscript{6} the\textsubscript{7} city\textsubscript{8} centre\textsubscript{9} .\textsubscript{10}
-
-~\\
-~\\
-
-\begin{subfigure}{\textwidth}
-\caption{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
-\begin{tabular}{cccccc}
-\multirow{2}{*}{$\ls^{(2)}(\mr) = \Bigg[$} & $x_0$ &   $x_{\pi_1}$ & $x_{\pi_2}$ & $x_{\pi_3}$ & \multirow{2}{*}{$\Bigg]$}\\
-& inform & eat\_type=coffee shop & area=city center & name=Aromi\\
-\end{tabular}
-
-~\\[5pt]
-
-\begin{tabular}{cccccccccccccc}
-\multirow{2}{*}{~~~~~~$\utttoks^{(2)} = \Bigg[$} & $y_1$ & $y_2$ & $y_3$ & $y_4$ & $y_5$ & $y_6$ & $y_7$ & $y_8$ & $y_9$ & $y_{10}$ & $y_{11}$& $y_{12}$ & \multirow{2}{*}{$\Bigg]$} \\
-&For & coffee & in & the & centre & of & the & city & , & try & Aromi & .\\
-\end{tabular}
-
-~\\[5pt]
-
-\begin{tabular}{ccccc}
- \multirow{2}{*}{~~$\denotationset_{\mr,\utttoks^{(2)}} = \Bigg\{$} & $(i^{(\pi_1)},j^{(\pi_1)})$ & 
-    $(i^{(\pi_2)},j^{(\pi_2)})$ & 
-    $(i^{(\pi_3)},j^{(\pi_3)})$ & \multirow{2}{*}{$\Bigg\}$}  \\
-   &  (1, 2) & (3, 8) & (11, 11) 
-\end{tabular}
-
-~\\[5pt]
-
-\begin{tabular}{ccc}
-$\utttoks^{(2)}_{i^{(\pi_1)}:j^{(\pi_1)}}$ & 
-$\utttoks^{(2)}_{i^{(\pi_2)}:j^{(\pi_2)}}$ &
-$\utttoks^{(2)}_{i^{(\pi_3)}:j^{(\pi_3)}}$   \\
-    $\left[\textrm{For coffee}\right]$ & $\left[\textrm{in the centre of the city}\right]$ &
-        $\left[\textrm{Aromi}\right]$ \\ 
-\end{tabular}
-\end{subfigure}
-
-~\\
-
-\caption{Examples of two possible utterance plans for $\mr$ (defined \autoref{eqn:mr1}) implied by
-the linearizations $\ls^{(1)}$ (a) and $\ls^{(2)}$ (b), their realizations $\utttoks$, denotation sets $\denotationset_{\mr,\utttoks}$, and corresponding
-attribute-value spans $\utttoks_{i:j}$.}
-\label{fig:explans}
-\end{figure}
-
-
-
-
-
-\subsection{Alignment Linearization}
-As was mentioned in \autoref{mrtproblemdef}, there are many choices of
-\linearizationstrategy~$\ls$ when modeling \surfacerealization~with
-a \sequencetosequence~archictecture. One particular \linearizationstrategy,
-which we call the \alignmenttraining~linearization, yields a controllable \sequencetosequence~model which is capable of following an utterance plan for \surfacerealization. 
-
-
-Unlike the {\color{red}arbitrary linearization} used in \autoref{somewhere}, \alignmenttraining~linearization~is not soley a function of $\mr$, but is determined by both $\mr$ and a reference utterance $\utttoks$. Given a $\left(\mr, \utttoks\right)$ pair, the \alignmenttraining~linearization finds a linearization
-$\ls$ such that the order of the \attributevalues in $\ls(\mr)$ corresponds
-to the order they are realized in $\utttoks$. Formally, this means that 
-for any $\left(i^{(\ls_k)},j^{(\ls_k)}\right), \left(i^{(\ls_{k+1})},j^{(\ls_{k+1})}\right) \in \denotationset_{\mr,\utttoks}$, we have $j^{(\ls_k)} < i^{(\ls_{k+1})}$.
-
-
-\autoref{fig:atexamples} shows some examples of the 
-\alignmenttraining~linearization, including some special cases. When
-linearizing list-valued attributes, for instance, we treat them as distinct
-\attributevalue~pairs. Occasionally, we encounter repeated \attributevalues~in the training set, and in that case we include extra \attributevalue~pairs
-in the correpsonding location in the linearization. We ignore any instances
-of  ungrounded information, as in example \autoref{} where (such and such)
-has no explicit representation.  
-
-\subsubsection{Alignment Training Implementation}
-
-
-\begin{algorithm}[t]
-    \caption{Alignment Training Linearization Algorithm}
-    \label{alg:at}
-    \DontPrintSemicolon
-    \KwData{\utterance~$\utttoks \in \outSpace$, \attributevalue~tagger $\tagger$}  
-    Tag the utterance, $\mathbf{t} \gets \tagger(\utttoks)$.   \\
-    Segment $\mathbf{t}$ into $k$ spans by splitting $\mathbf{t}$ on tags mapped to no \attributevalue~(i.e. $t_i = \emptyset$): $\boldsymbol{\hat{t}} = \left[\ldots,\left[t_{{i_k}},t_{i_{k}+1},\ldots, t_{j_k}\right],\ldots\right]$ \\
-    Segment each of the $k$ sub-segments into maximal length contiguous
-    spans sharing the same tag.
-\end{algorithm}
-
-In practice, there are two distinct and important issues when using the 
-\alignmenttraining~linearization. The first, which occurs during training,
-is that we need for each training set example $\left(\mr, \utttoks\right)$
-to tag the utterance tokens 
-$\utttoks = \left[\utttok_1,\ldots,\utttok_\uttSize\right]$ 
-with a corresponding tag sequence 
-$\mrtags=\left[\mrtag_1,\ldots, \mrtag_\uttSize\right]$ where each 
-tag $\mrtag_i$ is equal to an \attributevalue~$\mrtok_j \in \mr$ or 
-the null tag $\nulltag$. We assume that we have access to such a tagger
-$\tagger : \outSpace \rightarrow \inSpace$ (see \autoref{sec:tagger}
-for implementation details). After producing the tag sequence $\mrtags^{(1)} = \tagger\left(\utttoks\right)$ (Lines ? in alg and Figure ???.b), we then segment $\mrtags$ into contiguous sequences of tags containing no null tags $\nulltag$,
-$\mrtags^{(2)}$ (Line ? in alg and Figure ???.c). Each subsequence of $\mrtags^{(2)}$ is further split into the longest contiguous tag segments such that all 
-tags a segment are equal to the same \attributevalue~pair, $\mrtags^{(3)} = {}$ (Line ? in alg and Figure ???.d).
-Finally, $\mrtoks$ is constructed by 
-by prepending the \dialogueact~$\mrtok_0$ of $\mr$ to the ordered sequence 
-of \attributevalue~pairs $???$ implied by $\mrtoks^{(3)}$ (Line ? in alg and Figure ???.e). 
-
-The second issue is at test time, a \surfacerealization~model is only
-presented with a \meaningrepresentation~$\mr$ and we don't have a reference 
-utterance $\utttoks$ with which to apply \autoref{alg:at}. In this case,
-we can use either an utterance planning model $\planner : \mrspace \rightarrow \inSpace$ which maps a \meaningrepresentation~$\mr$ to a
-linearized $\mr$, $\mrtoks$ or alternatively a linearization implied by 
-a human reference utterance. In the latter case, this represents an
-unrealistic case where the model has clairvoyant knowledge of the 
-discourse ordering of the desired utterance but is also representative
-of discourse orderings prefered by humans. In either case, we refer to 
-a linearization $\mrtoks$ obtained either from $\planner$ or a human reference
-as an \utteranceplan~since a \surfacerealization~model trained with
-\alignmenttraining~linearizations will attempt to follow it during 
-the generation of the utterance.
-
-
-
-
-\tikzset{mynode/.style={anchor=center, minimum height=1.5em, 
-      text height=1.5ex, text depth=.25ex, align=center}}
-
-      \begin{figure}[p]
-    \fbox{\begin{minipage}{\textwidth}
-            ~\\
-        \center
-        \scalebox{0.75}{
-    \begin{tikzpicture}
-        \def\titlex{-3.0}
-        \def\colwidth{1.25}
-        \def\utttitleheight{2}
-        \def\uttheightA{0.0}
-        \def\uttheightB{-1.0}
-        \def\tagtitleheight{-3.0}
-        \def\tagheightA{-5.0}
-        \def\tagheightB{-6.0}
-        \def\nullsegtitleheight{-12.0}
-        \def\nullsegheightA{-14.0}
-        \def\mrsegtitleheight{-16.0}
-        \def\mrsegheightA{-18.0}
-        \def\attitleheight{-20.0}
-        \def\atheightA{-22.0}
-        \def\atheightB{-23.0}
-
-
-
-        \def\city{{area=city centre}};
-        \def\coffee{{eat\_type=coffee shop}};
-       % \def\nulltag{{$\emptyset$}};
-        \def\name{{name=Aromi}};
-        \def\words{For, coffee, in, the, centre, of, the, city, {,}, try, 
-                   Aromi, .};
-        \def\tags{\coffee, \coffee, \city, \city, \city, \city, \city, \city,
-                     \nulltag, \nulltag, \name, \nulltag};
-
-        %%% Input Utterance
-        \node[mynode,anchor=west] at (\titlex*\colwidth,\utttitleheight) 
-            {\Large (a) Input Utterance};
-
-        \foreach \w [count=\wi from 1] in \words {
-            \node[mynode] at (\wi*\colwidth,\uttheightA) 
-                {$\utttok_{\wi}\ifthenelse{\wi = 12}{}{,}$};
-            \node[mynode] at (\wi*\colwidth,\uttheightB) {\w};
-        }
-        \node[mynode] at (0*\colwidth,\uttheightA) {$\utttoks = \Bigg[$};
-        \node[mynode] at (12*\colwidth+0.5,\uttheightA) {$\Bigg]$};
-
-
-        %%% Tagged Utterance
-        \node[mynode,anchor=west] at (\titlex*\colwidth,\tagtitleheight) 
-            {\Large (b) Tagged Utterance};
-        \foreach \t [count=\ti from 1] in \tags {
-            \node[mynode] at (\ti*\colwidth,\tagheightA) 
-                {$\mrtag_{\ti}\ifthenelse{\ti = 12}{}{,}$};
-            \node[mynode,rotate=90,anchor=east] at 
-                (\ti*\colwidth,\tagheightB) {\t};
-        }
-        \node[mynode] at (0*\colwidth,\tagheightA) {$\mrtags^{(1)} = \Bigg[$};
-        \node[mynode] at (12*\colwidth+0.5,\tagheightA) {$\Bigg]$};
-
-
-        %%% Null Segmented Tags
-        \node[mynode,anchor=west] at (\titlex*\colwidth,\nullsegtitleheight) 
-            {\Large (c) Null Segmented Tags};
-        \node[mynode] at (0*\colwidth,\nullsegheightA) 
-            {$\mrtags^{(2)} = \Bigg[$};
-        \node[mynode] at (12*\colwidth+0.5,\nullsegheightA) {$\Bigg]$};        
-        \foreach \tprime in {1,...,8} {
-            \node[mynode] at (\tprime*\colwidth,\nullsegheightA) 
-            {$\mrtag_{\tprime}\ifthenelse{\tprime = 8}{}{,}$};
-        }
-        \foreach \tprime in {11} {
-            \node[mynode] at (\tprime*\colwidth,\nullsegheightA) 
-                {$\mrtag_{\tprime}$};
-        }
-
-        \node[mynode] at (\colwidth-0.50,\nullsegheightA) {$\bigg[$};
-        \node[mynode] at (8*\colwidth+0.50,\nullsegheightA) {$\bigg],$};
-        \node[mynode] at (11*\colwidth-0.50,\nullsegheightA) {$\bigg[$};
-        \node[mynode] at (11*\colwidth+0.50,\nullsegheightA) {$\bigg]$};
-
-
-        %%% MR Segmented Tags
-        \node[mynode,anchor=west] at (\titlex*\colwidth,\mrsegtitleheight) 
-            {\Large (d) MR Segmented Tags};
-        \node[mynode] at (0*\colwidth,\mrsegheightA) 
-            {$\mrtags^{(3)} = \Bigg[$};
-        \node[mynode] at (12*\colwidth+0.5,\mrsegheightA) {$\Bigg]$};        
-        \foreach \tprime in {1,...,2} {
-            \node[mynode] at (\tprime*\colwidth,\mrsegheightA) 
-            {$\mrtag_{\tprime}\ifthenelse{\tprime = 2}{}{,}$};
-        }
-        \foreach \tprime in {3,...,8} {
-            \node[mynode] at (\tprime*\colwidth,\mrsegheightA) 
-            {$\mrtag_{\tprime}\ifthenelse{\tprime = 8}{}{,}$};
-        }
-        \foreach \tprime in {11} {
-            \node[mynode] at (\tprime*\colwidth,\mrsegheightA) 
-                {$\mrtag_{\tprime}$};
-        }
-
-        \node[mynode] at (\colwidth-0.50,\mrsegheightA) {$\bigg[$};
-        \node[mynode,anchor=center] at (2*\colwidth+0.65,\mrsegheightA) {$\Bigg]_1, \Bigg[$};
-    \node[mynode] at (8*\colwidth+0.50,\mrsegheightA) {$\bigg]_2,$};
-        \node[mynode] at (11*\colwidth-0.50,\mrsegheightA) {$\bigg[$};
-        \node[mynode] at (11*\colwidth+0.50,\mrsegheightA) {$\bigg]_3$};
-
-
-        %%% Alignment Training Linearization
-        \node[mynode,anchor=west] at (\titlex*\colwidth,\attitleheight) 
-            {\Large (e) Alignment Training Linearization};
-        \node[mynode,anchor=east] at (-1.5*\colwidth-0.5,\atheightA) 
-            {$\mrtoks = \Bigg[$};
-        \node[mynode] at (-1.5*\colwidth,\atheightA) {$\mrtok_0,$};
-        \node[mynode] at (1.5*\colwidth,\atheightA) {$\mrtok_1,$};
-        \node[mynode] at (5.5*\colwidth,\atheightA) {$\mrtok_2,$};
-        \node[mynode] at (11*\colwidth,\atheightA) {$\mrtok_3$};
-        \node[mynode] at (11*\colwidth+0.5,\atheightA) {$\Bigg]$};
 %
-        \node[mynode] at (-1.5*\colwidth,\atheightB) {inform,};
-        \node[mynode] at (1.5*\colwidth,\atheightB) {eat\_type=coffee shop,};
-        \node[mynode] at (5.5*\colwidth,\atheightB) {area=city centre,};
-        \node[mynode] at (11*\colwidth,\atheightB) {name=Aromi};
+%Let $\mr \in \mrspace$ be a \meaningrepresentation~with a \dialogueact~$\mrtok_0$
+%and $\mrSize$ \attributevalues~$\mrtok_1,\ldots,\mrtok_\mrSize$, and let
+%$\utttoks = \left[\utttok_1,\ldots,\utttok_\uttSize\right]$ be 
+%an utterance that denotes $\mr$, which we write as $\denotes{\utttoks} = \mr$.
+%A contiguous span of utterance tokens $\utttoks_{i:j} = \left[\utttok_i,\ldots,\utttok_j\right]$, for $i \le j$, 
+%can denote zero or more \attributevalues, that is,
+%$\denotes{\utttoks_{i:j}} = \{\mrtok_{k_1}, \mrtok_{k_2}, \ldots\}$. We further define a ``denotation
+%set'' of $\mr$ and $\utttoks$ as $\denotationset = \left\{(i^{(k)},j^{(k)}): k \in \left\{1,\ldots,\mrSize\right\} \right\}$ where 
+%$\denotes{\utttoks_{i^{(k)}:j^{(k)}}} = \{ \mrtok_k \}$. In other words,
+%$\denotationset$ is the set of utterance token spans that denote a single
+%\attributevalue.
+%
+%\autoref{fig:explans} shows an example of controllable \surfacerealization~for the \meaningrepresentation
+% \begingroup
+% \renewcommand*\arraystretch{.6}
+%\begin{align} \mr =  \left[\!\!\left[ \begin{array}{l} (\mrtok_0)\; \textsc{Inform} \\ (\mrtok_1)\; \textrm{name=Aromi} \\ (\mrtok_2)\; \textrm{area=city centre} \\ (\mrtok_3)\; \textrm{eat\_type=coffee shop} \end{array} \right]\!\!\right]\label{eqn:mr1}\end{align}
+%\endgroup
+%when following either one of two different linearizations \[\ls^{(1)}(\mr) = \left[ \mrtok_0, \mrtok_1, \mrtok_3, \mrtok_2 \right]\quad \textrm{and} \quad \ls^{(2)}(\mr) = \left[ \mrtok_0, \mrtok_3, \mrtok_2, \mrtok_1 \right].\] When using a controllable model, 
+%we refer to a linearization $\ls$ as an \utteranceplan. In this work, 
+%a \linearizationstrategy~will only permute the location of \attributevalue~tokens, while the \dialogueact~token $\mrtok_0$ will always occupy the first
+%position of any \meaningrepresentation~token sequence $\mrtoks$. 
+%
+%
+%
+%\begin{figure}
+%\begin{subfigure}{\textwidth}
+%\caption{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+%\center
+%\fbox{\begin{minipage}{0.87\textwidth}
+%\begin{tabular}{cccccc}
+%\multirow{2}{*}{$\ls^{(1)}(\mr) = \Bigg[$} & $x_0$ &   $x_{\pi_1}$ & $x_{\pi_2}$ & $x_{\pi_3}$ & \multirow{2}{*}{$\Bigg]$}\\
+%& inform & name=Aromi & eat\_type=coffee shop & area=city center \\
+%\end{tabular}
+%
+%~\\[5pt]
+%
+%\begin{tabular}{cccccccccccc}
+%\multirow{2}{*}{~~~~~~$\utttoks^{(1)} = \Bigg[$} & $y_1$ & $y_2$ & $y_3$ & $y_4$ & $y_5$ & $y_6$ & $y_7$ & $y_8$ & $y_9$ & $y_{10}$ & \multirow{2}{*}{$\Bigg]$} \\
+%&Aromi & is & a & coffee & shop & in & the & city & centre & . \\
+%\end{tabular}
+%
+%~\\[5pt]
+%
+%\begin{tabular}{ccccc}
+% \multirow{2}{*}{~~$\denotationset_{\mr,\utttoks^{(1)}} = \Bigg\{$} & $(i^{(\pi_1)},j^{(\pi_1)})$ & 
+%    $(i^{(\pi_2)},j^{(\pi_2)})$ & 
+%    $(i^{(\pi_3)},j^{(\pi_3)})$ & \multirow{2}{*}{$\Bigg\}$}  \\
+%   &  (1, 1) & (2, 5) & (6, 9) 
+%\end{tabular}
+%
+%
+%\begin{center}
+%\begin{tabular}{ccc}
+%$\utttoks^{(1)}_{i^{(\pi_1)}:j^{(\pi_1)}}$ & 
+%$\utttoks^{(1)}_{i^{(\pi_2)}:j^{(\pi_2)}}$ &
+%$\utttoks^{(1)}_{i^{(\pi_3)}:j^{(\pi_3)}}$   \\
+%\cmidrule(lr){1-1}
+%\cmidrule(lr){2-2}
+%\cmidrule(lr){3-3}
+%    $\left[\textrm{Aromi}\right]$ & $\left[\textrm{is a coffee shop}\right]$ &
+%        $\left[\textrm{in the city center}\right]$ \\ 
+%\end{tabular}
+%\end{center}
+%\end{minipage}}
+%\end{subfigure}
+%
+%%Aromi\textsubscript{1} is\textsubscript{2} a\textsubscript{3} coffee\textsubscript{4} shop\textsubscript{5} in\textsubscript{6} the\textsubscript{7} city\textsubscript{8} centre\textsubscript{9} .\textsubscript{10}
+%
+%~\\
+%~\\
+%
+%\begin{subfigure}{\textwidth}
+%\caption{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~}
+%\begin{tabular}{cccccc}
+%\multirow{2}{*}{$\ls^{(2)}(\mr) = \Bigg[$} & $x_0$ &   $x_{\pi_1}$ & $x_{\pi_2}$ & $x_{\pi_3}$ & \multirow{2}{*}{$\Bigg]$}\\
+%& inform & eat\_type=coffee shop & area=city center & name=Aromi\\
+%\end{tabular}
+%
+%~\\[5pt]
+%
+%\begin{tabular}{cccccccccccccc}
+%\multirow{2}{*}{~~~~~~$\utttoks^{(2)} = \Bigg[$} & $y_1$ & $y_2$ & $y_3$ & $y_4$ & $y_5$ & $y_6$ & $y_7$ & $y_8$ & $y_9$ & $y_{10}$ & $y_{11}$& $y_{12}$ & \multirow{2}{*}{$\Bigg]$} \\
+%&For & coffee & in & the & centre & of & the & city & , & try & Aromi & .\\
+%\end{tabular}
+%
+%~\\[5pt]
+%
+%\begin{tabular}{ccccc}
+% \multirow{2}{*}{~~$\denotationset_{\mr,\utttoks^{(2)}} = \Bigg\{$} & $(i^{(\pi_1)},j^{(\pi_1)})$ & 
+%    $(i^{(\pi_2)},j^{(\pi_2)})$ & 
+%    $(i^{(\pi_3)},j^{(\pi_3)})$ & \multirow{2}{*}{$\Bigg\}$}  \\
+%   &  (1, 2) & (3, 8) & (11, 11) 
+%\end{tabular}
+%
+%~\\[5pt]
+%
+%\begin{tabular}{ccc}
+%$\utttoks^{(2)}_{i^{(\pi_1)}:j^{(\pi_1)}}$ & 
+%$\utttoks^{(2)}_{i^{(\pi_2)}:j^{(\pi_2)}}$ &
+%$\utttoks^{(2)}_{i^{(\pi_3)}:j^{(\pi_3)}}$   \\
+%    $\left[\textrm{For coffee}\right]$ & $\left[\textrm{in the centre of the city}\right]$ &
+%        $\left[\textrm{Aromi}\right]$ \\ 
+%\end{tabular}
+%\end{subfigure}
+%
+%~\\
+%
+%\caption{Examples of two possible utterance plans for $\mr$ (defined \autoref{eqn:mr1}) implied by
+%the linearizations $\ls^{(1)}$ (a) and $\ls^{(2)}$ (b), their realizations $\utttoks$, denotation sets $\denotationset_{\mr,\utttoks}$, and corresponding
+%attribute-value spans $\utttoks_{i:j}$.}
+%\label{fig:explans}
+%\end{figure}
 
 
 
-    \end{tikzpicture}
-    }
-    ~\\
-    \caption{Example steps of the \alignmenttraining~linearization algorithm
-        (\autoref{alg:at})
-        for producing a linearized \meaningrepresentation~$\mrtoks$.}
-        \label{fig:at}
-\end{minipage}}
-\end{figure}
+
+
+
+
+
 
 
 
@@ -434,48 +223,6 @@ utterance $\utttoks$.
 %provided by an external source, such as an utterance planner model or human
 %reference.
 
-
-
-\subsection{Phrase-based Data Augmentation}
-While the \alignshort~linearization leads to a controllable model,
-there is evidence that sequence-to-sequence models do not behave very
-systemically with standard training methods 
-\cite{lake2018generalization,loula2018rearranging}. By systematic, we mean that
-$\rep = \enc_\theta(\lin(\mr))$ is highly training data dependent and 
- small changes in $\lin(\mr)$ may lead to large, non-linear
-changes in \rep, and as a consequence, the decoder may succeed on
-on one $\lin(\mr)$ but fail on another $\lin^\prime(\mr)$ even when the 
-differences between the permutations are small. With this in mind, we propose
-two data augmentations to make explicit examples of  modular pairwise 
-transitions and constituent structure reuse so that \alignshort~trained models
-may systemically recombine these elements to generate any ordering.
-See \autoref{tab:augdat} for statistics of the generated training data.
-
-
-We augment the training data with MR/utterance pairs taken from constituent
-phrases in the original training data. 
-We parse all training utterances and enumerate all constituent phrases
-governed by 
-NP, VP, ADJP, ADVP, PP, S, Sbar
-non-terminals.\footnote{We used the \href{https://stanfordnlp.github.io/CoreNLP/}{Stanford CoreNLP parser v3.9.2}.} We then apply the attribute-value 
-matching rules
-used for \lsshort{At} (see \autoref{sec:align})
-to obtain a corresponding MR, keeping the dialog act 
-of the original utterance. We discard
-phrases with no realized attributes.
-See \autoref{tab:main.dataset.stats} for augmented data statistics.
-
-Because 
-we reclassify the MR of phrases using the matching rules, 
-the augmented  data includes examples of
-how to invert binary attributes, e.g. from the phrase
-``\uttstr{is not on Mac,}'' which implies \attrval{has\_mac\_release}{no,}
-we obtain the phrase ``\uttstr{on Mac}'' which implies 
-\attrval{has\_mac\_release}{yes.}
-When presenting the linearized MR of phrase examples to the model encoder
-we prepend and append phrase specific \textit{start} and \textit{stop} tokens respectively
-(e.g., \textit{start-NP} and \textit{stop-NP}) to prevent the model
-from ever producing an incomplete sentence when generating for a complete MR.
 
 
 

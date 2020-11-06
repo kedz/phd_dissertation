@@ -1,0 +1,46 @@
+\subsection{Phrase-based Data Augmentation}
+
+\input{nlg/figures/pbda.tex}
+
+While the alignment training linearization leads to a controllable model,
+there is evidence that sequence-to-sequence models do not behave very
+systemically with standard training methods 
+\cite{lake2018generalization,loula2018rearranging}. By systematic, we mean that
+$h = enc_\theta(\ls(\mr))$ is highly training data dependent and 
+ small changes in $\ls(\mr)$ may lead to large, non-linear
+changes in h, and as a consequence, the decoder may succeed on
+on one $\ls(\mr)$ but fail on another $\ls^\prime(\mr)$ even when the 
+differences between the permutations are small. With this in mind, we propose
+two data augmentations to make explicit examples of  modular pairwise 
+transitions and constituent structure reuse so that models trained with alignment training
+may systemically recombine these elements to generate any ordering.
+See \autoref{tab:augdat} for statistics of the generated training data.
+
+
+We augment the training data with MR/utterance pairs taken from constituent
+phrases in the original training data. 
+We parse all training utterances and enumerate all constituent phrases
+governed by 
+NP, VP, ADJP, ADVP, PP, S, Sbar
+non-terminals.\footnote{We used the \href{https://stanfordnlp.github.io/CoreNLP/}{Stanford CoreNLP parser v3.9.2}.} We then apply the attribute-value 
+matching rules
+used for alignment training (see \autoref{sec:align})
+to obtain a corresponding MR, keeping the dialog act 
+of the original utterance. We discard
+phrases with no realized attributes.
+See \autoref{tab:main.dataset.stats} for augmented data statistics.
+
+Because 
+we reclassify the MR of phrases using the matching rules, 
+the augmented  data includes examples of
+how to invert binary attributes, e.g. from the phrase
+``is not on Mac,'' which implies \AV{has\_mac\_release}{no},
+we obtain the phrase ``on Mac'' which implies 
+\AV{has\_mac\_release}{yes}.
+When presenting the linearized MR of phrase examples to the model encoder
+we prepend and append phrase specific \textit{start} and \textit{stop} tokens respectively
+(e.g., \textit{start-NP} and \textit{stop-NP}) to prevent the model
+from ever producing an incomplete sentence when generating for a complete MR.
+
+
+

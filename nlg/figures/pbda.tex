@@ -1,0 +1,61 @@
+\begin{figure}
+
+
+        \begin{tikzpicture}
+
+            \def\th{5mm};
+            \def\td{2mm};
+    \node[text height=\th,text depth=\td] (aromi) at (-5,-4) {Aromi};
+            \node[text height=\th,text depth=\td] (is) at (-1.5,-4) {is};
+            \node[text height=\th,text depth=\td] (not) at (0.0,-4) {not};
+
+            \node[text height=\th,text depth=\td] (a) at (1.5,-4) {a};
+            \node[text height=\th,text depth=\td] (ff) at (4,-4) {family-friendly};
+            \node[text height=\th,text depth=\td] (est) at (6.5,-4) {establishment};
+
+
+            \node (root) at (-2.5,0) {S};
+            \node (rootNP) at (-5,-1) {NP};
+            \node (rootNPNNP) at (-5,-2) {NNP};
+            \node (r1c2) at (0.0,-1) {VP};
+                \node (r2c3) at (4,-2) {NP};
+                \node (det) at (1.5,-3) {DET};
+                \node (jj) at (4,-3) {JJ};
+                \node (nn) at (6.5,-3) {NN};
+                \node (r2c1) at (-1.5,-2) {VB};
+                \node (r2c2) at (0.0,-2) {RB};
+                \draw[-] (r1c2) -- (r2c1);
+                \draw[-] (r1c2) -- (r2c2);
+                \draw[-] (r1c2) -- (r2c3);
+
+
+                \draw[-] (r2c1) -- (is);
+
+            \draw[-] (rootNPNNP) -- (aromi);
+            \draw[-] (root.south west) -- (rootNP.north east);
+            \draw[-] (rootNP) -- (rootNPNNP);
+            \draw[-] (root.south east) -- (r1c2.north west);
+                \draw[-] (r2c3) -- (det);
+                \draw[-] (r2c3) -- (jj);
+                \draw[-] (r2c3) -- (nn);
+                \draw[-] (det) -- (a);
+                \draw[-] (jj) -- (ff);
+                \draw[-] (nn) -- (est);
+                \draw[-] (r2c2) -- (not);
+        
+
+      %      \node[anchor=north west,align=left,inner sep=0,outer sep=0,text height=0mm,text width=11cm] at (0.7,0.5) {
+                    %\begin{enumerate}
+                    %    \item Parse training examples.
+                %\item<3-> Create additional training examples from constituent phrases.
+                %\end{enumerate}};
+
+        \end{tikzpicture}
+
+
+$\left[\!\!\left[ \begin{array}{l} \textsc{Inform}\\ \AV{family\_friendly}{yes} \end{array}   \right]\!\!\right] $  ~~ a family-friendly establishment \\
+$\left[\!\!\left[ \begin{array}{l} \textsc{Inform}\\ \AV{family\_friendly}{no} \end{array}   \right]\!\!\right] $  ~~ is not a family-friendly establishment \\
+$\left[\!\!\left[ \begin{array}{l} \textsc{Inform}\\ \AV{name}{Aromi} \\ \AV{family\_friendly}{no} \end{array}   \right]\!\!\right] $  ~~ Aromi is not a family-friendly establishment \\
+$\left[\!\!\left[ \begin{array}{l} \textsc{Inform}\\ \AV{name}{Aromi} \end{array}   \right]\!\!\right] $  ~~ Aromi \\
+
+\end{figure}

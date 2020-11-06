@@ -1,0 +1,84 @@
+\subsection{Alignment Training Linearization}
+%As was mentioned in \autoref{mrtproblemdef}, there are many choices of
+%\linearizationstrategy~$\ls$ when modeling \surfacerealization~with
+%a \sequencetosequence~archictecture. One particular \linearizationstrategy,
+%which we call the \alignmenttraining~linearization, yields a controllable \sequencetosequence~model which is capable of following an utterance plan indicating
+% the \surfacerealization~order of a \meaningrepresentation's \attributevalues.
+%
+%
+Unlike the {\color{red}arbitrary linearization} used in \autoref{somewhere}, \alignmenttraining~linearization~is not soley a function of $\mr$, but is determined by both $\mr$ and a reference utterance $\utttoks$. Given a $\left(\mr, \utttoks\right)$ pair, the \alignmenttraining~linearization finds a linearization
+$\ls$ such that the order of the \attributevalues~in $\ls(\mr)$ corresponds
+to the order in which they are realized in $\utttoks$. %Formally, this means that 
+%for any $\left(i^{(\ls_k)},j^{(\ls_k)}\right), \left(i^{(\ls_{k+1})},j^{(\ls_{k+1})}\right) \in \denotationset_{\mr,\utttoks}$, we have $j^{(\ls_k)} < i^{(\ls_{k+1})}$.
+
+
+\autoref{fig:atexamples} shows some examples of the 
+\alignmenttraining~linearization, including some special cases. When
+linearizing list-valued attributes, for instance, we treat them as distinct
+\attributevalue~pairs. Occasionally, we encounter repeated \attributevalues~in the training set, and in that case we include extra \attributevalue~pairs
+in the correpsonding location in the linearization. We ignore any instances
+of  ungrounded information, as in example \autoref{} where (such and such)
+has no explicit representation.  
+
+%\subsubsection{Alignment Training Implementation}
+
+%\input{nlg/figures/atalg.tex}
+
+%\hyperref[alg:at]{Algorithm \ref{alg:at}} shows the alignment training algorithm for a training example $(\mr,\utttoks)$. 
+
+In \autoref{fig:at} we show the steps of our procedure for obtaining
+the alignment training linearization, given a reference utterance $\utttoks$.
+%the intermediate outputs of each line in \hyperref[alg:at]{Algorithm \ref{alg:at}}. %In practice, there are two distinct and important issues when implementing the 
+%\alignmenttraining~linearization. 
+The first step is 
+to tag the utterance tokens 
+$\utttoks = \left[\utttok_1,\ldots,\utttok_\uttSize\right]$ 
+with a corresponding tag sequence 
+$\mrtags=\left[\mrtag_1,\ldots, \mrtag_\uttSize\right]$ where each 
+tag $\mrtag_i$ is equal to an \attributevalue~$\mrtok_j \in \mr$ or 
+the null tag $\nulltag$. We assume that we have access to such a tagger
+$\tagger : \outSpace \rightarrow \inSpace$ (see \autoref{sec:tagger}
+for implementation details). After producing the tag sequence $\mrtags^{(1)} = \tagger\left(\utttoks\right)$ 
+%(\hyperref[alg:attag]{Lines \ref{alg:attag}} in \hyperref[alg:at]{Algorithm \ref{alg:at}} and \hyperref[fig:at]{\autoref{fig:at}.b}),
+(\hyperref[fig:at]{\autoref{fig:at}b}),
+we then group contiguous sequences of tags sharing the same tag value, discarding any null tag sequences to obtain the sequence of subsequences 
+$\mrtags^{(2)} = \left[\mrtags^{(1)}_{i_1:j_1},\ldots,\mrtags^{(1)}_{i_\mrSize:j_\mrSize}, \right]$ (\hyperref[fig:at]{\autoref{fig:at}c}).
+Finally, $\mrtoks$ is constructed by 
+by prepending the \dialogueact~$\mrtok_0$ of $\mr$ to the ordered sequence 
+of \attributevalue~pairs $\mrtok_1,\ldots,\mrtok_\mrSize$ implied by $\mrtags^{(1)}_{i_1},\ldots,\mrtags^{(1)}_{i_\mrSize}$ (\hyperref[fig:at]{\autoref{fig:at}d}). 
+
+
+
+%~\\~\\
+%we then segment $\mrtags^{(1)}$ into contiguous sequences of tags containing no null tags, $\nulltag$, to obtain the sequence of subsequences
+%$\mrtags^{(2)}$ (\hyperref[fig:at]{\autoref{fig:at}c}). Each subsequence of
+%$\mrtags^{(2)}$ is further split into the longest contiguous tag sequences 
+%such that all 
+%tags of a segment are equal to the same \attributevalue~pair(\hyperref[fig:at]{\autoref{fig:at}d}). 
+%Finally, $\mrtoks$ is constructed by 
+%by prepending the \dialogueact~$\mrtok_0$ of $\mr$ to the ordered sequence 
+%of \attributevalue~pairs $???$ implied by $\mrtoks^{(3)}$ (\hyperref[fig:at]{\autoref{fig:at}e}). 
+%
+\input{nlg/figures/atouts.tex}
+
+At test time, the generation model is only
+presented with a \meaningrepresentation~$\mr$ and we don't have a reference 
+utterance $\utttoks$ with which to apply the alignment training 
+linearization. In this case,
+we can use an utterance planning model $\planner : \mrspace \rightarrow \inSpace$ to map a \meaningrepresentation~$\mr$ to a
+linear sequence $\mrtoks$. Alternatively, we can use the test set reference
+to obtain the alignment training linearization; this represents an unrealistically
+optimistic case where the model has clairvoyant known of the discourse
+ordering preferred by a human.
+%
+%a human reference utterance. In the latter case, this represents an
+%unrealistic case where the model has clairvoyant knowledge of the 
+%discourse ordering of the desired utterance but is also representative
+%of discourse orderings prefered by humans. 
+In either case, we refer to 
+a linearization $\mrtoks$ obtained either from $\planner$ or a human reference
+as an \utteranceplan~since a generation model trained with
+\alignmenttraining~linearizations will attempt to follow it during 
+the generation of the utterance.
+
+
