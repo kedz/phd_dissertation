@@ -1,0 +1,31 @@
+\begin{table}
+\center
+\begin{tabular}{cl cccc ccccc}
+\toprule
+&Model & Layers & LS & Emb. & Params & $\embDim$ & $\hidDim$ & $\encDim$ & $\decDim$ & Dropout\\
+\midrule
+    \parbox[t]{2mm}{\multirow{6}{*}{\rotatebox[origin=c]{90}{E2E}}} 
+ & \textsc{Rnd} & 1 & 0.1 & tied & 7,966,787 & 512 & 2048 & 512 & 512 & 0.1\\
+ & \textsc{Fp} & 1 & 0.1 & tied & 7,970,371 & 512 & 2048 & 512 & 512 & 0.1\\
+ & \textsc{If} & 1 & 0.1 & untied & 8,525,379 & 512 & 2048 & 512 & 512 & 0.1 \\
+ & \textsc{If+p} & 1 & 0.1 & untied & 8,525,379 & 512 & 2048 & 512 & 512 & 0.1 \\
+ & \textsc{At} & 2 & 0.1 & untied & 15,881,795 & 512 & 2048 & 512 & 512 & 0.1 \\
+ & \textsc{At+p} & 2 & 0.1 & untied & 15,881,795 & 512 & 2048 & 512 & 512 & 0.1 \\
+\midrule
+    \parbox[t]{2mm}{\multirow{6}{*}{\rotatebox[origin=c]{90}{ViGGO}}} 
+ & \textsc{Rnd} & 2 & 0.0 & untied & 15,598,897 & 512 & 2048 & 512 & 512 & 0.1\\
+ & \textsc{Fp} & 2 & 0.1 & untied & 15,605,041 & 512 & 2048 & 512 & 512 & 0.1\\
+ & \textsc{If} & 2 & 0.1 & untied & 15,598,897 & 512 & 2048 & 512 & 512 & 0.1 \\
+ & \textsc{If+p} & 2 & 0.1 & untied & 15,598,897 & 512 & 2048 & 512 & 512 & 0.1\\
+ & \textsc{At} & 2 & 0.1 & untied & 15,598,897 & 512 & 2048 & 512 & 512 & 0.1 \\
+ & \textsc{At+p} & 2 & 0.1 & untied & 15,598,897 & 512 & 2048 & 512 & 512 & 0.1 \\
+\bottomrule
+\end{tabular}
+
+\caption{Winning hyperparameter settings for transformer models 
+(trained from scratch). L and  LS indicate number of layers and label smoothing respectively. Drop. indicates dropout (i.e. drop probability).
+All models trained with the Adam optimizir with the learning
+            rate schedule from \cite{rush2018} (factor=1, warmup=8000).
+}
+\label{tab:tfparams}
+\end{table}

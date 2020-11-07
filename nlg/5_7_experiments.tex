@@ -1,0 +1,90 @@
+\subsection{Experiments}
+
+\subsubsection{Test-Set Evaluation}
+
+In our first experiment, we compare performance of the proposed models and
+linearization strategies on the E2E Challenge and ViGGO test sets. 
+We refer to models using the alignment training linearization strategy
+as \textsc{At+BgUP}, \textsc{At+NUP}, or \textsc{At+Oracle} depending
+on whether the model is following the bigram planner, neural planner, or
+human reference plan respectively.
+For the \textsc{If}
+and \textsc{At+NUP} models we also include variants trained on
+the union of original training data and phrase-augmented data (see
+\autoref{sec:pbda}), which we denote \textsc{+p}.
+
+\paragraph{Evaluation Measures} For automatic quality measures, we report
+\bleu~and \rougel  scores using the official E2E Challenge evaluation
+script.\footnote{\url{https://github.com/tuetschek/e2e-metrics}} Additionally, we use the rule-based utterance tagger to
+automatically annotate the attribute-value spans of the model generated
+utterances, and then manually verify/correct them. With the attribute-value
+annotations in hand we compute the number of missing, wrong, or added
+attribute-values for each model. From these counts, we compute the semantic
+error rate (SER) \citep{dusek2020} where \[ \textrm{SER} = \frac{\#missing +
+\#wrong + \#added}{\#attributes}.\]  On ViGGO, we do not include the
+\Atr{rating} attribute in this evaluation since we consider it part of the
+dialogue act.  Additionally, for \textsc{At} variants, we report the order
+accuracy (OA) as the percentage of generated utterances that correctly follow
+the provided utterance plan. Utterances with wrong or added attribute values
+are counted as not following the utterance plan. 
+%Additional metrics
+%and SER error break downs can be found in \autoref{app:exp.results}.
+
+All models are trained five times with different random seeds; we report
+the mean of all five runs. We report statistical significance
+using Welch's $t$-test \citep{welch1947}, comparing the score distribution of the five runs from the best linearization strategy against all other strategies
+at the $0.05$ level.
+
+\paragraph{Baselines} On the ViGGO dataset we compare to the transformer
+baseline of \citet{juraska2019}, which used a beam search of size 10 and
+heuristic attribute reranker (similar to our attribute-value matching rules).
+On the E2E Challenge dataset, we report the results of 
+TGen+ \cite{dusek2019}, an
+LSTM-based \sequencetosequence~model, which also uses beam search with a matching rule based
+reranker to select the most semantically correct utterance and is
+trained on a cleaned version of the corpus (similar to our approach).
+%, using matching
+%rules to correct erroneous MRs in the train data (similar to our approach).
+ 
+\subsubsection{Random Permutation Stress Test}
+
+
+
+Differences between an \textsc{At} model following an utterance planner model
+and the human oracle are often small so we do not learn much about the limits
+of controllability of such models, or how they behave in extreme conditions
+(i.e. on an arbitrary, random utterance plan, not drawn from the training data
+distribution). In order to perform such an experiment we generate random
+utterance plans (i.e. permutations of attribute-values) and have the
+\textsc{At} models generate utterances for them, which we evaluate with
+respect to SER and OA (we lack ground truth references with which to evaluate
+\bleu~or \rougel).  We generate random permutations of size $3,4,\ldots, 8$ on
+the E2E dataset, since there are 8 unique attributes on the E2E dataset. For
+ViGGO we generate permutations of size $3,4,\ldots,10$ (96\% of the ViGGO
+training examples fall within this range). For each size we generated 100
+random permutations and all generated plans were given the \textsc{Inform}
+dialogue act. In addition to running the \textsc{At} models on these random
+permutations, we also compare them to the same model after using the NUP  to
+reorder them into an easier\footnote{Easier in the sense that the
+\NUP~re-ordering is closer to the training set distribution of \textsc{At}
+utterance plans.} ordering. % Example outputs can be
+%found in \autoref{app:examples}.  
+
+
+
+\subsubsection{Human Evaluation} In our final experiment, we had human evaluators
+rank the 100 outputs of the size 5 random permutations for three \BART~models
+on both datasets: (i) \textsc{At+p} model with \NUP,  (ii) \textsc{At+p}
+model, and (iii) \textsc{At} model.  The first model, which uses an utterance
+planner, is likely to be more natural since it doesn't have to follow the
+random order, so it serves as a ceiling.  The second and third models will try
+to follow the random permutation ordering, and are more likely to produce
+unnatural transitions between awkard sequences of attribute-values.
+Differences between these models will allow us to understand how the
+phrase-augmented data affects the fluency of the models.  The annotators were
+asked to rank outputs by their naturalness/fluency.  Each set was annotated
+twice by different annotators so we can compute agreement. %More details can be
+%found in \autoref{app:humaneval}.
+
+
+

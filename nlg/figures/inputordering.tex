@@ -1,0 +1,304 @@
+
+\newtcbox{\mybox}[1][]{colframe=blue, colback=blue!15, 
+                       nobeforeafter, tcbox raise base, shrink tight, extrude 
+                       by=0.75mm, #1}
+
+
+
+\begin{figure}
+    \center
+    \begin{tikzpicture}[]
+
+
+    \node[anchor=west] at (5.0,5.8) 
+        {\textbf{Fixed Position \textsc{(F\small{P})}}};
+    \node[anchor=west] at (0.0,5.8) 
+        {\textbf{Alignment Training \textsc{(A\small{T})}}};
+    \draw[thick] (0.85,1.9) -- (0.85,2.2);
+    \draw[thick] (0,1.9) -- (4.25,1.9);
+    \draw[thick] (5 + 0.85,1.9) -- (5 + 0.85,2.2);
+    \draw[thick] (5 + 0,1.9) -- (10.25+ 4.25,1.9);
+    \draw[thick] (0.85,-2.6) -- (0.85,-2.3);
+    \draw[thick] (0,-2.6) -- (4.25,-2.6);
+    \draw[thick] (5+0.85,-2.6) -- (5+0.85,-2.3);
+    \draw[thick] (5+0,-2.6) -- (5+4.25,-2.6);
+
+    \node[anchor=north west,inner sep=0.5mm,rotate=90] at (0,2) 
+        {\footnotesize da=inform};
+    \node[anchor=north west,inner sep=0.5mm,rotate=90] at (0.4,2) 
+        {\footnotesize rating=N/A};
+    \node[anchor=north west,rotate=90,inner sep=0.5mm,draw=red,thick,fill=red!50] 
+        at (0.2 + 0.8,2) 
+        {\footnotesize name=NAME};
+    \node[anchor=north west,rotate=90,inner sep=0.5mm,draw=blue,thick,fill=blue!50] 
+        at (0.2 + 1.2,2) {\footnotesize perspective=bird view};
+    \node[anchor=north west,rotate=90,inner sep=0.5mm,draw=green,thick,
+          fill=green!50] 
+        at (0.2 + 1.6,2) {\footnotesize genres=real-time strategy};
+    \node[anchor=north west,rotate=90,inner sep=0.5mm,draw=orange,thick,
+          fill=orange!50] 
+        at (0.2 + 2.0,2) {\footnotesize platforms=PlayStation};
+    \node[anchor=north west,rotate=90,inner sep=0.5mm,draw=purple,thick,
+          fill=purple!50] 
+        at (0.2 + 2.4,2) {\footnotesize platforms=PC};
+    \node[anchor=north west,rotate=90,inner sep=0.5mm,draw=pink,thick,
+          fill=pink!50] 
+        at (0.2 + 2.8,2) {\footnotesize on\_Steam=no};
+    \node[anchor=north west,rotate=90,inner sep=0.5mm,draw=yellow,thick,
+          fill=yellow!50] 
+        at (0.2 + 3.2,2) {\footnotesize on\_Linux=no};
+    \node[anchor=north west,rotate=90,inner sep=0.5mm,draw=brown,thick,
+          fill=brown!50] 
+        at (0.2 + 3.6,2) {\footnotesize on\_Mac=yes};
+
+
+\node[anchor=north west,inner sep=0.5mm,rotate=90] at (5 + 0,2) 
+    {\footnotesize da=inform};
+\node[anchor=north west,inner sep=0.5mm,rotate=90] at (5 + 0.4,2) 
+    {\footnotesize rating=N/A};
+\node[anchor=north west,rotate=90,inner sep=0.5mm] 
+    at (5.2 + 0.8,2) 
+    {\footnotesize exp\_release\_date=N/A};
+\node[anchor=north west,rotate=90,inner sep=0.5mm] 
+    at (5.2 + 1.2,2) 
+    {\footnotesize specifier=N/A};
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=yellow,thick,fill=yellow!50] 
+    at (5.2 + 1.6,2) 
+    {\footnotesize on\_Linux=no};
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=brown,thick,fill=brown!50] 
+    at (5.2 + 2.0,2) 
+    {\footnotesize on\_Mac=yes};
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=pink,thick,fill=pink!50] 
+    at (5.2 + 2.4,2) 
+    {\footnotesize on\_Steam=no};
+\node[anchor=north west,rotate=90,inner sep=0.5mm] 
+    at (5.2 + 2.8,2) 
+    {\footnotesize esrb=N/A};
+\node[anchor=north west,rotate=90,inner sep=0.5mm] 
+    at (5.2 + 3.2,2) 
+    {\footnotesize has\_multiplayer=N/A};
+
+   % ['inform', 'rating=N/A', 'exp_release_date=N/A', 'specifier=N/A', 'has_linux_release=no', 'has_mac_release=yes', 'available_on_steam=no', 'esrb=N/A', 'has_multiplayer=N/A', 'developer=N/A', 'release_year=N/A', 'player_perspective=bird view', 'player_perspective=N/A', 'player_perspective=N/A', 'platforms=PlayStation', 'platforms=PC', 'platforms=N/A', 'platforms=N/A', 'name=PLACEHOLDER', 'genres=real-time strategy', 'genres=N/A', 'genres=N/A', 'genres=N/A']
+\node[anchor=north west,rotate=90,inner sep=0.5mm] 
+    at (5.2 + 3.6,2) 
+    {\footnotesize developer=N/A};
+\node[anchor=north west,rotate=90,inner sep=0.5mm] 
+    at (5.2 + 4.0,2) 
+    {\footnotesize release\_year=N/A};
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=blue,thick,fill=blue!50] 
+    at (5.2 + 4.4,2) 
+    {\footnotesize perpspective\textsubscript{1}=bird view};
+\node[anchor=north west,rotate=90,inner sep=0.5mm] 
+    at (5.2 + 4.8,2) 
+    {\footnotesize perpspective\textsubscript{2}=N/A};
+\node[anchor=north west,rotate=90,inner sep=0.5mm] 
+    at (5.2 + 5.2,2) 
+    {\footnotesize perpspective\textsubscript{3}=N/A};
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=orange,thick,fill=orange!50] 
+    at (5.2 + 5.6,2) 
+    {\footnotesize platforms\textsubscript{1}=PlayStation};
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=purple,thick,fill=purple!50] 
+    at (5.2 + 6.0,2) 
+    {\footnotesize platforms\textsubscript{2}=PC};
+\node[anchor=north west,rotate=90,inner sep=0.5mm] 
+    at (5.2 + 6.4,2) 
+    {\footnotesize platforms\textsubscript{3}=N/A};
+\node[anchor=north west,rotate=90,inner sep=0.5mm] 
+    at (5.2 + 6.8,2) 
+    {\footnotesize platforms\textsubscript{4}=N/A};
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=red,thick,fill=red!50] 
+    at (5.2 + 7.2,2) 
+    {\footnotesize name=NAME};
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=green,thick,fill=green!50] 
+    at (5.2 + 7.6,2) 
+    {\footnotesize genres\textsubscript{1}=real-time strategy};
+\node[anchor=north west,rotate=90,inner sep=0.5mm] 
+    at (5.2 + 8.0,2) 
+    {\footnotesize genres\textsubscript{2}=N/A};
+\node[anchor=north west,rotate=90,inner sep=0.5mm] 
+    at (5.2 + 8.4,2) 
+    {\footnotesize genres\textsubscript{3}=N/A};
+\node[anchor=north west,rotate=90,inner sep=0.5mm] 
+    at (5.2 + 8.8,2) 
+    {\footnotesize genres\textsubscript{4}=N/A};
+
+
+%\node[anchor=north west,rotate=90] at (1.5,2) {genres=platformer};
+%\node[anchor=north west,rotate=90] at (2,2) {genres=puzzle};
+%\node[anchor=north west,rotate=90] at (2.5,2) {perspective=side vew};
+%\node[anchor=north west,rotate=90] at (3,2) {name=NAME};
+%\node[anchor=north west,rotate=90] at (3.5,2) {name=NAME};
+%\node[anchor=north west,rotate=90] at (4,2) {name=NAME};
+%\node[anchor=north west,rotate=90] at (4.5,2) {name=NAME};
+%
+%
+%\node[anchor=north west,rotate=90] at (5.5+0,2) {\small give opinion};
+%\node[anchor=north west,rotate=90] at (5.5+0.5,2) {\small rating=good};
+%\node[anchor=north west,rotate=90] at (5.5+1,2) {\small genres=adventure};
+%\node[anchor=north west,rotate=90] at (5.5+1.5,2) {genres=platformer};
+%\node[anchor=north west,rotate=90] at (5.5+2,2) {genres=puzzle};
+%\node[anchor=north west,rotate=90] at (5.5+2.5,2) {perspective=side vew};
+%\node[anchor=north west,rotate=90] at (5.5+3,2) {name=NAME};
+%\node[anchor=north west,rotate=90] at (5.5+3.5,2) {name=NAME};
+%\node[anchor=north west,rotate=90] at (5.5+4,2) {name=NAME};
+%\node[anchor=north west,rotate=90] at (10+0,2) {give opinion};
+%\node[anchor=north west,rotate=90] at (10+0.5,2) {rating=good};
+%\node[anchor=north west,rotate=90] at (10+1,2) {genres=adventure};
+%\node[anchor=north west,rotate=90] at (10+1.5,2) {genres=platformer};
+%\node[anchor=north west,rotate=90] at (10+2,2) {genres=puzzle};
+%\node[anchor=north west,rotate=90] at (10+2.5,2) {perspective=side vew};
+%\node[anchor=north west,rotate=90] at (10+3,2) {name=NAME};
+%\node[anchor=north west,rotate=90] at (10+3.5,2) {name=NAME};
+%\node[anchor=north west,rotate=90] at (10+4,2) {name=NAME};
+%\node[anchor=north west,rotate=90] at (10+4.5,2) {name=NAME};
+%
+%
+
+
+
+%['give_opinion', 'rating=good', 'genres=adventure', 'genres=platformer', 'genres=puzzle', 'player_perspective=side view', 'name=PLACEHOLDER']
+
+
+%#
+%#
+
+%['inform', 'rating=N/A', 'exp_release_date=N/A', 'specifier=N/A', 'has_linux_release=no', 'has_mac_release=yes', 'available_on_steam=no', 'esrb=N/A', 'has_multiplayer=N/A', 'developer=N/A', 'release_year=N/A', 'player_perspective=bird view', 'player_perspective=N/A', 'player_perspective=N/A', 'platforms=PlayStation', 'platforms=PC', 'platforms=N/A', 'platforms=N/A', 'name=PLACEHOLDER', 'genres=real-time strategy', 'genres=N/A', 'genres=N/A', 'genres=N/A']
+
+
+%inc_freq_delex
+%['inform', 'rating=N/A', 'has_linux_release=no', 'has_mac_release=yes', 'available_on_steam=no', 'player_perspective=bird view', 'platforms=PlayStation', 'platforms=PC', 'name=PLACEHOLDER', 'genres=real-time strategy']
+
+\node[anchor=north west,inner sep=0.5mm,rotate=90] at (0,-2.5) 
+    {\footnotesize da=inform};
+\node[anchor=north west,inner sep=0.5mm,rotate=90] at (0.4,-2.5) 
+    {\footnotesize rating=N/A};
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=blue,thick,fill=blue!50] 
+    at (0.2 + 0.8,-2.5) 
+    {\footnotesize perspective=bird view};
+
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=orange,thick,fill=orange!50] 
+    at (0.2 + 1.2,-2.5) 
+    {\footnotesize platforms=PlayStation};
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=green,thick,fill=green!50] 
+    at (0.2 + 1.6,-2.5) 
+    {\footnotesize genres=real-time strategy};
+
+
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=brown,thick,fill=brown!50] 
+    at (0.2 + 2.0,-2.5) 
+    {\footnotesize on\_Mac=yes};
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=red,thick,fill=red!50] 
+    at (0.2 + 2.4,-2.5) 
+    {\footnotesize name=NAME};
+
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=yellow,thick,fill=yellow!50] 
+    at (0.2 + 2.8,-2.5) 
+    {\footnotesize on\_Linux=no};
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=pink,thick,fill=pink!50] 
+    at (0.2 + 3.2,-2.5) 
+    {\footnotesize on\_Steam=no};
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=purple,thick,fill=purple!50] 
+    at (0.2 + 3.6,-2.5) 
+    {\footnotesize platforms=PC};
+
+    \node[anchor=west] at (0,1.3) {\textbf{Random \textsc{(R\small{ND})}}};
+
+
+
+\node[anchor=north west,inner sep=0.5mm,rotate=90] at (5 + 0,-2.5) 
+    {\footnotesize da=inform};
+\node[anchor=north west,inner sep=0.5mm,rotate=90] at (5 + 0.4,-2.5) 
+    {\footnotesize rating=N/A};
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=yellow,thick,fill=yellow!50] 
+    at (5.2 + 0.8,-2.5) 
+    {\footnotesize on\_Linux=no};
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=brown,thick,fill=brown!50] 
+    at (5.2 + 1.2,-2.5) 
+    {\footnotesize on\_Mac=yes};
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=pink,thick,fill=pink!50] 
+    at (5.2 + 1.6,-2.5) 
+    {\footnotesize on\_Steam=no};
+
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=blue,thick,fill=blue!50]
+    at (5.2 + 2.0,-2.5) 
+    {\footnotesize perspective=bird view};
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=orange,thick,fill=orange!50] 
+    at (5.2 + 2.4,-2.5) 
+    {\footnotesize platforms=PlayStation};
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=purple,thick,fill=purple!50] 
+    at (5.2 + 2.8,-2.5) 
+    {\footnotesize platforms=PC};
+
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=green,thick,fill=green!50] 
+    at (5.2 + 3.2,-2.5) 
+    {\footnotesize genres=real-time strategy};
+\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=red,thick,fill=red!50] 
+    at (5.2 + 3.6,-2.5) 
+    {\footnotesize name=NAME};
+%has_linux_release=no', 'has_mac_release=yes', 'available_on_steam=no', 'player_perspective=bird view', 'platforms=PlayStation', 'platforms=PC', 'name=PLACEHOLDER', 'genres=real-time strategy'
+    \node[anchor=west] at (5.0,1.3) {\textbf{Increasing Freq. \textsc{(I\small{F})}}};
+
+
+%\node[anchor=north west,inner sep=0.5mm,rotate=90] at (10 + 0,-2.5) 
+%    {\footnotesize da=inform};
+%\node[anchor=north west,inner sep=0.5mm,rotate=90] at (10 + 0.4,-2.5) 
+%    {\footnotesize rating=N/A};
+%
+%\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=red,thick,fill=red!50] 
+%    at (10.2 + 0.8,-2.5) 
+%    {\footnotesize name=NAME};
+%
+%\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=green,thick,fill=green!50] 
+%    at (10.2 + 1.2,-2.5) 
+%    {\footnotesize genres=real-time strategy};
+%
+%    \node[anchor=north west,rotate=90,inner sep=0.5mm,draw=purple,thick,fill=purple!50] 
+%    at (10.2 + 1.6,-2.5) 
+%    {\footnotesize platforms=PC};
+%\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=orange,thick,fill=orange!50] 
+%    at (10.2 + 2.0,-2.5) 
+%    {\footnotesize platforms=PlayStation};
+%
+%\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=blue,thick,fill=blue!50]
+%    at (10.2 + 2.4,-2.5) 
+%    {\footnotesize perspective=bird view};
+%\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=pink,thick,fill=pink!50] 
+%    at (10.2 + 2.8,-2.5) 
+%    {\footnotesize on\_Steam=no};
+%\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=brown,thick,fill=brown!50] 
+%    at (10.2 + 3.2,-2.5) 
+%    {\footnotesize on\_Mac=yes};
+%\node[anchor=north west,rotate=90,inner sep=0.5mm,draw=yellow,thick,fill=yellow!50] 
+%    at (10.2 + 3.6,-2.5) 
+%    {\footnotesize on\_Linux=no};
+%
+
+
+
+
+%has_linux_release=no', 'has_mac_release=yes', 'available_on_steam=no', 'player_perspective=bird view', 'platforms=PlayStation', 'platforms=PC', 'name=PLACEHOLDER', 'genres=real-time strategy'
+%    \node[anchor=west] at (10.0,1.3) {\textbf{Decreasing Freq.}};
+
+
+
+
+    \node[anchor=west] at (10, 1.3) {\textbf{Utterance}};
+\node[text width=5.0cm,draw=white,anchor=west] at (10,-0.7) {
+    {\mybox[colframe=red,colback=red!60]{\textsc{Name}}} is a 
+    \mybox[colframe=blue,colback=blue!60]{bird view} 
+    \mybox[colframe=green,colback=green!60]{real-time strategy} 
+    game that was released for 
+    \mybox[colframe=orange,colback=orange!60]{PlayStation} and 
+    \mybox[colframe=purple,colback=purple!60]{PC.} It isn't available on 
+    \mybox[colframe=pink,colback=pink!60]{Steam} and doesn't have a 
+    \mybox[colframe=yellow,colback=yellow!60]{Linux} release, but it does have
+    a \mybox[colframe=brown,colback=brown!60]{Mac} version.
+};
+
+
+\end{tikzpicture}
+
+\caption{Example \meaningrepresentation~linearization strategies for an utterance (lower right) from the 
+    ViGGO training set.}
+\label{fig:linstrats}
+\end{figure}

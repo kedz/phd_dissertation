@@ -1,0 +1,139 @@
+
+\subsection{Generation Models}
+We examine the effects of linearization strategy and data augmentation
+on biGRU (see \autoref{sec:nlggru})
+and transformer (see \autoref{sec:nlgtf}) based \sequencetosequence~models.
+See \autoref{tab:nlghpsspace} for the set of hyper-parameters that we explored for
+each model and \autoref{tab:gruparams} and \autoref{tab:tfparams} for the winning hyper-parameter settings for the biGRU and transformer models respectively.
+Hyper-parameters were found using grid-search, selecting the model
+with best validation \textsc{Bleu} score. We performed a separate
+grid-search for each architecture-linearization strategy pairing in case
+there was no one best hyper-parameter setting.
+We used a batch size of 128 for all biGRU and
+Transformer models and trained for at most 700 epochs.
+
+
+
+\input{nlg/tables/hpsspace.tex}
+
+\input{nlg/tables/gruhps.tex}
+\input{nlg/tables/hps.tex}
+%lowest validation set cross-entropy. 
+%
+%\paragraph{Transformer}
+%We used the Transformer S2S as implemented in
+%\href{https://pytorch.org/}{PyTorch}.
+%The input embedding dimension is 512 and inner hidden layer size is 2048.
+%We used 8 heads in all multi-head attention layers.
+%We used Sinusoidal position embeddings following those described in
+%\citet{rush2018annotated}. Additionally, we used Adam with the learning
+%rate schedule provided in that work (factor=1, warmup=8000).
+%Dropout was set to 0.1.
+%
+%
+\newcommand{\utt}{\ensuremath{\mathbf{y}}}
+\newcommand{\uttVocab}{\ensuremath{\mathcal{W}}}
+\newcommand{\da}{\ensuremath{a}}
+\newcommand{\inseq}{\mathbf{x}}
+\newcommand{\Attrs}{\ensuremath{\mathcal{V}}}
+\newcommand{\inSize}{m}
+\newcommand{\outSize}{n}
+
+\newcommand{\mmhAttn}{\operatorname{maskedMHAttn}}
+\newcommand{\mhAttn}{\operatorname{MHAttn}}
+
+\newcommand{\mrEmb}{\mathbf{W}}
+\newcommand{\uttEmb}{\mathbf{V}}
+\newcommand{\decInput}{\mathbf{G}}
+\newcommand{\decInputi}{\mathbf{g}_i}
+
+
+\newcommand{\tfeA}{\boldsymbol{\check{\encInput}}^{(i)}}
+\newcommand{\tfeB}{\boldsymbol{\bar{\encInput}}^{(i)}}
+\newcommand{\tfeC}{\boldsymbol{\hat{\encInput}}^{(i)}}
+\newcommand{\tfeD}{\boldsymbol{\dot{\encInput}}^{(i)}}
+\newcommand{\tfeE}{\boldsymbol{\ddot{\encInput}}^{(i)}}
+
+\newcommand{\tfdA}{\boldsymbol{\check{\decInput}}^{(i)}}
+\newcommand{\tfdB}{\boldsymbol{\bar{\decInput}}^{(i)}}
+\newcommand{\tfdC}{\boldsymbol{\hat{\decInput}}^{(i)}}
+\newcommand{\tfdD}{\boldsymbol{\grave{\decInput}}^{(i)}}
+\newcommand{\tfdE}{\boldsymbol{\tilde{\decInput}}^{(i)}}
+\newcommand{\tfdF}{\boldsymbol{\acute{\decInput}}^{(i)}}
+\newcommand{\tfdG}{\boldsymbol{\dot{\decInput}}^{(i)}}
+\newcommand{\tfdH}{\boldsymbol{\ddot{\decInput}}^{(i)}}
+
+
+%\subsection{Transformer Model Definition}
+%
+%Each Transformer layer is divided into blocks which each have three
+%parts, (i) layer norm, (ii) feed-forward/attention, and  (iii) skip-connection.
+%We first define the components used in the transformer blocks before
+%describing the overall S2S transformer. 
+%Starting with layer norm \cite{ba2016}, let $\encInput \in \reals^{m\times n}$, then we have
+%$\layerNorm : \reals^{m \times n} \rightarrow \reals^{m \times n}$,
+%\[\layerNorm(\encInput; \lnweightv, \lnbias) = \lnweight \odot (\encInput - \boldsymbol{\mu}) \odot \Lambda + \mathbf{b} \]
+%
+%where $\lnweightv, \lnbias \in \reals^n$ are learned parameters, $\odot$ is the elementwise product, $\lnweight = \left[\lnweightv,\ldots,\lnweightv\right] \in \reals^{m\times n}$ is a tiling of the parameter vector, $\lnweightv$, $m$ times, and  $\boldsymbol{\mu}, \boldsymbol{\Lambda} \in \reals^{m\times n}$ are
+%defined elementwise as
+%\[\boldsymbol{\mu}_{i,j} = \frac{1}{n} \sum_{k=1}^n \encInput_{i,k}\]
+%and 
+%\[\boldsymbol{\Lambda}_{i,j} = \left(
+%    \sqrt{ \frac{1}{n-1} \sum_{k=1}^n \left( 
+%\encInput_{i,k} - \boldsymbol{\mu}_{i,j} \right)^2  + \epsilon}\right)^{-1}\]
+%respectively. The $\epsilon$ term is a small constant for numerical stability,
+%set to $10^{-5}$.
+%
+%The inplace feed-forward layer, $\feedforward$, is a simple single-layer perceptron
+%with $\relu$ activation 
+%($\relu(\encInput) = \max\left(\zeroEmb, \encInput\right)$) \cite{nair2010}, applied to each row of an $m \times n$ input matrix, i.e. a sequence of $m$ objects
+%with $n$ features,\\
+%
+%
+%\noindent $\feedforward\left(\encInput;\weight{i},\weight{j},\bias{i},\bias{j}\right) =$
+%\[  \relu\left(\encInput\weight{i} + \bias{i}\right)\weight{j} + \bias{j}     \]
+%where $\weight{i} \in \reals^{\embDim \times \hidDim}$, $\bias{i} \in \reals^{\hidDim}$,
+%$\weight{j} \in \reals^{\hidDim \times \embDim}$, $\bias{j} \in \reals^{\embDim}$ are learned parameters and 
+%matrix-vector additions (i.e. $\mathbf{X} + \mathbf{b}$) are broadcast across
+%the matrix rows.
+%
+%
+%The final component to be defined is the multi-head attention, $\MultiAttn$ which is defined
+%as\\
+%
+%\noindent  $\MultiAttn(\Query, \Key; \weight{a_1}, \weight{a_2}) =$
+%\[ \left[ \begin{array}{c} 
+%and $\bias{o} \in \reals^{\embDim}$ are learned parameters. 
+%
+%
+%%We used the Transformer S2S as implemented in 
+%%\href{https://pytorch.org/}{PyTorch}.
+%The input embedding dimension is $\embDim= 512$ and inner hidden layer size 
+%is $\hidDim=2048$. The encoder and decoder have separate parameters.
+%We used $H=8$ heads in all multi-head attention layers. 
+% We used Adam with the learning
+%rate schedule provided in  \citet{rush2018} (factor=1, warmup=8000).
+%Dropout was set to 0.1 was applied to input embeddings and each skip 
+%connection (i.e. the third line in each block definition). As a 
+%hyperparameter, we optionally tie the decoder input and output embeddings,
+%i.e. $\decEmbs = \weight{o}$.
+
+Additionally, we
+fine-tune BART \cite{lewis2019bart}, a large pretrained transformer based 
+\sequencetosequence~model. We stop fine-tuning after validation set cross-entropy stops decreasing.
+We use the same settings as the fine-tuning for the CNN-DailyMail
+summarization task,
+although we modify the maximum number of updates to be roughly to be
+equivalent to 10 epochs on the training set when using a 500 token batch
+size, since
+the number of updates effects
+the learning rate scheduler. We selected the model iterate with
+lowest validation set cross-entropy.
+
+While BART is unlikely to have seen any linearized MR in its pretraining
+data, its use of sub-word encoding  allows it to encode
+arbitrary strings. Rather than extending it's encoder input vocabulary to
+add the MR tokens, we simply format the input MR as a string
+(in the correpsonding linearization order), e.g. ``inform rating=good name=NAME platforms=PC platforms=Xbox''.
+
+

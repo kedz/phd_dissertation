@@ -1,4 +1,5 @@
 \begin{figure}
+    \centering
 
 
         \begin{tikzpicture}
@@ -15,14 +16,19 @@
 
 
             \node (root) at (-2.5,0) {S};
+            \node[draw,circle,font=\small,inner sep=0] at ($(root)+(-0.5,0.5)$) {4};
             \node (rootNP) at (-5,-1) {NP};
+            \node[draw,circle,font=\small,inner sep=0] at ($(rootNP)+(-0.5,0.5)$) {3};
             \node (rootNPNNP) at (-5,-2) {NNP};
             \node (r1c2) at (0.0,-1) {VP};
+            \node[draw,circle,font=\small,inner sep=0] at ($(r1c2)+(0.5,0.5)$) {2};
                 \node (r2c3) at (4,-2) {NP};
+            \node[draw,circle,font=\small,inner sep=0] at ($(r2c3)+(0.5,0.5)$) {1};
                 \node (det) at (1.5,-3) {DET};
                 \node (jj) at (4,-3) {JJ};
                 \node (nn) at (6.5,-3) {NN};
                 \node (r2c1) at (-1.5,-2) {VB};
+
                 \node (r2c2) at (0.0,-2) {RB};
                 \draw[-] (r1c2) -- (r2c1);
                 \draw[-] (r1c2) -- (r2c2);
@@ -52,10 +58,45 @@
 
         \end{tikzpicture}
 
+        ~\\~\\
 
-$\left[\!\!\left[ \begin{array}{l} \textsc{Inform}\\ \AV{family\_friendly}{yes} \end{array}   \right]\!\!\right] $  ~~ a family-friendly establishment \\
-$\left[\!\!\left[ \begin{array}{l} \textsc{Inform}\\ \AV{family\_friendly}{no} \end{array}   \right]\!\!\right] $  ~~ is not a family-friendly establishment \\
-$\left[\!\!\left[ \begin{array}{l} \textsc{Inform}\\ \AV{name}{Aromi} \\ \AV{family\_friendly}{no} \end{array}   \right]\!\!\right] $  ~~ Aromi is not a family-friendly establishment \\
-$\left[\!\!\left[ \begin{array}{l} \textsc{Inform}\\ \AV{name}{Aromi} \end{array}   \right]\!\!\right] $  ~~ Aromi \\
-
+        \begin{tabular}{ccc}
+            \toprule
+            &         \MeaningRepresentation~($\mr$) & Utterance ($\utttoks$) \\
+            \midrule
+            \raisebox{0.5pt}{\textcircled{\raisebox{-0.9pt} {1}}} &  
+        $\left[\!\!\left[ \begin{array}{l} 
+            \textsc{Inform}\\ 
+            \AV{family\_friendly}{yes} 
+        \end{array}   \right]\!\!\right]$  & 
+            $\left[\textit{<<s>>}, \textit{a}, \textit{family-friendly}, \textit{establishment}, \textit{<<e>>}\right]$\\
+        \raisebox{0.5pt}{\textcircled{\raisebox{-0.9pt} {2}}} &
+        $\left[\!\!\left[ \begin{array}{l} 
+            \textsc{Inform}\\ 
+            \AV{family\_friendly}{no} 
+        \end{array}\right]\!\!\right]$  & 
+            $\left[\textit{<<s>>}, \textit{is}, \textit{not}, \textit{a}, 
+            \textit{family-friendly}, \textit{establishment}, \textit{<<e>>}\right]$ \\
+        \raisebox{0.5pt}{\textcircled{\raisebox{-0.9pt} {3}}} &
+        $\left[\!\!\left[ \begin{array}{l} 
+            \textsc{Inform}\\ 
+            \AV{name}{Aromi} \end{array}   
+        \right]\!\!\right]$ &  
+        $\left[\textit{<<s>>}, \textit{aromi}, \textit{<<e>>}\right]$ \\
+        \raisebox{0.5pt}{\textcircled{\raisebox{-0.9pt} {4}}} &
+        $\left[\!\!\left[ \begin{array}{l}
+            \textsc{Inform}\\ 
+            \AV{name}{Aromi} \\ 
+            \AV{family\_friendly}{no} 
+        \end{array}\right]\!\!\right]$  & 
+        $\left[\textit{<<s>>}, \textit{aromi}, \textit{is}, \textit{not}, 
+               \textit{a}, \textit{family-friendly}, \textit{establishment}, 
+               \textit{<<e>>}\right]$ \\
+        \bottomrule
+        \end{tabular}
+    \caption{Example training instances produced from the phrase-based
+            data augmentation protocol. The constituent parse is shown
+        above. Numbered phrase nodes correspond to the phrase examples
+    created in the table below.}
+            \label{fig:pbdaexample}
 \end{figure}

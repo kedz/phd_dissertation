@@ -1,0 +1,30 @@
+\begin{table}
+\small
+\center
+\begin{tabular}{clccc ccc cc ccccc}
+\toprule
+&Model & L & LS & WD & Optim. & LR & Attn & $\embDim$ & $\hidDim$ & $\encDim$ & $\decDim$ & Drop. & Params \\
+\midrule
+    \parbox[t]{2mm}{\multirow{6}{*}{\rotatebox[origin=c]{90}{E2E}}} 
+ & \textsc{Rnd} & 2 & 0.1 & $10^{-5}$ & Adam & $10^{-5}$ &  Bahd. & 512 & 512 & 1024 & 512 & 0.1 & 14,820,419  \\
+ & \textsc{Fp} & 2 & 0.1 & $10^{-5}$ & SGD & $0.1$ &  Bahd. & 512 & 512 & 1024 & 512 & 0.1 & 14,820,003 \\ 
+ & \textsc{If} & 2 & 0.1 & $0.0$ & SGD & $0.5$ &  Gen. & 512 & 512 & 1024 & 512  & 0.1 & 14,557,763 \\
+ & \textsc{If+p} & 2 & 0.1 & $0.0$ & SGD & $0.5$ &  Gen. &512 & 512 & 1024 & 512  & 0.1 &14,557,763 \\
+ & \textsc{At} & 2 & 0.1 & $10^{-5}$ & Adam & $10^{-5}$ &  Bahd. & 512 & 512 & 1024 & 512  & 0.1 & 14,820,419  \\
+ & \textsc{At+p} & 2 & 0.1 & $10^{-5}$ & Adam & $10^{-5}$ &  Bahd. & 512 & 512 & 1024 & 512  & 0.1 & 14,820,419  \\
+\midrule
+    \parbox[t]{2mm}{\multirow{6}{*}{\rotatebox[origin=c]{90}{ViGGO}}} 
+ & \textsc{Rnd} & 2 & 0.1 & $10^{-5}$ & SGD & $0.25$ &  Gen. & 512 & 512 & 1024 & 512 & 0.1 & 14,274,865 \\
+ & \textsc{Fp} & 1 & 0.1 & $10^{-5}$ & Adam & $10^{-5}$ &  Bahd. & 512 & 512 & 1024 & 512 & 0.1 & 7,718,193 \\ 
+ & \textsc{If} & 1 & 0.0 & $0.0$ & SGD & $0.5$ &  Bahd. &  512 & 512 & 1024 & 512  & 0.1 & 7,712,049 \\ 
+ & \textsc{If+} & 1 & 0.0 & $0.0$ & SGD & $0.5$ &  Bahd. & 512 & 512 & 1024 & 512  & 0.1 & 7,712,049 \\ 
+ & \textsc{At} & 2 & 0.1 & $0.0$ & Adam & $10^{-5}$ &  Bahd. &  512 & 512 & 1024 & 512  & 0.1 & 14,537,521 \\ 
+ & \textsc{At+p} & 2 & 0.1 & $0.0$ & Adam & $10^{-5}$ &  Bahd. &  512 & 512 & 1024 & 512  & 0.1 & 14,537,521 \\ 
+\bottomrule
+\end{tabular}
+
+\caption{Winning hyperparameter settings for biGRU models. L, LS, and WD 
+indicate number of layers, label smoothing, and weight decay respectively. 
+All models use untied embeddings. Drop. indicates dropout (i.e. drop probability).}
+\label{tab:gruparams}
+\end{table}

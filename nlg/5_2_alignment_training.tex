@@ -37,7 +37,7 @@ with a corresponding tag sequence
 $\mrtags=\left[\mrtag_1,\ldots, \mrtag_\uttSize\right]$ where each 
 tag $\mrtag_i$ is equal to an \attributevalue~$\mrtok_j \in \mr$ or 
 the null tag $\nulltag$. We assume that we have access to such a tagger
-$\tagger : \outSpace \rightarrow \inSpace$ (see \autoref{sec:tagger}
+$\tagger : \outSpace \rightarrow \inSpace$ (see \autoref{sec:align}
 for implementation details). After producing the tag sequence $\mrtags^{(1)} = \tagger\left(\utttoks\right)$ 
 %(\hyperref[alg:attag]{Lines \ref{alg:attag}} in \hyperref[alg:at]{Algorithm \ref{alg:at}} and \hyperref[fig:at]{\autoref{fig:at}.b}),
 (\hyperref[fig:at]{\autoref{fig:at}b}),
@@ -80,5 +80,69 @@ a linearization $\mrtoks$ obtained either from $\planner$ or a human reference
 as an \utteranceplan~since a generation model trained with
 \alignmenttraining~linearizations will attempt to follow it during 
 the generation of the utterance.
+
+
+
+\subsubsection{Alternative Linearization Strategies}
+
+In our experiments, we compare alignment training to three other 
+linearization strategies, which we describe below. 
+These linearizations, while sensible methods of mapping a 
+\meaningrepresentation~to a linear sequence of tokens, have no 
+correspondence between the
+\meaningrepresentation~linearization and surface realization order. Because
+of this, \sequencetosequence~models trained using these linearization strategies are not controllable. These linearization strategies may have some effect on the faithfulness when
+compared to each other and alignemnt training, so evaluation of this modelling choice has
+additional benefits beyond benchmarking alignment training.
+See \autoref{fig:linstrats} for examples of the
+different linearization strategies on the same \meaningrepresentation/utterance
+pair.
+%Crucially, \alignmenttraining~stands in contrast to these 
+%alternative linea
+%three strategies
+%(\lsshort{Rnd}, \lsshort{If}, and \lsshort{Fp}) which do not have any
+%correspondence between the the order of attribute-value pairs in $\lin(\mr)$
+%and the order in which they are realized in the corresponding
+%utterance $\utttoks$.
+
+
+
+\paragraph{Random (\textsc{Rnd})} In the \textsc{Random} linearization (\textsc{Rnd}), we randomly
+order the attribute-value pairs for a given \meaningrepresentation. This strategy 
+serves as a baseline for determining
+if linearization ordering matters at all for faithfulness. \textsc{Rnd} 
+is similar to token level noise used in
+sequential denoising autoencoders \citep{wang2019denoising} and might even improve faithfulness.
+During training, we resample the ordering for each example at every epoch
+so as not to over fit to a particular random ordering.
+We do not resample the validation set in order to obtain stable results 
+from which to pick the best model.
+
+\input{nlg/figures/inputordering.tex}
+
+\paragraph{Increasing Frequency (\textsc{If})} 
+In the \textsc{Increasing Frequency} linearization (\textsc{If}), 
+we order the attribute-value pairs by increasing frequency of 
+occurrence in the training data
+i.e. $\acount(\attr_i=\aval_i) \le \acount(\attr_{i+1}=\aval_{i+1})$.
+We hypothesize that placing frequently occurring items in a consistent location
+may make it easier for the generation model to realize those items correctly, possibly
+at the expense of rarer items.
+
+\paragraph{Fixed Position (\textsc{Fp})} We take  consistency one step further 
+and create a fixed ordering of all attributes, \textit{n.b.} not attribute-values, ordering them in increasing
+frequency of occurrence on the training set (i.e. every instance has the same
+order of attributes in the encoder input). In this \textsc{Fixed Position}
+linearization (\textsc{Fp}), attributes that are not present 
+in an \meaningrepresentation~are explicitly represented with an \textit{N/A} value. 
+For list-valued slots, we determine the maximum length list in the training
+data and create that many repeated slots in the input sequence.
+This linearization is feasible for datasets with a modest number of 
+unique attributes (in our case ViGGO has 14 attributes and
+the E2E Challenge corpus has eight) but would not easily scale to 10s, 100s, or larger
+attribute vocabularies. 
+
+
+
 
 

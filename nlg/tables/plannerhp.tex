@@ -1,0 +1,14 @@
+\begin{table}
+\centering
+\begin{tabular}{c ccc ccc ccccc}
+\toprule
+Dataset & L & Enc. Dir. & RNN Cell& LR & LS & Attn. &$\embDim$ & $\hidDim$  & $\encDim$ & $\decDim$ & Dropout \\
+\midrule
+   E2E & 1 & bi- &LSTM& $10^{-5}$ & 0.1 & Bahd. & 512 & 512 & 1024 & 512 &\\
+   ViGGO & 1 & uni- & LSTM & $10^{-4}$ & 0.1 & Bahd.  & 512 & 512 & 1024 & 512 \\
+\bottomrule
+\end{tabular}
+\caption{Winning hyperparameter options for the neural utterance planner (NUP)
+model.}
+\label{tab:nuphp}
+\end{table}

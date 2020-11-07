@@ -1,0 +1,19 @@
+\begin{table}
+    \centering
+    \begin{tabular}{cp{4.25cm}p{4.25cm}}
+            \toprule
+            Hyperparameter & biGRU & Transformer\\
+            \midrule
+            Layers & $1$, $2$ & $1$, $2$\\
+            Label Smoothing & $0.0$, $0.1$ & $0.0$, $0.1$\\
+            Weight Decay & $0$, $10^-5$ & --- \\
+Optimizer/Learning Rate & Adam/$10^{-3}$, Adam/$10^{-4}$, Adam/$10^{-5}$,
+            SGD/$0.5$, SGD/$0.25$, SGD/$0.1$ & Adam with the learning
+            rate schedule from \cite{rush2018} (factor=1, warmup=8000)\\
+        Tied Decoder Embeddings & tied, untied & tied, untied\\
+        Attention & Bahdanau, General & ---\\
+        \bottomrule
+\end{tabular}
+\caption{Hyperparameter search space for biGRU and transformer architectures.}
+\label{tab:nlghpsspace}
+\end{table}

@@ -1,0 +1,42 @@
+\subsection{Utterance Planner Model} We experiment with three approaches to
+creating a test-time utterance plan for the alignment training models. The
+first is a bigram language model (\BgUP) over attribute-value sequences.
+Attribute-value bigram counts are estimated from the training data 
+(using Lidstone smoothing \citep{chen1996} with $\lidstone=10^{-6}$)  according to the
+ordering determined by the matching rules (i.e. the alignment-training ordering). 
+
+\input{nlg/tables/plannerhps.tex}
+
+\input{nlg/tables/plannerhp.tex}
+
+
+The second model is a recurrent neural network based \sequencetosequence~model, which we refer to 
+as the neural
+utterance planner (\NUP). We train the \NUP~to map \textsc{If} ordered
+attribute-values to the alignment training ordering. We grid-search model
+hyperparameters, selecting the model with highest average Kendall's $\tau$
+\citep{kendall1938} on the validation set alignment training orderings. See
+\autoref{tab:nuphps} for the hyperparameter search space and \autoref{tab:nuphp} to see the chosen hyperameter setting. We used a batch size of 128, the Adam optimizer, and trained for at most 50 epochs.   Unlike the
+\BgUP~model, the \NUP~model also conditions on the dialogue act, so it can
+learn ordering preferences that differ across dialogue acts.
+
+For both \BgUP~and \NUP, we use beam search (with beam size 32) to generate
+candidate utterance plans. The beam search is constrained to only generate
+attribute-value pairs that are given in the supplied \meaningrepresentation, and to avoid
+generating repeated attributes. The search is not allowed to terminate until
+all attribute-values in the \meaningrepresentation~are generated.  Beam candidates are ranked by
+log likelihood. We show validation and test set Kendall's $\tau$ to the 
+reference utterance for both planning models in \autoref{tab:uptau}.
+A Kendall's $\tau$ of 1.0 indicates that the planner exactly follows the
+human reference order while 0.0 indicates a random order relative to the
+human reference. $\tau=-1$ indicates the model produces the reverse order
+of the human reference plan. We see that the NUP produces utterance plans that are closer in order to the human reference on both the E2E Challenge and ViGGO datasets
+
+\input{nlg/tables/uptau.tex}
+
+The final ordering we propose is the \Oracle~ordering, i.e. the utterance plan
+implied by the human-authored test-set reference utterances. This plan
+represents the model performance if it had \textit{a priori}  knowledge of the
+reference utterance plan. When a test example has multiple references, we
+select the most frequent ordering in the references, breaking ties according
+to \BgUP~log-likelihood.
