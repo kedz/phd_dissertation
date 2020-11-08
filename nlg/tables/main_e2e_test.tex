@@ -1,5 +1,7 @@
-\begin{table}[t!]
+\begin{table}[p]
     \centering
+    \begin{minipage}[t]{0.45\linewidth}
+    \resizebox{\linewidth}{!}{
     \begin{tabular}{ll cccc}
     \toprule
     \multicolumn{2}{c}{Model}&B$\uparrow$&R$\uparrow$&SER$\downarrow$&OA$\uparrow$    \\
@@ -38,10 +40,52 @@
      & \lsshort{At\small{+NUP+p}}  & \uline{66.3} & \textbf{69.3} & \textbf{0.00} & \textbf{100.0} \\
      & \lsshort{At \small{Oracle}}  & 68.3 & 77.1 & 0.70 & 95.3 \\
     \bottomrule
-\end{tabular}
-
-
-
-\caption{E2E test set (B) \bleu, (R) \rougel, SER, and OA. All numbers are percents. }
+\end{tabular}}
+\caption{E2E Challenge test set (B) \bleu, (R) \rougel, SER, and OA. All numbers are percents. }
 \label{tab:main.e2e.test}
+\end{minipage}\hfill \begin{minipage}[t]{0.45\linewidth}
+
+    \resizebox{\linewidth}{!}{
+\begin{tabular}{ll cccc}
+\toprule
+\multicolumn{2}{c}{Model}&B$\uparrow$&R$\uparrow$&SER$\downarrow$&OA$\uparrow$    \\
+\midrule
+\multicolumn{2}{c}{Transformer}&
+\multirow{2}{*}{52.1}&\multirow{2}{*}{63.8}&\multirow{2}{*}{1.60\tablefootnote{Since their model does not realize \Atr{specifier} attributes, we do not include them in SER calculation. When including them, their model achieves 2.6\% SER.}}& \multirow{2}{*}{---} \\
+\multicolumn{2}{c}{\footnotesize \cite{juraska2019}}&\\
+\midrule
+\parbox[t]{2mm}{\multirow{8}{*}{\rotatebox[origin=c]{90}{biGRU}}}
+ &\lsshort{Rnd}  & 50.2 & 61.6 & 12.56 & --- \\
+ &\lsshort{Fp}  & 50.2 & 61.0 & 17.12 & --- \\
+ & \lsshort{If}  & 50.2 & 61.3 & 19.20 & --- \\
+ & \lsshort{If\small{+p}}  & 49.5 & 61.6 & 12.46 & --- \\
+ & \lsshort{At\small+BgUP}  & 48.5 & 58.5 & 3.40 & 89.8 \\
+ & \lsshort{At\small{+NUP}}  & \uline{51.8} & \uline{62.6} & \textbf{1.58} & \uline{93.7} \\
+ & \lsshort{At\small{+NUP+p}}  & \textbf{52.4} & \textbf{62.7} & \uline{1.62} & \textbf{94.3}\\
+ & \lsshort{At \small{Oracle}}  & 54.1 & 65.5 & 2.42 & 92.2 \\
+\midrule
+\parbox[t]{2mm}{\multirow{8}{*}{\rotatebox[origin=c]{90}{Transformer}}}
+ & \lsshort{Rnd}  & \uline{52.0} & \uline{62.9} & 9.62 & --- \\
+ & \lsshort{Fp}  & \textbf{52.6} & \uline{63.0} & 8.70 & --- \\
+ & \lsshort{If}  & \uline{52.3} & \uline{62.6} & 7.50 & --- \\
+ & \lsshort{If\small{+p}}  & \uline{52.3} & \textbf{63.1} & 4.24 & --- \\
+ & \lsshort{At\small{+BgUP}}  & 48.7 & 59.2 & 4.68 & 79.1 \\
+ & \lsshort{At\small{+NUP}}  & \uline{51.6} & \uline{62.4} & \uline{2.70} & \uline{88.3} \\
+ & \lsshort{At\small{+NUP+p}}  & 51.1 & 62.0 & \textbf{2.28} & \textbf{89.8} \\
+ & \lsshort{At \small{Oracle}}  & \uline{53.2} & 65.0 & 4.08 & 83.0 \\
+\midrule
+\parbox[t]{2mm}{\multirow{8}{*}{\rotatebox[origin=c]{90}{BART}}}
+ & \textsc{Rnd}  & 43.7 & 55.1 & 1.50 & --- \\
+ & \textsc{Fp}  & \uline{47.0} & \uline{58.9} & 1.68 & --- \\
+ & \textsc{If}  & 43.1 & 54.4 & 1.86 & --- \\
+ & \textsc{If\small{+p}}  & \textbf{49.1} & \textbf{59.7} & \uline{1.78} & --- \\
+ & \textsc{At\small{+BgUP}}  & 43.8 & 54.0 & \uline{0.52} & \textbf{98.3} \\
+ & \textsc{At\small{+NUP}}  & 45.5 & 57.6 & \uline{0.54} & \uline{98.2} \\
+ & \textsc{At\small{+NUP+p}}  & \uline{48.5} & \uline{59.2} & \textbf{0.46} & \uline{98.1} \\
+ & \textsc{At \small{Oracle}}  & \uline{47.1} & \uline{60.4} & \uline{0.82} & 97.2 \\
+\bottomrule
+\end{tabular}}
+\caption{ViGGO test set (B) \bleu, (R) \rougel, SER, and OA. All numbers are percents. }
+\label{tab:main.viggo.test}
+\end{minipage}
 \end{table}

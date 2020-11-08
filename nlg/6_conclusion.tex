@@ -1,0 +1,24 @@
+\section{Conclusion}
+
+In this chapter we focused on two problems in natural language generation
+from a meaning representation using \sequencetosequence~models:
+faithful generation and controllable generation.
+For the former we proposed a data-augmentation protocol called noise-injection
+sampling and self-training, which enabled us to use an unfaithful
+\sequencetosequence~based language generation model and a \meaningrepresentation~parser to generate fluent but semantically divergent synthetic training
+instances, which when added to the original training data, improved
+the faithfulness of subsequent models.
+
+For the former problem of controllable generation, we showed that alignment
+of the input meaning representation to the reference utterance realization
+order yields high degrees of control in several popular \sequencetosequence~model variates. Additionally, we also see that data-augmentation is useful 
+in making the model more robust when following difficult utterance plans.
+
+In future work, we hope to focus more on changes to the models themselves
+to make them more explicitly aware of the compositional nature of the 
+language they are modeling and how that can effect faithfulness and control.
+We are currently achieving this through data-augmentation. However, we worry
+that data-augmentation will be difficult to scale to more complex meaning
+representations, and that it will be difficult to adequately 
+represent more combinatorially complex semantic formalisms explicitly.
+

@@ -6,6 +6,36 @@ attention for our
 described in \autoref{sec:nlggru}.
 We fit model parameters, $\params$, by minimizing the negative log-likelihood
 of the training set, $\corpus$, i.e. \[\mathcal{L}(\params) = - \sum_{(\mr, \utttoks) \in \corpus  }  \log \gen\left(\utttoks|\ls(\mr);\params\right).\]
+
+Our choice of linearization strategy, $\ls$, differs slightly for the 
+E2E Challenge and ViGGO corpora. For the former, we arbitrarily and 
+consistently order the eight attribues, explicitly representing absent
+\attributevalues~with a \textit{N/A} token. For example, for the \meaningrepresentation, 
+\begin{singlespace}
+    \centering
+    \MR{\textsc{Inform}}{\AV{name}{The Mill}}{\AV{near}{Avalon}}{\AV{food}{Italian}}
+\end{singlespace}
+\noindent we would have the following linearization,
+\[ \ls(\mr) = \left[\begin{array}{l} \starttok,\\ \textit{eat\_type=N/A},\\ \textit{near=Avalon},\\ \textit{area=N/A}, \\ \textit{family\_friendly=N/A},\\ \textit{customer\_rating=N/A}, \\\textit{price\_range=N/A},\\ \textit{food=Italian},\\ \textit{name=The Mill}\\ \stoptok \end{array}\right].\] 
+    We omit the dialogue act since the E2E Challenge dataset only has one, \textsc{Inform}. When
+    using the delexicalized model variant, we omit the name attribute since
+    it is always present, and only indicate that the near attribute is present
+    with a placeholder
+    token, yielding 
+\[ \ls(\mr) = \left[\begin{array}{l} \starttok,\\ \textit{eat\_type=N/A},\\ \textit{near=<<present>>},\\ \textit{area=N/A}, \\ \textit{family\_friendly=N/A},\\ \textit{customer\_rating=N/A}, \\\textit{price\_range=N/A},\\ \textit{food=Italian},\\ \stoptok \end{array}\right].\] 
+
+    For the Laptops and TVs corpus, we similarly determine an arbitrary ordering
+    but omit any absent attribute-values since there are too many to represent
+    all of them explicitly. Additionally, since there are multiple dialogue acts we prepend a token representing the dialogue act to the start of the sequence. As an example, for the following \meaningrepresentation, \\[-15pt]
+\begin{singlespace}
+    \centering
+    \MR{\textsc{InformCount}}{\AV{count}{40}}{\AV{family}{don't care}}{\AV{battery\_rating}{excellent}}
+\end{singlespace}~\\
+\noindent we would have the following linearization,
+\[\ls(\mr) = \left[\starttok, \textit{inform\_count}, \textit{count=<<NUM>>}, \textit{family=don't care}, \textit{battery\_rating=excellent}, \stoptok\right].  \]
+
+
+
 When generating utterances for evaluation (i.e. not for use in noise-injection sampling) we use either greedy decoding or beam decoding with a 
 beam size of eight.
 The beam search terminates after eight candidates have been generated;

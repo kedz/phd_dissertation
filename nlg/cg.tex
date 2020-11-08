@@ -177,12 +177,12 @@
 
   
 
-\section{Results}
+\subsection{Results}
 
 
 \paragraph{\lsshort{At} models accurately follow utterance plans.} See
 \autoref{tab:main.e2e.test} and \autoref{tab:main.viggo.test} for results on
-E2E and ViGGO test sets respectively.  
+E2E Challenge and ViGGO test sets respectively.  
 The best non-\Oracle~results are bolded for each model and results
 that are not different with statistical significance to the best results
 are underlined.
@@ -190,16 +190,16 @@ We see that the \lsshort{At+NUP}
 strategy consistently receives the lowest semantic error rate and highest 
 order accuracy, regardless of
 architecture or dataset, suggesting that alleviating the model's decoder of content
-planning is highly beneficial to avoiding errors. The Transformer \lsshort{At} model is able to consistently achieve virtually zero semantic error on E2E using either
+planning is highly beneficial to avoiding errors. The Transformer \lsshort{At} model is able to consistently achieve virtually zero semantic error on the E2E Challenge dataset using either
 the bigram or neural planner model.
 
 We also see that fine-tuned BART is able to learn to follow an utterance plan
 as well. When following the neural utterance planner,
 BART is highly competitive with the trained from scratch Transformer
-on E2E and surpassing it on ViGGO in terms of semantic error rate.
+on the E2E Challenge dataset and surpassing it on the ViGGO dataset in terms of semantic error rate.
 
 \input{nlg/tables/main_e2e_test.tex}
-\input{nlg/tables/main_viggo_test.tex}
+%\input{nlg/tables/main_viggo_test.tex}
 
 
 
@@ -208,7 +208,7 @@ on E2E and surpassing it on ViGGO in terms of semantic error rate.
     Generally, the \lsshort{At} models had a smaller variance in test-set
 evaluation measures over the five random initializations as compared to the
 other strategies. This is reflected in some unusual equivalency classes
-by statistical significance. For example, on the E2E dataset biGRU models,
+by statistical significance. For example, on the E2E Challenge dataset biGRU models,
 the \lsshort{At+NUP+p} strategy acheives 0\% semantic error and is significantly
 different than all other linearization strategies \textbf{except} 
 the \lsshort{Fp} strategy even though the absolute difference in score is 
@@ -257,10 +257,10 @@ small data (i.e. ViGGO) setting, \biGRU~and \Transformer~models achieve better s
 neural utterance planner models have slightly higher \bleu~and \rougel~than
 the bigram utterance planner, suggesting the neural planner produces utterance plans closer to
 the reference orderings. The neural and bigram planner models have slightly lower semantic error rate
-than when following the \Oracle~utterance plans.  This suggests that the models
+than when following the \Oracle~utterance plans.  This suggests that the model-based planners
 are producing orders more commonly seen in the training data, similar to how
 neural language generators frequently learn the least interesting, lowest
-entropy responses \cite{serban2016}.  On the other hand, when given
+entropy responses \citep{serban2016}.  On the other hand, when given
 the \Oracle~orderings, models achieve much higher word overlap with the
 reference, e.g. achieving an E2E \textsc{Rouge-L} $\ge 77$.
 
@@ -340,7 +340,7 @@ ordering is not required, using the neural utterance planner to propose an order
 semantically correct outputs.
 
 
-\section{Limitations}
+\subsection{Limitations}
 
 While we are able to acheive very low test-set SER for both corpora, we 
 should caution that this required extensive manual development of matching 
@@ -361,5 +361,5 @@ Also we should note that
 %while possibly less glamorous than proposing novel
 %model architecture, 
 data cleaning can yield more substantial decreases in
-semantic errors \cite{dusek2019,hongminwang2019} and is an important 
+semantic errors \citep{dusek2019,hongminwang2019} and is an important 
 consideration in any practical neural NLG.

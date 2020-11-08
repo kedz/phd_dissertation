@@ -1,6 +1,7 @@
-\begin{table}[t!]
+\begin{table}[t]
     \centering
 
+\resizebox{0.5\textwidth}{!}{
 \begin{tabular}{ll cccc}
 \toprule
 \multicolumn{2}{c}{Model}&B$\uparrow$&R$\uparrow$&SER$\downarrow$&OA$\uparrow$    \\
@@ -39,9 +40,7 @@
  & \textsc{At\small{+NUP+p}}  & \uline{48.5} & \uline{59.2} & \textbf{0.46} & \uline{98.1} \\
  & \textsc{At \small{Oracle}}  & \uline{47.1} & \uline{60.4} & \uline{0.82} & 97.2 \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \caption{ViGGO test set (B) \bleu, (R) \rougel, SER, and OA. All numbers are percents. }
 \label{tab:main.viggo.test}
 \end{table}
-
-
