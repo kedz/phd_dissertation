@@ -1,0 +1,24 @@
+\begin{algorithm}[t]
+  \RestyleAlgo{boxruled}
+  \LinesNumbered
+  \KwIn{
+    query string $\query$, 
+    query category $\category$, 
+    stream $\sentstream^{(\query)}$, 
+    period of interest ($\timestamp_\starttok$, $\timestamp_\stoptok$), 
+    summarization policy $\policy$}
+  \KwOut{update summary $\updateSummary$}
+  $\updateSummary \gets \{\}$
+
+    \For{$\strmSent_t \in \sentstream^{(\query)}_{\timestamp_\starttok:\timestamp_\stoptok}$}{
+       $\state_t \gets (\strmSent_1,\ldots,\strmSent_t, \bsal_1,\ldots,\bsal_{t-1},\query,\category)$\\
+       $\bsal_t \gets \policy(\state_t)$\\
+      \If{$\bsal_t = 1$}{
+        $\updateSummary \gets \updateSummary \cup \left\{\left(\strmSent_t, \senttimestamp_t \right) \right\} $
+        }
+    }
+  \caption{Policy-based Stream Summarization} 
+  \label{alg:policysum}
+\end{algorithm}
+
+

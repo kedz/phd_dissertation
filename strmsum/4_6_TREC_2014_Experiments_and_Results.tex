@@ -1,0 +1,72 @@
+\subsection{TREC 2014 Experiments and Results}
+
+\input{strmsum/tables/trecresults.tex}
+
+We submitted three different model variations to the 2014 TREC Temporal
+Summarization shared-task \citep{aslam2015}. The models were submitted under
+the Team ID \textit{cunlp} and given
+the following Run IDs:
+\begin{enumerate}
+\item 1APSalRed --- the SAP summarizer where salience predictions are penalized by similarity to prior updates. Let $\predbsal_k = f\left(\phi\left(\strmupdate_k,\query,\category\right)\right)$ for each update in $\updateSummary$. The 
+salience estimate for a new sentence $\strmSent_i$ is 
+$f\left(\phi\left(\strmSent_i,\query,\category\right)\right) - \sum_{\strmupdate_k, \updatetimestamp_k \in \updateSummary} \predbsal_k \operatorname{similarity}\left(\strmSent_i,\strmupdate_k \right)$. 
+\item 2APSal --- the default SAP summarizer described in this section.
+\item 3AP --- the summarizer with no salience estimation, all non-singleton
+ exemplars are passed on to the redundancy filter and update selection
+stage.
+\end{enumerate}
+
+We use the 10 TREC 2013 events to train/tune our submitted models.
+3 of the events were selected at random as
+a development set. All system salience and similarity threshold parameters are
+tuned on the development set to maximize \textsc{Rouge}-2 F1 scores with
+respect to the reference summaries $\strmNuggets^{(\query)}$.
+We fit separate salience models using 1,000 sentences randomly sampled from
+each of the 7 remaining TREC 2013 query events using its associated document stream.
+When predicting the salience for a new sentence at test time, we use the
+average prediction of all 7 models. 
+
+
+Participant systems were run on 15 query events and associated document streams
+ curated for the evaluation.
+Updates from the participant systems were pooled and manually matched 
+to reference nuggets by NIST assessors. These matches were used to compute
+the  shared-task evaluation metrics (\autoref{sec:methods}):
+normalized expected gain, $n\mathbb{E}[\gain](\updateSummary)$, comprehensiveness $\comp(\updateSummary)$, latency-penalized comprehensiveness $\comp_L(\updateSummary)$,
+and the overall track evaluation measure, the harmonic mean $\mathcal{H}_L(\updateSummary)$ of the latency-penalized
+$n\mathbb{E}[\gain](\updateSummary)$ and $\comp(\updateSummary)$ variants.
+
+\input{strmsum/figures/outputs.tex}
+
+To give a qualitative flavor of our produced summaries,
+we show excerpts of two summaries produced by the 2APSal, i.e. SAP, model,
+in \autoref{fig:sapsummaries}.
+Results from the official TREC 2014 Temporal Summarization shared-task 
+are shown in \autoref{tab:trec2014}. We see that our 2APSal
+model had the highest overall $\mathcal{H}_L(\updateSummary)$. It was also one of the 
+most precise models along with BJUT runs Q1, Q2, and Q0. The 2APSal and 
+the BJUT runs return far fewer updates on average while still managing to 
+include updates that matched to nuggets. The 2APSal run returned 
+381.4 updates per query on average while the overall track average was 8528.55
+updates per query on average. 
+
+When we look at 3AP, which had no salience
+componet, it had higer recall (i.e. comprehensiveness) than 2APSal 
+but was much less 
+precise, returning 5,967 updates on average. This suggests that the salience
+estimation was important for guiding the summarizer. 
+
+The performance of 1APSalRed was between 3AP and 2APSal. The redundancy
+penalty meant that the average self-similarities were flatter than 
+those of 2APSal
+yielding more diverse updates, which were not as likely to be matched
+to ground-truth nuggets, and therefore hurting the expected gain metrics.
+
+
+All three of our proposed models had a latency-penalized comprehensiveness, $\comp_L(\updateSummary)$,
+above $1$ ($1.1507 - 1.3689$). Values above $1$ indicate the average update that matched a nugget
+was selected before that information made it into Wikipedia (and confusingly
+getting a latency reward for early returns). In this case 
+our proposed model was finding nugget information around 3-5 hours ahead of
+its publication in Wikipedia.  
+

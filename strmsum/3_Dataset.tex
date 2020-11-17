@@ -1,0 +1,51 @@
+\section{Dataset}
+
+For all of our experiments in this chapter, we use data collected or prepared 
+for the TREC 2013, 2014, and 2015 Temporal Summarization shared-tasks
+\citep{aslam2013,aslam2015,aslam2016}. The task organizers provided both a corpus
+with which to create the document stream as well as sets of reference
+query events for training/evaluation. 
+
+The corpus for the document stream consisted of the 2014 TREC KBA Stream
+Corpus \citep{frank2013} which contains a 16.1 terabyte set of 1.2 billion
+timestamped documents crawled from the web between October, 2011 and February
+2013.\footnote{\url{http://streamcorpus.org/}} The crawl includes a variety of
+news articles, forum data, and blog pages.  We only use the news portion of
+this dataset in our experiments.  Because the documents in this dataset are
+timestamped, we can simulate a document stream of online news for the
+2011-2013 time period.
+
+
+The reference query events were manually curated by the track organizers from
+ world news events that were significant enough to have their own
+Wikipedia page. See \autoref{tab:queries} for the complete list of 
+reference query events collected for the shared-task. The task organizers
+also created the query string and determined a suitable
+ time period of interest, i.e. the time duration of the event, for all
+reference query events. 
+For each event we create a stream of relevant 
+documents from the KBA Stream Corpus by selecting only those documents that contain the complete set of query 
+terms and whose timestamps fall within the period of interest. 
+
+
+
+%Our experiments also make use of the TREC Temporal Summarization (TS) Track
+% data from 2013 and 2014 \cite{aslam2013trec}.  This data includes 25 events 
+%and event metadata (e.g., a user search query for the event, the event type, 
+%and event evaluation time frame). 
+
+Assessors at the National Institute of Standards and Technology (NIST) constructed a ground truth set of nuggets for each reference event by extracting 
+important snippets from the introduction of the event's associated Wikipedia page.
+%nuggets for each event. Nuggets are brief and important text snippets that 
+%represent sub-events that should be conveyed by an ideal update summary. 
+Assesors used the revision history to identify important nugget texts,
+and also used the revision timestamps to establish the reference 
+timestamps $\nugtimestamp_i$ for each nugget $\strmnugget_i$.
+%In order to accomplish this, for each event, assessors were provided with the
+%revision history of the Wikipedia page associated with the event. For example,
+%the revision history for the Wikipedia page for `Hurricane Sandy' will contain
+%text additions including those related to individual nuggets.  The assessment
+%task involves reviewing the Wikipedia revisions in the evaluation time frame 
+%and marking the text additions capturing a new, unique nugget.  
+More detail
+on this process can be found in the official shared-task  description \citep{aslam2013}.

@@ -1,0 +1,19 @@
+\subsection{Redundancy Filtering and Update Selection}
+\label{sec:upsel}
+
+The exemplar sentences from the exemplar selection stage are the most salient
+and representative of the input for the current hour. However, we need to
+reconcile these sentences with updates from the previous hours to ensure that
+the most salient and least redundant  updates are selected. To ensure that
+only the most salient updates are selected we apply a minimum salience
+threshold; after exemplar sentences have been identified, any exemplars whose
+salience is less than $\lambda_{sal}$ are removed from consideration. 
+
+Next, to prevent adding updates that are redundant with previous output
+updates, we filter out exemplars that are too similar to previous updates.
+The exemplars are examined sequentially in order of decreasing salience and  a
+similarity threshold is applied, where the exemplar is ignored if its maximum
+semantic similarity to any previous updates in the summary is greater than
+$\lambda_{sim}$.  Exemplars that pass these thresholds (indicated as
+$\updateSummary_t$ in \hyperref[alg:clustsum]{Alg. \ref{alg:clustsum} line
+\ref{alg:filter}}) are selected as updates and added to the summary.

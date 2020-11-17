@@ -1,0 +1,90 @@
+\subsection{Features}
+%%
+As mentioned in the previous section, we represent each state as a feature
+vector.  In general, at state $\state_t$, these features are functions of the
+current sentence $\strmSent_t$, the  stream history $\strmSent_1, \ldots, \strmSent_{t-1}$, the query string $\query$ and category $\category$,
+and/or the  decision history $\bsal_1,\ldots,\bsal_{t-1}$.  We refer to features only
+determined by $\strmSent_t$,  $\query$, and $\category$ as static features and all others as dynamic
+features. % \footnote{\scriptsize We have attempted to use a comprehensive
+    %set of static features used in previous summarization systems.  We omit
+%details for space but source code is available at:
+%\texttt{https://github.com/kedz/ijcai2016}}
+
+\subsubsection{Static Features}
+
+\textbf{Basic Features } Our most basic features look at the length in words
+of a sentence, its position in the document, and the ratio of specific named
+entity tags to non-named entity tokens.  We also compute the average number
+of sentence tokens that match the event query words and synonyms using
+WordNet.
+
+\textbf{Language Model Features } Similar to \autoref{sec:sap}, we
+compute the average token log probability of the sentence on two language
+models: i) an event category specific language model and ii) a general newswire
+language model.  The first language model is built from Wikipedia articles
+relevant to the event-type domain. The second model is built from the New
+York Times and Associate Press sections of the Gigaword-5 corpus
+\citep{graff2003english}.
+
+\textbf{Single Document Summarization Features } These features are computed
+using the current sentence's document as a context and are also commonly
+used as ranking features in other document summarization systems. Where a
+sentence representation is needed, we use both 
+TF-IDF bag-of-words representation as well as the
+latent vector representation under the WMF
+method described in \autoref{sec:salpred}.
+
+We compute SumBasic features \citep{nenkova2005}: the average
+and sum of unigram probabilities in a sentence.  We compute the arithmetic
+and geometric means of the sentence's cosine distance to the other sentences
+of the document \citep{guo2013updating}. We refer to this quantity as novelty
+and compute it with both vector representations. We also compute the
+centroid rank \citep{radev2004} and LexRank of each sentence
+\citep{erkan2004}, again using both vector representations.
+
+\textbf{Summary Content Probability} For a subset of the stream sentences we
+have manual judgements as to whether they match to model summary content or
+not (see \ref{sec:data}). We use this
+data (restricted to sentences from the training query streams), to train a
+decision tree classifier, using the sentences' term ngrams as the classifier
+features. As this data is aggregated across the training queries, the
+purpose of this classifier is to capture the importance of general ngrams
+predictive of summary worthy content.  
+Using this classifier, we obtain the probability that the current sentence
+$\strmSent_t$ contains summary content and use this as a model feature.
+
+\subsubsection{Dynamic Features}
+
+\textbf{Stream Language Models} We maintain several unigram language models
+that are updated with each new document in the stream. Using these counts,
+we compute the sum, average, and maximum token probability of the non-stop
+words in the sentence. We compute similar quantities restricted to
+\textit{person}, \textit{location}, and \textit{organization} named
+entities as well.
+
+\textbf{Update Similarity} The average and maximum cosine similarity of the
+current sentence to all previous updates is computed under both the TF-IDF
+bag-of-words and latent vector representation. We also include indicator
+features for when the set of updates is empty (i.e. at the beginning of a
+run) and when either similarity is 0.
+
+\textbf{Document Frequency} We also compute the hour-to-hour percent change
+in document frequency of the stream. This feature helps gauge breaking
+developments in an unfolding event. As this feature is also heavily affected
+by the daily news cycle (larger average document frequencies in the morning
+and evening) we compute the 0-mean/unit-variance of this feature using the
+training streams to find the mean and variance for each hour of the day.
+
+\textbf{Feature Interactions} Many of our features are helpful for
+determining the importance of a sentence with respect to its document.
+However, they are more ambiguous for determining importance to the event as
+a whole. For example, it is not clear how to compare the document level
+PageRank of sentences from different documents. To compensate for this, we
+leverage two features which we believe to be good global indicators of
+update selection: the summary content probability and the document
+frequency.  These two features are proxies for detecting (1) a good summary
+sentences (regardless of novelty with respect to other previous decisions)
+and (2) when an event is likely to be producing novel content. We compute
+the conjunctions of all previously mentioned features with the summary
+content probability and document frequency separately and together.
+

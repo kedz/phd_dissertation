@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering
+\begin{tabular}{cccccc}
+\toprule
+Team ID & Run ID &$n\mathbb{E}[\gain](\updateSummary)$ & $\comp(\updateSummary)$ & $\comp_L(\updateSummary)$ & $\mathcal{H}_L(\updateSummary)$ \\
+\midrule
+\textbf{cunlp} & \textbf{2LtoSnofltr20} & 0.1224 & 0.4691 & \textbf{0.8086}  & \textbf{0.1531} \\
+CWI & IGnPrecision & 0.1894 & 0.4678 & 0.6273 & 0.1396 \\
+\midrule
+\multicolumn{2}{c}{\textit{average}} & 0.1533 & 0.4575 & 0.6507 & 0.1279 \\
+\midrule
+CWI &  IGn & 0.1620 & \textbf{0.5137} & 0.6538 &0.1248 \\
+CWI & docs & 0.1242 & 0.4680 & 0.6658 &0.1222 \\
+CWI & titles & \textbf{0.1915} & 0.3107 & 0.5171 & 0.1150 \\
+\bottomrule
+\end{tabular}
+\caption{Official TREC 2015 Temporal Summarization Task 1 results
+using manual update/nugget matches.}
+\label{tab:trec15t1}
+\end{table}

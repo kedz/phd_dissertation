@@ -1,0 +1,182 @@
+\section{Task Definition}
+\label{sec:strmsumProbDef}
+
+We now describe the query focused, sentence extractive, streaming
+news summarization problem in detail. 
+We start with the query, $\query$, which is a brief string
+describing an event of interest to be summarized. See \autoref{tab:queries} for
+some example queries. All relevance judgements about a sentence are made with
+respect to the query string. Additionally, the query is used to construct the 
+news stream which we now turn to. The news stream is an ordered
+sequence of text approximately relevant to the query (i.e. the results of 
+an information retrieval system). It is useful to be able to talk  
+about this stream from 
+two perspectives, as either a stream of documents, $\docstream^{(\query)}$, or 
+a flat stream of sentences, $\sentstream^{(\query)}$.
+
+\input{strmsum/tables/queryevents.tex}
+
+From the document perspective, the stream is an ordered sequence of
+$\strmDocSize_\query$ documents  \[ \docstream^{(\query)} = \left[ \strmDoc_1,
+\strmDoc_2, \ldots, \strmDoc_{\strmDocSize_\query} \right] \] where each
+document $\strmDoc_i$ is itself an ordered sequence of $\strmSentSize_i$
+sentences, \[ \strmDoc_i = \left[ \strmSent_{i,1}, \strmSent_{i,2}, \ldots,
+\strmSent_{i,\strmSentSize_i}  \right].  \] Each document $\strmDoc_i$ also
+has a timestamp $\timestamp^{(d)}_i$ and which is also shared by all of its
+sentences $\strmSent_{i,j}  \in \strmDoc_i$.  The stream is ordered by
+timestamp, so we have $\doctimestamp_i < \doctimestamp_{i+1}$ for all $i \in
+\{1,\ldots, \strmDocSize_\query\}$.  From the sentence perspective, the news
+stream is an ordered sequence of $\strmSentSize_\query$ sentences, \[
+\sentstream^{(\query)} = \left[ \strmSent_1, \strmSent_2, \ldots,
+\strmSent_{\strmSentSize_\query}\right], \] where each sentence $\strmSent_i$
+has a timestamp $\senttimestamp_i$ and $\senttimestamp_i \le
+\senttimestamp_{i+1}$ for all $i \in \{1,\ldots,\strmSentSize_\query - 1\}$.
+The two points of view are equivalent in the sense that the concatenation of
+$\docstream^{(\query)}$ equals $\sentstream^{(\query)}$, \[  \strmDoc_1 \oplus
+\strmDoc_2 \oplus \cdots \oplus \strmDoc_{\strmDocSize_\query} =
+\sentstream^{(\query)} \] and $\doctimestamp_i = \senttimestamp_j$ for all
+$\strmSent_j \in \strmDoc_i$.
+
+
+A query focused, sentence extractive stream summarization model must process
+the stream sequentially in time and determine for each sentence
+$\strmSent_j\in \sentstream^{(\query)}$ whether to extract it
+or to skip it. That is, the system must decide to add the sentence to a summary of the stream, or to ignore
+the sentence. To indicate this decision, we associate with each sentence, $\strmSent_j$, a binary extraction
+variable $\strmExtr_j \in \{0,1\}$, with $\strmExtr_j=1$ indicating the
+sentence is to be extracted and included in the summary.  
+
+Crucially, the summarization model has a system time $\systemtime_t$
+which indicates what information from the stream has been read and can
+be used to make extraction predictions. When the system time is $\systemtime_t$,
+the summarization model can in theory use any information collected from all
+documents $\strmDoc_i \in \docstream^{(\query)}$ such that $\doctimestamp_i \le \systemtime_t$ (for more significant query-streams, it may not be practical for a summarization model to store all previous documents). For any sentences not yet extracted, it can similary decide to extract any sentence $\strmSent_j \in \sentstream^{(\query)}$  
+such that $\senttimestamp_j \le \systemtime_t$ (previous extraction decisions, however, cannot be undone). The system time can be incremented by arbitrary
+positive amounts to $\systemtime_{t+1}$ (i.e. $\systemtime_t < \systemtime_{t+1}$) to allow the summarization model to observe and extract more sentences.
+Given two timestamps $\timestamp_1,\timestamp_2$ with $\timestamp_1 < \timestamp_2$, we denote the sub-sequence of documents in the stream that fall
+between them as $\docstream_{\timestamp_1:\timestamp_2}$. Similarly, 
+$\sentstream_{\timestamp_1:\timestamp_2}$ indicates the subsequence of 
+sentences with timestamps that fall between $\timestamp_1$ and $\timestamp_2$.
+
+We refer to a sentence that has been extracted as an update. Let
+$\strmupdate_k$ be the $k$-th update extracted by the system.  $\strmupdate_k$
+has a corresponding timestamp, $\updatetimestamp_k$ that is equal to the
+system time that it was extracted by the summarizer.  That is, if
+$\strmupdate_k$ was extracted at $\systemtime_t$, then $\updatetimestamp_k =
+\systemtime_t$. We refer to a collection of timestamped updates as an update
+summary, $\updateSummary = \left[ \left(\strmupdate_1,
+\updatetimestamp_1\right) ,\ldots,\left(\strmupdate_K, \updatetimestamp_K
+\right)\right]$.
+
+For evaluation purposes we compare the update summary to a human reference
+abstract summary of the query event. The reference abstract summary,
+$\strmNuggets^{(\query)} = \left[ \left(\strmnugget_1, \nugtimestamp_1\right),
+\ldots, \left(\strmnugget_\nuggetSize, \nugtimestamp_{\nuggetSize}\right)
+\right]$, contains a series of $\nuggetSize$ sentences describing important
+facts about  the event. We refer to these facts as \textit{nuggets}. Each
+nugget $\strmnugget_i$ has a timestamp, $\nugtimestamp_i$, indicating the
+reference time that information became known.
+
+We say an update $\strmupdate$ covers a nugget $\strmnugget$, which we write $\denotes{\strmnugget} \in \denotes{\strmupdate}$, if the information
+in the nugget $\strmnugget$ is described in the update $\strmupdate$. Note
+that it is possible for an update to cover multiple nuggets.
+For example if we have,
+\begin{align*}
+    \strmnugget_1 & =  \textit{Hurricane Sandy was a category 5 hurricane.}\\
+\strmnugget_2 & = \textit{Hurricane Sandy made landfall on Saturday.}\\
+\strmupdate & = \textit{Hurricane Sandy, which made landfall on Saturday,
+                was upgraded to a category 5 storm.}
+\end{align*}
+then $\denotes{\strmnugget_1},\denotes{\strmnugget_2} \in
+\denotes{\strmupdate}$. Given an update summary $\updateSummary$ and a nugget
+$\strmnugget$, we define the earliest cover, \[\earlymatch(\strmnugget,
+\updateSummary) = \begin{cases} \argmin_{\left(\strmupdate_k,\updatetimestamp_k\right) \in \updateSummary :
+\denotes{\strmnugget} \in \denotes{\strmupdate_k}} \updatetimestamp_k &
+\textrm{if there exists a $\left(\strmupdate_k,\updatetimestamp_k\right) \in \updateSummary$ such that
+$\denotes{\strmnugget} \in \denotes{\strmupdate}$} \\ \emptyset &
+\textrm{otherwise} \end{cases}\] as the earliest update that covers the nugget
+$\strmnugget$, or the empty set if no update in the update summary covers
+$\strmnugget$. We also define the inverse mapping,
+\[\invearlymatch(\strmupdate, \updateSummary, \strmNuggets) =
+\left\{\left(\strmnugget_l, \nugtimestamp_l\right)\in \strmNuggets \Big\vert \strmupdate = \earlymatch(\strmnugget_l,
+\updateSummary) \right\},\] which is the set of nuggets that have $\strmupdate$
+as its earliest cover.
+
+
+
+The objective of the summarization model is to produce an update summary
+$\updateSummary$ such that the set of updates covers the information expressed
+by the nuggets without containing much repeated information. Additionally,
+the summarization system should try to minimize the latency between 
+the time information in a nugget is available in the stream and the system
+time that information is extracted. 
+
+We now formalize these metrics.  Given an update and reference summary,
+$\updateSummary$ and $\strmNuggets$ respectively, we define the gain of an
+update as \[  \gain(\strmupdate_k,\updatetimestamp_k, \updateSummary, \strmNuggets) =  \sum_{
+ \left(\strmnugget_j, \nugtimestamp_j\right) \in  \invearlymatch(\strmupdate_k,  \updateSummary, \strmNuggets)} 1 \] which is
+essentially the number of nuggets covered by an update $\strmupdate$.  We also
+define a latency penalized version of this function, \[
+\gain_\latency\left(\strmupdate_i, \updateSummary,\strmNuggets \right) =
+\sum_{
+ \left(\strmnugget_j, \nugtimestamp_j\right) \in  \invearlymatch(\strmupdate_k,  \updateSummary, \strmNuggets)} \latency\left(\nugtimestamp_j, \updatetimestamp_i\right)  \]
+where $\latency(\timestamp^*, \timestamp) = 1 - \frac{2}{\pi}\arctan\left(
+\frac{\timestamp - \timestamp^*}{3600 * 6} \right) $ where
+$\latency(\timestamp^*,\timestamp) = 1$ when $\timestamp=\timestamp^*$ and
+gradually approaches 0 as $\timestamp - \timestamp^*$ increases. In real time,
+the latency weighting
+$\latency\left(\nugtimestamp_j,\updatetimestamp_i\right)$ aproaches 2 if
+$\strmupdate_i$ covers $\strmnugget_j$ over 50 hours before $\nugtimestamp_j$;
+$\latency\left(\nugtimestamp_j,\updatetimestamp_i\right)$ approaches 0 if
+$\strmupdate_i$ covers $\strmnugget_j$ over 50 hours after $\nugtimestamp_j$.
+ 
+
+The first metric we use to evaluate a summary is the normalized expected gain,
+\[
+n\mathbb{E}[\gain]\left(\updateSummary\right) = \frac{1}{Z\setsize{\updateSummary}} 
+\sum_{\strmupdate_i \in \updateSummary} 
+    \gain(\strmupdate_i, \updateSummary, \strmNuggets)\]
+where $Z$ is maximum achievable expected gain (computed per query). 
+This metric can be thought of as roughly analogous to precision.
+We report a recall focused metric, called comprehensiveness, which
+is defined as 
+\[
+\comp\left(\updateSummary\right) = \frac{1}{\setsize{\strmNuggets}} 
+\sum_{\strmupdate_i \in \updateSummary} 
+    \gain(\strmupdate_i, \updateSummary, \strmNuggets)\]
+%
+%\[ \comp(\updateSummary) = \frac{1}{\setsize{\strmNuggets}} \sum_{\left(\strmnugget_j, \nugtimestamp_j\right) \in \strmNuggets} \mathds{1}\left\{\earlymatch(\strmnugget_j, \updateSummary) \ne \emptyset \right\}\] 
+which measures the percentage of
+nuggets covered by the update summary. We also report the harmonic mean of normalized expected
+gain and  comprehensiveness,
+ \[ \mathcal{H}(\updateSummary) = 
+2 \frac{n\mathbb{E}[\gain]\left(\updateSummary\right) \times \comp(\updateSummary)}
+{  n\mathbb{E}[\gain]\left(\updateSummary\right) + \comp(\updateSummary)   }.
+\]
+A latency-penalized version of
+normalized expected gain, comprehensiveness, and their harmonic mean 
+can be obtained by replacing
+$\gain$ with $\gain_\latency$ in the above calculations.
+
+
+
+
+
+
+
+
+
+
+
+%?In our datasets, each query corresponds to a real world event that 
+%?was  significant enough to have its own Wikipedia page. For evaluation
+%?purposes we treat its lead paragraphs as a reference abstract summary.
+%?What is helpful for this task is that a Wikipedia page evolves over time.
+%?In the case of the query events in our datasets, these summaries evolved in
+%?real time, reflecting changing conditions or statistics. Because all of the
+%?Wikipedia 
+%?
+%?A human reference abstract summary of the  query
+%?event is used  
+%?
+%?

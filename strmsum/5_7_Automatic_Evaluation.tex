@@ -1,0 +1,35 @@
+\subsection{Automatic Experiments} We evaluate our method on the publicly
+available TREC Temporal Summarization Track data using the data from the 2013,
+2014, and 2015 years of the shared task. This collection contains  44 unique
+query events.  To evaluate our model, we randomly select five events to use as
+a development set and then perform a leave-one-out style evaluation on the
+remaining 39 events.
+
+As we did in the official Temporal Summarization submission,  we  downsample each
+training stream to a length of 100 sentences. The downsampling is done
+uniformly over the entire stream. This is repeated 10 times for each training
+event to create a total of 380 training streams. In the event that a
+downsample contains no nuggets (either human or automatically labeled) we
+resample until at least one exists in the sample.  We select the best model
+iteration for each training fold based on the automatically computed
+$\mathcal{H}(\updateSummary)$ on the development set.
+
+\subsubsection{Baselines and Model Variants}
+
+We refer to our ``learning to search'' model in the results as \textsc{L2S}.
+We compare our proposed model against several baselines and extensions. 
+
+\textbf{Cosine Similarity Threshold} WaterlooClarke, the performing team in at
+TREC 2015 used a heuristic method that only examined article first sentences,
+selecting those that were below a cosine similarity threshold to any of the
+previously selected updates. We implemented a variant of that approach using
+the latent-vector representation used throughout this work. The development
+set was used to set the threshold. We refer to this model as \textsc{Cos}.
+  
+\textbf{SAP} We also compare to the SAP model described in \autoref{sec:sap}.
+In this evaluation.
+
+\textbf{Learning2Search+Cosine Similarity Threshold} In this model, which we
+refer to as \textsc{L2S-Cos}, we run \textsc{L2S} as before, but filter the
+resulting updates using the same cosine similarity threshold method as in
+\textsc{Cos}. The threshold was also tuned on the development set. 

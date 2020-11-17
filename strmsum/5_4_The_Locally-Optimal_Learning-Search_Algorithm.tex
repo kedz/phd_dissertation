@@ -1,0 +1,118 @@
+\subsection{The Locally-Optimal Learning-to-Search Algorithm}
+\label{sec:algorithm}
+
+In a perfect world, we would have a training set of state-action 
+pairs, $(\state_t,\bsal_t)$,
+and their associated costs $\cost(\state_t, \bsal_t)$, drawn from a distribution
+of states similar to the one our final learned policy would produce.
+With these states, actions, and costs in hand we could fit two linear regressions, one for estimating the cost of extract actions and one for skip actions
+from a givem state's feature representation;
+we would immediately have a suitable stream summarization
+policy. Unfortunately, we do not 
+have a reasonable distribution of state-action pairs let alone the 
+associated costs. Instead we turn to the locally-optimal learning-to-search (LOLS) algorithm \citep{chang2015}, presented in \autoref{fig:lols},
+to iteratively refine our learned policy as it attempts to follow an
+oracle policy. 
+
+At a high level, we begin with an initally random learned policy.  We leverage
+a heuristic oracle stream summarizer and our learned policy to collect
+state-action pairs and their costs from the training set query-streams, with
+our learned policy gradually learning to immitate the heuristic oracle. Using
+both the oracle and learned policy to sample state-action-cost triples is
+beneficial as it exposes the learned policy to a mix of states it is likely to
+encounter when following its own actions, but also state-actions of the better
+performing reference summarizer. Exploring with the learned policy alone may
+be less optimal because it may overestimate the costs of good decisions since
+its roll-outs at the beginning of training are likely to be quite bad.
+Exploring with only the oracle would also be harmful as the distribution of
+states it produces will reflect an optimistic level of performance from
+learned policy that it will not be able to match in practice.
+
+
+\subsubsection{Oracle Policy}
+
+For a given training query $\query$ and stream $\sentstream^{(\query)}$ we
+construct a greedy heuristic oracle policy $\oracle_\query$.  Let
+$\updateSummary_t$ be the update summary at state $\state_t$. Additionally,
+let
+\[
+\strmNuggets^{(\query)}_{\denotes{\updateSummary_t}} = 
+\left\{\strmnugget_i \Bigg\vert
+        \left(\strmnugget_i,\nugtimestamp_i\right) \in \strmNuggets^{(\query)},
+         \exists \left(\strmupdate_j, \updatetimestamp_j\right) \in \updateSummary_t : \denotes{\strmnugget_i} \in
+        \denotes{\strmupdate_j}
+       \right\}
+\]
+be the set of nuggets covered by the updates in the update summary at
+$\state_t$, and let
+\[
+\strmNuggets^{(\query)}_{\denotes{\strmSent_t}} = 
+\left\{\strmnugget_i \Bigg\vert
+        \left(\strmnugget_i,\nugtimestamp_i\right) \in \strmNuggets^{(\query)},
+        \denotes{\strmnugget_i} \in
+        \denotes{\strmSent_t}
+       \right\}
+\]
+be the set of nuggets covered by $\strmSent_t$.  The oracle $\oracle_\query$
+has clairvoyant knowledge of these sets given a state $\state_t$ has the
+following policy,
+\[
+    \oracle_\query(\state_t) = \begin{cases} 
+        1 & \textrm{if }  
+        \exists \strmnugget : \strmnugget \in \strmNuggets^{(\query)}_{\denotes{\strmSent_t}} \wedge 
+   \strmnugget \not\in \strmNuggets^{(\query)}_{\denotes{\updateSummary_t} }
+     \\
+     0 & \textrm{otherwise.} \end{cases}
+\]
+In words, the oracle policy will extract $\strmSent_t$ at state $\state_t$
+if $\strmSent_t$ covers any nuggets not yet covered by updates in the
+update summary $\updateSummary_t$. We describe how we obtain comprehensive
+nugget/sentence covers, i.e. the sets $\strmNuggets^{(\query)}_{\denotes{\strmSent_t}}$ in \autoref{sec:reljudge}.
+
+\subsubsection{Loss Function}
+We design our loss function to penalize policies that  over- or
+under-generate. Let $\state_1, \ldots, \state_T$ be the sequence
+of states associated with the action sequence $\bsals$.
+%Given 
+%Given two sets of decisions, usually one from the oracle and
+%another from the candidate model, 
+%We define the loss as the complement of
+%the Dice coefficient between the decisions,
+We define the loss of a sequence as 
+\begin{align*}
+  \lossfunc(\bsals) = 1 - 2 \times 
+    \frac{ \bsals^\T \bsals^* }{ \sum^T_{i=1} \bsal_i + \sum^T_{j=1}\bsal_j^* }
+\end{align*}
+where $\bsals^* = \left[\bsal_1^*,\ldots, \bsal_T^* \right]$
+is a reference sequence of consisting of the one-step optimal deviations
+under the oracle policy, i.e. $\bsal_t^* = \oracle_\query(\state_t)$.
+
+Note that $\lossfunc$ is the complement of the Dice coefficient.
+This encourages not only local agreement between policies (the numerator of
+the second term) but that the learned and oracle policy should generate
+roughly the same number of updates (the denominator in the second term).
+
+\input{strmsum/figures/lolsalg.tex}
+
+\subsubsection{Learning with LOLS}
+
+We now step through the LOLS algorithm in detail.
+Our initial policy parameters $\params_0$ and $\params_1$ are randomly initialized (\hyperref[fig:lols]{Algorithm~\ref{fig:lols} line \ref{alg:lolsinit}}). 
+The LOLS algorithm works by iteratively using the current learned policy
+$\policy_\params$ to explore state sequences from a training stream $\sentstream^{(\query)}$
+(\hyperref[fig:lols]{Algorithm~\ref{fig:lols} line \ref{alg:lolsrollin}}).
+At each state $\state_t$, a roll-out policy $\rolloutpolicy$ is selected
+at random from $\policy_\params$ and the oracle $\oracle_\query$
+(\hyperref[fig:lols]{Algorithm~\ref{fig:lols} line \ref{alg:lolsrollout}}).
+Losses
+are then computed for each continuation sequence $\roaseq{t}{0}$ and 
+$\roaseq{t}{1}$
+(\hyperref[fig:lols]{Algorithm~\ref{fig:lols} line \ref{alg:lolsaction}}).
+Costs for each action are then computed and state features and costs are 
+cached in $\Train$ 
+(\hyperref[fig:lols]{Algorithm~\ref{fig:lols} lines \ref{alg:lolscoststart}--\ref{alg:lolscoststop}}).
+After the roll-in has explored all $T$ states, we update the policy
+parameters $\params$ by performing gradient descent on the squared
+error of the linear regressor on the cached feature-cost pairs
+in $\Train$ 
+(\hyperref[fig:lols]{Algorithm~\ref{fig:lols} lines \ref{alg:lolsmsestart}--\ref{alg:lolsmsestop}}).

@@ -1,0 +1,209 @@
+\subsection{Salience Estimation}
+\label{sec:salpred}
+
+\subsubsection{Model}
+
+Given a sentence $\strmSent \in
+\sentstream^{(\query)}_{\systemtime_{t-1}:\systemtime_{t} }$ from the current
+hourly batch, the salience estimation model determines how important or
+relevant it's content is with respect to the query. Since we do not have
+manual assessments of query-sentence salience for the overwhelming majority of
+the sentences in the KBA Stream Corpus, we rely on an automatic measure for
+determining the salience targets we wish to predict.
+
+Let $\strmNuggets^{(\query)}$ be a timestamped collection of reference nuggets
+for query $\query$. We define the salience of a sentence $\strmSent$ with
+respect to $\query$ to be the degree to which it reflects an event's reference
+nuggets, which we define as its maximum nugget similarity,
+\begin{align}
+\operatorname{salience}(\strmSent, \query) = \operatorname{max}_{\left(\strmnugget_i, \nugtimestamp_i\right) \in \strmNuggets^{(\query)}} 
+\operatorname{similarity}(\strmSent, \strmnugget_i). \label{eq:salience}
+\end{align}
+
+We implement the similarity function using the cosine-similarity of
+latent-space vectors associated with $\strmSent$ and $\strmnugget_j$ using
+weighted matrix factorization (WMF) \citep{srebro2003,guo2012}. Given a
+term-sentence matrix $\mathbf{K} \in \reals^{D_{w} \times D_{d}}$ where
+$\mathbf{K}_{i,j}$ is the TF-IDF weight of term $i$ in document $j$, WMF finds
+a low-rank approximation $\mathbf{P}^\T\mathbf{Q} \approx \mathbf{K}$ where
+$\mathbf{P} \in \reals^{D_h\times D_w}$ and $\mathbf{Q} \in \reals^{D_h\times
+D_d}$ are projection matrices into the latent term and document  spaces
+respectively.  The projection matrices are found by minimizing the weighted
+reconsruction error of $\mathbf{K}$ under a least squares objective, i.e.,
+\[\mathcal{L}(\mathbf{P},\mathbf{Q}) = \sum_{i=1}^{D_w}\sum_{j=1}^{D_d}
+\mathbf{W}_{i,j} \left( \mathbf{K}_{i,j} - \left(\mathbf{P}^\T
+\mathbf{Q}\right)_{i,j}\right)^2 + \textrm{reg.}\] Following \cite{guo2012},
+we set the weight $\mathbf{W}_{i,j}$ to \[ \mathbf{W}_{i,j} = \begin{cases} 1
+& \textrm{if $\mathbf{K}_{i,j} \ne 0$}\\ 0.01 & \textrm{if $\mathbf{K}_{i,j} =
+0$,}   \end{cases}\] which focuses the reconstructon on non-zero entries in
+$\mathbf{K}$. The intuition here is that $\mathbf{K}$ is sparse so error in
+modeling the 0 entries, which we care least about, will dominate the loss. By
+down-weighting those entries, the projectection matrices must better represent
+how terms are positively associated to the documents they occur
+in.\footnote{WMF is similar to latent semantic analysis (LSA)
+\citep{dumais1988} which uses a truncated singular-value decomposition to
+obtain term and document projections but does not reweight non-zero entries.
+Interesingly, WMF is also similar to the global vector (GloVe) embedding
+method \citep{pennington2014glove} which minimizes a weighted least squares
+objective of a term-by-term log cooccurence matrix.} Let
+$\psi(\strmSent),\psi(\strmnugget) \in \reals^{D_w}$ be projections into
+TF-IDF weighted bag-of-words space of $\strmSent$ and $\strmnugget$
+respectively. The similarity of $\strmSent$ and $\strmnugget$ then is
+defined as, \begin{align}\operatorname{similarity}(\strmSent,\strmnugget) =
+\operatorname{cosine-similarity}(\mathbf{P}\cdot \psi(\strmSent),
+\mathbf{P}\cdot\psi(\strmnugget)). \label{eq:semsim} \end{align}
+
+Since the summarizer will not have knowledge of the reference summary
+$\strmNuggets^{(\query)}$ at test time, we must estimate \autoref{eq:salience}
+without it. To that end, we fit a regression model $f(\cdot)$ to estimate the
+salience of a sentence with respect to the query, i.e., \begin{align}
+\operatorname{salience}(\strmSent, \query) \approx
+f(\phi(\strmSent,\query,\category))\label{eq:approxsal} \end{align} using features,
+$\phi(\strmSent,\query,\category)$, of the sentence, query, and query
+category.
+
+
+%The first component of the summarization model is a salience estimation component. Given a sentence $\strmSent$ and set of nuggets $\strmNuggets$, 
+%its salience is defined by \autoref{eq:salience} with $\bsal = \operatorname{salience}(\strmSent,\strmNuggets)$. However, since $\strmNuggets$ are not known 
+%at test time, we fit a regression model $f(\cdot)$ to estimate the salience of
+%a sentence, $\predbsal = f(\phi(\strmSent,\query,\category))$ using features,
+%$\phi(\strmSent,\query,\category)$, of the sentence, query, and query category.
+
+We opt to use a Gaussian process (GP) regression model \citep{rasmussen2005}
+with a radial basis function (RBF) kernel for the salience prediction task.
+Our features fall naturally into five groups (which we describe below) and we
+use a separate RBF kernel for each, using the sum of each feature group RBF
+kernel as the final input to the GP model.
+
+Given our feature representation of the input sentences, we need only target
+salience values for model learning. For each query event in our training data,
+we sample a set of sentences and  each sentence's salience is computed
+according to \autoref{eq:salience}. This results in a training set of
+sentences with their feature representations and target salience values, to
+which we fit the salience estimator.
+
+\subsubsection{Features}
+\label{sec:features}
+
+We want our model to be predictive of sentence salience across different event
+instances so we avoid event-specific lexical features.  Instead, we extract
+features such as language model scores, geographic relevance, and temporal
+relevance from each sentence; these features in our initial model development
+were consistently helpful across specific event instances and categories.
+
+\textbf{Basic Features}
+We employ several basic features that have been used previously in supervised 
+models to rank sentence salience \citep{kupiec1995trainable,conroy2001using}. 
+These include sentence length, the number of capitalized words normalized by 
+sentence length, document position, and number of named entities.  The data 
+stream comprises text extracted from raw html documents; these features help 
+to downweight sentences that are not content (e.g. web page titles, links to 
+other content) or more heavily weight important sentences (e.g., that appear 
+in prominent positions such as paragraph initial or article initial).
+
+\textbf{Query Features}
+Query features measure the relationship between the sentence and the event
+query and category.  These include the number of query words present in the
+sentence in addition to the number of event category synonyms, hypernyms, and
+hyponyms using WordNet \citep{miller1995wordnet}.  For example, for event
+category \emph{earthquake},  we match sentence terms ``quake'', ``temblor'',
+``seism'', and ``aftershock''.
+
+\textbf{Language Model Features}\label{subsubsec:lm}
+Language models allow us to measure the likelihood of producing a sentence 
+from a particular source.  We consider two different language models to 
+obtain features.  
+The first model is estimated from a corpus of generic news articles (we used 
+the 1995-2010 Associated Press section of the Gigaword corpus 
+\citep{graff2003english}).  
+This model is intended to assess the general writing quality (grammaticality, 
+word usage) of an input sentence and helps our model to select sentences
+written in the newswire style.  
+
+
+%\begin{figure}
+%    \center
+%    \begin{tabular}{|l l l|}
+%    %Event Types \\
+%    \hline
+%    Storm & Earthquake & Meteor Impact\\
+%    Accident & Riot & Protest\\
+%    Hostages & Shooting &Bombing\\
+%    \hline
+%    \end{tabular}
+%    \caption{TREC TS event types.}
+%    \label{fig:eventtypes}
+%\end{figure}
+
+The second model is estimated from text specific to our event categories.  For
+each event category we create a corpus of related documents using pages and
+subcategories listed under a related Wikipedia category. For example, the
+language model for event category \textit{earthquake} is estimated from
+Wikipedia pages under \emph{Category:Earthquakes}.
+\autoref{tab:queries} lists the event categories for each of the events in our
+dataset. These models are intended to detect sentences similar to those
+appearing in summaries of other events in the same category (e.g., most
+earthquake summaries are likely to include higher probability for ngrams
+including the token `magnitude').  While we focus our system on the language
+of news and disaster, we emphasize that the use of language modeling can be an
+effective feature for multi-document summarization for other domains that have
+related text corpora.
+
+We use the SRILM toolkit \citep{stolcke2002srilm} to implement a 5-gram
+Kneser-Ney model for both the background language model and the event category
+specific language models. For each sentence we use the average token log
+probability under each model as a feature.
+
+\textbf{Geographic Relevance Features}
+The events in our corpus are all phenomena that affect some part of the 
+world. Where possible, we would like to capture a sentence's proximity to the 
+event, i.e. when a sentence references a location, it should be close to the 
+geographic area of the event.
+
+There are two particular challenges to using geographic features in our
+present setting. First, we do not know where the event is, and second, most
+sentences do not contain references to a location. We address the first issue
+by extracting all locations (using contiguous token spans tagged with a location tag under a named-entity tagger) from documents relevant to the event at the
+current hour (i.e. $\strmDoc_i \in \docstream^{(\query)}_{\systemtime_{t-1}:\systemtime_t}$) and looking up their latitude and longitude using a publicly
+available geo-location service.  Since the documents are at least
+somewhat relevant to the event, we assume in aggregate the locations should
+give us a rough area of interest.  The locations are clustered and we treat
+the resulting cluster centers as the event locations for the current time.\footnote{The great-circle distance (\url{https://en.wikipedia.org/wiki/Great-circle_distance}), which is the shortest arc between two points projected onto the surface of a sphere, is used as the distance metric
+for clustering. Clustering is done with affinity propagation clustering.}
+
+The second issue arises from the fact that the majority of sentences in our 
+data do not contain explicit references to locations.
+Our intuition is that geographic 
+relevance is important in the disaster domain, and we would like to take 
+advantage of the sentences that do have location information present. To make 
+up for this imbalance, we instead compute an overall location for the document
+and derive geographic features based on the document's proximity to the event
+in question. These features are assigned to all sentences in the document.
+
+
+Our method of computing document-level geographic relevance features is as 
+follows. Using the locations in each document, we compute the median distance 
+to the nearest event location. Because document position is a good indicator 
+of importance we also compute the distance of the first mentioned location to 
+the nearest event location. All sentences in the document take as features 
+these two distance calculations. Because some events can move, we also compute
+these distances to event locations from the previous hour.
+
+
+\textbf{Temporal Relevance Features}
+As we track events over time, it is likely that the coverage of the event 
+may die down, only to spike back up when there is a breaking development.
+Identifying terms that are ``bursty,'' i.e. suddenly peaking in usage,
+can help to locate novel sentences that are part of the most recent reportage
+and have yet to fall into the background.
+
+We compute the IDF\textsubscript{$t$} for each hour sub-sequence, $\sentstream^{(\query)}_{\systemtime_{t-1}:\systemtime_{t}}$. For each sentence $\strmSent \in \sentstream^{(\query)}_{\systemtime_{t-1}:\systemtime_{t}}$, the 
+average TF-IDF\textsubscript{$t$} is taken as a feature. Additionally, 
+we use the difference between average TF-IDF\textsubscript{$t$} and average TF-IDF\textsubscript{$t-i$}  for 
+$i \in \{1, \ldots, 24\}$ to measure how the TF-IDF scores for the sentence have
+changed over the last 24 hours, i.e. we keep the sentence term frequencies 
+fixed and compute the difference in IDF. Large changes in IDF value indicate 
+the sentence contains bursty terms.
+We also use the time (in hours) since the event started as a feature.
+
+

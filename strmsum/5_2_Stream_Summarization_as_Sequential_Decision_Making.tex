@@ -1,0 +1,47 @@
+\subsection{Stream Summarization as Sequential Decision Making}
+
+We could na{\"i}vely treat the stream summarization problem as classification
+and predict which sentences to extract or skip. However, this would make it
+difficult to take advantage of many features (e.g. sentence novelty with
+regard to previous updates).  What is more concerning, however, is that the
+classification objective for this task is somewhat ill-defined: successfully
+predicting extract on one sentence changes the true label (from extract to
+skip) for sentences that contain the same information but occur later in the
+stream.
+ 
+In this work, we pose stream summarization as a greedy search over a binary
+branching tree where each level corresponds to a position in the stream (see
+\autoref{fig:search}).  The height of the tree corresponds to the length of
+stream.  A path through the tree is determined by the system extract and skip
+decisions.
+ 
+\input{strmsum/figures/search.tex}
+
+When treated as a sequential decision making problem, our task reduces to
+defining a policy for selecting a sentence based on its features as well as
+the features of its ancestors (i.e., all of the observed sentences and
+previous extraction decisions).  The union of these features represents the
+current state in the decision making process. 
+
+The feature representation provides state abstraction both within a given
+query's search tree as well as to states in other queries' search trees, and
+also allows for complex interactions between the current update summary,
+candidate sentences, and stream dynamics unlike the classification approach.
+
+In order to learn an effective policy for a query $\query$, we can take one of
+several approaches.  We could use a simulator to provide feedback to a
+reinforcement learning algorithm.  Alternatively, if provided access to an
+evaluation algorithm at training time, we can simulate (approximately) optimal
+decisions. That is, using the training data, we can define an \emph{oracle
+policy} that is able to omnisciently determine which sentences to extract and
+which to skip.  Moreover, it can make these determinations by starting at the
+root or at an arbitrary node in the tree, allowing us to observe optimal
+performance in states unlikely to be reached by the oracle.  We adopt
+\textit{locally optimal learning to search} to learn our model from the oracle
+policy \citep{chang2015}.  
+
+%In this section, we will begin by describing the learning algorithm abstractly
+%%and then in detail for our task.  We will conclude with details on how to
+%train the model with an oracle policy.  
+
+

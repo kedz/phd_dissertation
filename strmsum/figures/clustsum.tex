@@ -1,0 +1,33 @@
+\begin{algorithm}[t]
+    \KwIn{
+        query string $\query$, 
+        query category $\category$, 
+        stream $\sentstream^{(\query)}$, 
+        period of interest $(\timestamp_\starttok, \timestamp_\stoptok)$}
+    \KwOut{update summary $\updateSummary$~\\~\\}
+    
+    \tcc{Initialize empty update summary and system start time.}
+    $\updateSummary \gets \left[ \right]$ \label{alg:initstart}\\
+    $t \gets 1$\\
+    $\systemtime_0 \gets \timestamp_\starttok$ \\
+    $\systemtime_1 \gets \timestamp_\starttok + \delta_{hour}$ \label{alg:initstop} \\
+\While{$\systemtime_t < \timestamp_\stoptok$}{
+
+    \tcc{Predict salience (\autoref{sec:salpred})  } 
+    $\predbsals_t \gets \left[ \right]$  \label{alg:salstart}\\
+    \For{$\strmSent_i \in \sentstream^{(\query)}_{\systemtime_{t-1}:\systemtime_t}$}{
+   $\predbsals_t \gets \predbsals \oplus \left[f(\phi(\strmSent_i,\query, \category))\right]$ \label{alg:salstop}\\
+    }
+\tcc{Select exemplars with SAP clustering (\autoref{sec:exsel})}
+   $\mathcal{E}_t \gets \operatorname{APCluster}(\sentstream^{(\query)}_{\systemtime_{t-1}:\systemtime_t}, \predbsals_t)$ \label{alg:clust} \\ 
+\tcc{Select next updates (\autoref{sec:upsel})}
+    $\mathcal{U}_t \gets \operatorname{FilterRedundant}(\mathcal{E}_t, \updateSummary)$   \label{alg:filter} \\
+    \For{$\strmupdate \in \updateSummary_t$}{
+     $\updateSummary \gets \updateSummary \oplus \left[\left(\strmupdate,\systemtime_t\right)\right]$ \label{alg:add} \\
+    }
+$\systemtime_{t+1} \gets \systemtime_t + \delta_{hour}$\\
+$t \gets t + 1$
+}
+\caption{Salience-biased Affinity Propagation (SAP) Summarizer}
+\label{alg:clustsum}
+\end{algorithm}

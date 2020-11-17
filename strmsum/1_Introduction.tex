@@ -1,0 +1,68 @@
+\section{Introduction}
+
+In many cases, estimating salience is not the entirety of the summarization
+system's task. Accounting for redundancy is also an important factor in many
+summarization systems (especially multi-document summarization) since the same
+information can often be restated multiple times. Additionally, in many
+situations, salience is dynamic, changing over time with the information need
+of the summary receiver.  In this chapter, we explore ways of encorporating
+salience predictions into more holistic algorithms for constructing extract
+summaries using information about text unit redundancy or prior extraction
+decisions.  
+
+Since this approach to summarization is not totally necessary for single
+document summarization, we motivate the models in this chapter wth a more
+difficult summarization challenge: query focused, sentence extractive,
+streaming news summarization.  In this problem, the summarization system must
+monitor a stream of news articles and extract sentences, which we call
+updates, that are relevant to the user query. Collectively, these updates
+constitute an update summary.  As in the last chapter, we rely a data-driven
+assignment of update salience, where an update is salient if it contains
+information that was found in a human authored summary of the query/document
+stream. 
+
+A notable aspect of the stream summarization task is the notion of system time
+-- the summarization system can consider all sentences that have entered the
+stream before the current system time. Advancing the system time allows the
+summarizer to observe more sentences from the stream. However, the salience of
+relevant information decreases monotonically from the earliest system time
+that information was revealed to the final system time it was actually
+extracted for the update summary.  Because of this, we must extract sentences
+in an online fashion, attempting to minimize the latency between the time
+important information is first revealed and the time the summarization system
+extracts that information.
+
+Since there is little supervised data for this task, we rely on a
+feature-based regression model to provide our salience estimates.   The time
+constraint makes things particularly challenging as the typical features for
+summarization make use of static term frequency.  In the streaming case, these
+features are now constantly evolving with time, and at the start of the
+stream, estimates of term frequency may not be very reliable. 
+
+A second but important issue is that salience estimates do not occur in
+isolation. As we add updates to the summary, the salience of our remaining
+inputs is likely to change based on redundancy and other factors.
+Unfortunately, adding summary/sentence interaction features introduces an
+element of exploration to training a salience estimation model for now various
+summary configuration and candidate sentence pairs must be considered.
+
+Our two proposed feature-based summarization models deal with these issues in
+slightly different ways.  The first model, salience-biased affinity
+propagation (SAP) \citep{kedzie2015}, combines independent, sentence-level
+salience estimates with the affinity propagation clustering algorithm
+\citep{frey2007clustering}. Affinity propagation forms clusters by identifying
+a set of ``exemplar'' inputs and mapping the remaing inputs to one of the
+exemplars. Under our modification of the clustering algorithm, we jointly
+select exemplars that are individually highly salient but also representative
+of the inputs. The resulting exemplars constitute updates in our update
+summary.
+
+Our second model, learning-to-summarize (L2S) \citep{kedzie2016}, allows us to
+freely incorporate summary/sentence interaction features, as we train the
+salience model using the learning-to-search regime \citep{daume2005,chang2015}
+where learning takes place using different exploration policies. Using this
+method we can learn a summarization policy that makes greedy sentence
+extraction decisions that also correlate with a good final summary.  In the
+next sections, we will introduce the query focused, sentence
+extractive, streaming news summarization task and dataset, before discussing our proposed
+SAP and L2S models.

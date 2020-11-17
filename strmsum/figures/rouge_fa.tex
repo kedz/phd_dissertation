@@ -1,0 +1,35 @@
+\begin{table}[h]
+\centering
+% centering table
+\begin{tabular}{l c c c ccc}
+    \toprule
+% creating 10 columns
+    & \multicolumn{3}{c}{\textsc{Rouge}-1}
+    & \multicolumn{3}{c}{\textsc{Rouge}-2}\\
+    \cmidrule(lr){2-4} \cmidrule(lr){5-7}
+% inserting double-line
+$\mathrm{Model}$ & $\mathrm{Recall}$ & $\mathrm{Prec.}$ & $\mathrm{F}_1$
+& $\mathrm{Recall}$ & $\mathrm{Prec.}$ & $\mathrm{F}_1$\\
+\midrule
+Full System & $0.282$ & $0.344$ & $0.306$ & $0.045$ & $0.056$ & $0.049$\\
+No Basic    & $0.263$ & $0.380^\dagger$ & $0.294$ & $0.046$ & $0.068^{\dagger\dagger}$ & $0.051^\dagger$\\
+No LM       & $0.223^\dagger$ & $0.361$ & $0.254^\dagger$ & $0.033^\dagger$ & $0.056$ & $0.038^\dagger$\\
+No Time  & $0.297^\dagger$ & $0.367^{\dagger\dagger}$ & $0.322^\dagger$ & $0.052^{\dagger\dagger}$ & $0.064^{\dagger\dagger}$ & $0.056^{\dagger\dagger}$ \\ 
+No Geo   & $0.232^{\dagger\dagger}$ & $0.381$ & $0.265^\dagger$ & $0.037^\dagger$ & $0.065$ & $0.042$ \\  
+No Query & $0.251$ & $0.377$ & $0.280$ & $0.043$ & $0.068^\dagger$ & $0.048$ \\
+\bottomrule
+\end{tabular}
+\caption{Feature ablation \textsc{Rouge} performance. 
+    $\dagger$ indicates statistically significant difference from 
+full model at the $\alpha=.05$ level.
+    $\dagger\dagger$ indicates statistically significant difference from 
+full model at the $\alpha=.01$ level.
+    } % title name of the table
+\label{tab:farouge}
+\end{table}
+
+
+
+
+
+

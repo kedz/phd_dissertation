@@ -1,0 +1,32 @@
+\begin{algorithm}[t]
+  \RestyleAlgo{boxruled}
+  \LinesNumbered
+  \KwIn{training dataset of query-relevant streams and oracle policies $\{\sentstream_\query, \oracle_{\query} \}_{\query\in\queries}$, number of 
+        training epochs $N$, learning rate $\lambda$, and a mixture parameter $\beta \in (0,1)$ for 
+        selecting a roll-out policy.}
+  \KwOut{learned summarization policy $\policy_\params$}
+  Initialize $\params$ \label{alg:lolsinit}\\
+  \For{$n \gets 1,2,\ldots, N$}{
+    \For{$\query \in \queries$}{
+      $\Train \gets \{\}$\\    
+      \For{$t \in \{1,\ldots,T \}$}{
+        Roll-in by executing $\policy_\params$ on $\sentstream_\query$ for $t-1$ rounds and reach state $s_t$. \label{alg:lolsrollin} \\
+        \For{$y \in \{0,1\}$}{
+            Pick roll-out policy $\rolloutpolicy \gets \begin{cases} \oracle_{\query} & \textrm{with probability $\beta$}\\ \policy_\params & \textrm{with probability $1 -\beta$.}\end{cases}$. \label{alg:lolsrollout}\\
+            Compute roll-out action sequence $\bsals^{(t,\bsal,\rolloutpolicy)}$. \label{alg:lolsaction}\\
+        }      
+        \For{$y \in \{0,1\}$}{
+            $\cost(\state_t, \bsal) \gets \ell\left(\bsals^{\left(t,\bsal,\rolloutpolicy\right)}\right) - \min_{\bsal^\prime \in \{0,1\}} \ell\left(\bsals^{\left(t,\bsal^\prime,\rolloutpolicy\right)}\right) $ \label{alg:lolscoststart}  \\
+            $\Train \gets \Train \cup \left\{\left( \Feat(\state_t,\bsal),
+            c(\state_t, \bsal), \bsal\right)\right\}$ \label{alg:lolscoststop}  }}
+    \For{$\left(\Feat(\state,\bsal),
+            c(\state, \bsal), \bsal\right) \in \Train$ \label{alg:lolsmsestart} }{
+        $\params_\bsal \gets \params_\bsal - \lambda \nabla_{\params_\bsal}(c(\state, \bsal) - \Feat(\state,\bsal)\cdot \params_\bsal  )^2$ \label{alg:lolsmsestop}
+}
+}}
+  \KwResult{$\policy_\params$}
+  \caption{Locally Optimal Learning-to-Search for Stream Summarization} 
+  \label{fig:lols}
+\end{algorithm}
+
+
