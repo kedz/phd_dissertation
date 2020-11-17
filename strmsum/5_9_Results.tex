@@ -1,125 +1,60 @@
- \section{Results} \label{sec:results}
+\section{Results} \label{sec:results}
 
-  Results for system runs are shown in Figure \ref{fig:results}.  On average,
- \textsc{LS} and \textsc{LS-Cos} achieve higher $F_1$ scores than the baseline
- systems in both latency penalized and unpenalized evaluations. For
- \textsc{LS-Cos}, the difference in mean $F_1$ score was significant compared
- to all other systems (for both latency settings).
+Results for system runs are shown in \autoref{fig:tr15autoresults}.  On
+average, \textsc{L2S} and \textsc{L2S-Cos} achieve higher
+$\mathcal{H}(\updateSummary)$ scores than the baseline systems in both latency
+penalized and unpenalized evaluations. For \textsc{L2S-Cos}, the difference in
+mean $\mathcal{H}(\updateSummary)$ score was significant compared to all other
+systems (for both latency settings). Intuitively, L2S has higher comprehensiveness than \textsc{L2S-Cos}; adding the the cosine similairt filter to L2S 
+reduces the comprehensiveness, but increases the average gain of the 
+updates by a larger amount, yielding an improved harmonic mean of the two
+metrics ($\mathcal{H}(\updateSummary)$).
  
-  \textsc{APSal} achieved the overall highest expected gain, partially because
- it was the tersest system we evaluated. However, only \textsc{Cos} was
- statistically significantly worse than it on this measure. %Interestingly,
+\textsc{SAP} achieved the overall highest expected gain, partially because it
+was the tersest system we evaluated (at 8 updates per query on average).
+However, only \textsc{Cos} was statistically significantly worse than it on
+this measure. We also see that SAP suffers from the latency-weighted evaluation, receiving latency penalties for retrieving updates after that information
+had been added to Wikipedia. By comparison, all other systems are actually 
+rewarded in the latency-weighted evaluation, as they consistently
+retrieve information before it is published in Wikipedia. While SAP
+had previously beaten Wikiepdia in previous evaluations, the added events
+for the 2015 Temporal Summarization had less media coverage, suggesting
+the clustering based approach is less suited for lower-volume news streams.
 
-\begin{figure}
-    \center
-\begin{tabular}{ l | l l l | l l l | l }
-   &\multicolumn{3}{c|}{unpenalized}&\multicolumn{3}{c|}{latency-penalized}&\\
-   & exp. gain     & comp. & $F_1$ & exp. gain     & comp. & $F_1$ & num. updates\\
-    \hline
-%\textsc{AP}         
-%    & $0.083$            & $0.09$                     & $0.078$ 
-%    & $0.079$            & $0.095$                    & $0.077$ 
-%    & ~~$20.846^{s}$ \\
-\textsc{APSal}      
-    & $\mathbf{0.119}^c$ & $0.09$                     & $0.094$ 
-    & $0.105$            & $0.088$                    & $0.088$ 
-    & ~~~~$8.333$ \\
-\textsc{Cos}     
-    & $0.075$            & $0.176^{s}$              & $0.099$ 
-    & $0.095$            & $0.236^{s}$              & $0.128^{s}$ 
-    & $145.615^{s,f}$ \\
-\textsc{LS}       
-    & $0.097$            & $\mathbf{0.207}^{s,f}$   & $0.112$ 
-    & $0.136^{c}$      & $\mathbf{0.306}^{s,c,f}$ & $0.162^{s}$
-    & ~~$89.872^{s,f}$ \\
-\textsc{LS-Cos}
-    & $0.115^{c,l}$        & $0.189^{s}$ & ${\bf0.127}^{s,c,l}$
-    & ${\bf0.162}^{s,c,l}$ & $0.276^{s}$ & ${\bf0.184}^{s,c,l}$
- & ~~$29.231^{s,c}$ \\
-\end{tabular}
-\caption{
- Average system performance 
- and average number of updates per event.
- Superscripts indicate significant improvements ($p < 0.05$) between the run and
- competing algorithms using the 
-  paired randomization test with the Bonferroni correction for multiple 
-  comparisons ($s$: \textsc{APSal}, 
- $c$: \textsc{Cos}, $l$: \textsc{LS}, $f$: \textsc{LS-Cos}). 
-}
-\label{fig:results}
-\end{figure}
-
-
+\input{strmsum/tables/lolsautoeval.tex}
  
-  In comprehensiveness, \textsc{LS} recalls on average a fifth of the nuggets
- for each event. This is even more impressive when  compared to the average
- number of updates produced by each system (Figure \ref{fig:results}); while
- \textsc{Cos} achieves similar comprehensiveness, it takes on average about
- 62\% more updates than \textsc{LS} and almost 400\% more updates than
- \textsc{LS-Cos}. The output size of \textsc{Cos} stretches the limit of the
- term ``summary,'' which is typically shorter than 145 sentences in length.
- This is especially important if the intended application is negatively
- affected by verbosity (e.g. crisis monitoring).
+In comprehensiveness, \textsc{L2S} recalls on average a fifth of the nuggets
+for each event. This is even more impressive when  compared to the average
+number of updates produced by each system; while \textsc{Cos} achieves similar
+comprehensiveness, it takes on average about 1.6 times more updates than
+\textsc{L2S} and almost 5 times more updates than \textsc{L2S-Cos}. The output
+size of \textsc{Cos} stretches the limit of the term ``summary,'' which is
+typically far shorter than 145 sentences in length.  This is especially
+important if the intended application is negatively affected by verbosity
+(e.g. crisis monitoring).
+
+\input{strmsum/tables/fseval.tex}
 
 
-
-
-\begin{figure}
-  \center
-  \begin{tabular}{ l | l l l |}
-    &\multicolumn{3}{c}{latency-penalized}\\
-    & exp. gain     & comp. & $F_1$ \\
-    \hline
-    \small \textsc{Cos}  & $0.095$ & $\mathbf{0.236}$ & $0.128$ \\
-    \small \textsc{LS-FS}  & $0.164$ & $0.220$ & $0.157$ \\
-    \small \textsc{LS-Cos-FS} & 
-      $\mathbf{0.207}$ & $0.18~~$ & $\mathbf{0.163}$ \\
-  \end{tabular}
-  \caption{Average system performance. \textsc{LS-FS} and \textsc{LS-Cos-FS} 
-           runs are trained and evaluated on first sentences only (like the 
-           \textsc{Cos} system). Unpenalized results are omitted for space but
-           the rankings are consistent.}
-  \label{fig:results-trunc}
-\end{figure}
-
-\begin{figure}
-  \center
-  \begin{tabular}{l|l|l|l|l|l}
-    & Miss  &      Miss  &          &    &  \\
-    & Lead &      Body &         Empty &   Dupl. & Total \\
-    \hline
-    \small \textsc{APSal}         
-      & 29.6\% & 68.7\% & ~~1.6\% & 0.1\% & 15,986\\
-    \small \textsc{Cos}     
-      & 17.8\% & 39.4\% & 41.1\% & 1.7\% & 12,873\\
-    \small \textsc{LS-FS}      
-      & 25.4\% & 71.7\% & ~~2.0\% & 0.9\% & 13,088\\
-    \small \textsc{LS-Cos-FS}
-      & 27.9\% & 70.8\% & ~~1.0\% & 0.2\% & 15,756\\
-    \small \textsc{LS}           
-      & 19.6\% & 55.3\% & 19.9\% & 5.1\% & 13,380\\
-    \small \textsc{LS-Cos}    
-      & 24.6\% & 66.7\% & ~~7.5\% & 1.2\% & 11,613\\
-  \end{tabular}
-  \caption{Percent of errors made and total errors on test set.}
-  \label{fig:errors}
-\end{figure}
 
 \section{Discussion} \label{sec:discussion}
 
   Since \textsc{Cos} only considers the first sentence of each document, it
  may miss relevant sentences below the article's lead. In order to confirm the
  importance of modeling the oracle, we also trained and evaluated the
- \textsc{LS} based approaches on first sentence only streams. Figure
- \ref{fig:results-trunc} shows the latency penalized results of the first
- sentence only runs.  The \textsc{LS} approaches still dominate \textsc{Cos}
+ \textsc{L2S} based approaches on first sentence only streams. 
+ \autoref{tab:results-trunc} shows the latency penalized results of the first
+ sentence only runs.  The \textsc{L2S} approaches still dominate \textsc{Cos}
  and receive larger positive effects from the latency penalty despite also
  being restricted to the first sentence. Clearly having a model (beyond
  similarity) of what to select is helpful. Ultimately we do much better when
  we can look at the whole document.
   
-  We also performed an error analysis to further understand how each system
- operates.  Figure \ref{fig:errors} shows the errors made by each system on
+
+ \input{strmsum/tables/errors.tex}
+ 
+ We also performed an error analysis to further understand how each system
+ operates.  \autoref{tab:errors} shows the errors made by each system on
  the test streams.  Errors were broken down into four categories. \emph{Miss
  lead} and \emph{miss body} errors occur when a system skips a sentence
  containing a novel nugget in the lead or article body respectively. An
@@ -134,7 +69,7 @@
  
   After misses, empty errors (false positives) are the next largest source of
  error. \textsc{Cos} was especially prone to empty errors (41\% of its total
- errors). \textsc{LS} is also vulnerable to empties (19.9\%) but after
+ errors). \textsc{L2S} is also vulnerable to empties (19.9\%) but after
  applying the similarity filter and restriting to first sentences, these
  errors can be reduced dramatically (to 1\%).
   

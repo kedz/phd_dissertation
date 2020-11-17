@@ -1,0 +1,20 @@
+\begin{table}[t]
+  \center
+  \begin{tabular}{ l   l l l  }
+\toprule
+    &\multicolumn{3}{c}{latency-penalized}\\
+\cmidrule(lr){2-4} 
+    & $n\mathbb{E}[\gain_L](\updateSummary)$     & $\comp_L(\updateSummary)$ & $\mathcal{H}_L(\updateSummary)$ \\
+    \midrule
+    \textsc{Cos}  & $0.095$ & $\mathbf{0.236}$ & $0.128$ \\
+     \textsc{L2S-FS}  & $0.164$ & $0.220$ & $0.157$ \\
+    \textsc{L2S-Cos-FS} & 
+      $\mathbf{0.207}$ & $0.18~~$ & $\mathbf{0.163}$ \\
+\bottomrule
+  \end{tabular}
+  \caption{Average system performance. \textsc{L2S-FS} and \textsc{L2S-Cos-FS} 
+           runs are trained and evaluated on first sentences only (like the 
+           \textsc{Cos} system). Ranking is consistent with unpenalized results.}
+  \label{tab:results-trunc}
+\end{table}
+

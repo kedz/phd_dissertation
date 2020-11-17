@@ -1,16 +1,16 @@
 \section{Conclusion}
 
-In this chapter we introduced two online, stream summarization algorithms, 
+In this chapter we introduced two stream summarization algorithms, 
 where
 we focused on incorporating salience predictions into the update
-selection stage. In the first model, \textsc{AP+Salience}, we were able to
+selection stage. In the first model, \textsc{SAP}, we were able to
 incorporate these predictions into the affinity propagation clustering 
 algorithm, thereby balancing the twin objectives of selecting representative
 updates while ensuring the updates contained essential information that 
 was relevant to the query event. In the second method,  \textsc{L2S},
 we were able to train a stream summarization policy which predicts the salience
 of potential updates using a feature representation of the current update
-summary and stream state. This method improves over \textsc{AP+Salience}
+summary and stream state. This method improves over \textsc{SAP}
 in that it can make predictions using dynamically updated features based
 on previous behavior and can make decisions on updates immediately
  without needing to collect a sizeable cache of sentences for clustering.
@@ -19,7 +19,8 @@ Future work could focus on a number of improvements. One of the most important
 ones would be to improve the understanding of novelty. Currently, we do not
 have any explicit handling of information that is refined or updated over time.
 For example, the number of reported casualities in a disaster typically
-increases over time as more cases are reported. Under our current models
+changes over time as more cases are reported and nubmers are refined. 
+Under our current models
 these statements might all look very similar since they have a fairly 
 boilerplate text, e.g. for we have the following nuggets for a train 
 crash event presented in chronological order,
@@ -28,14 +29,19 @@ crash event presented in chronological order,
 \item 50 confirmed dead
 \item 51 confirmed dead.
 \end{itemize}
-Also as issues of trust and veracity in reporting have become more important
-it might also be necessary to model the reliability of the mention. In this
-case it seems the death toll was initialy over-estimated and refined down.
-Also it is unclear what source confirmed these numbers, this might be 
-something to take into consideration in future models. 
+As this information is textually similar, after a system selects one of these
+updates, it may not extract others.
+
+Also as issues of trust and veracity in reporting in online sources have become more important,
+it might also be necessary to model the reliability of an information 
+source. In this
+case some numbers are reported and some are also confirmed. Our model
+currently has no distinction between official and unofficial sourcing,
+which would be necessary in any real implemenation of these models.
 
 We also clearly have room to improve salience predictions. The expected gain
-of our systems varied from around 0.1-0.2, meaning it would take on average five to ten updates to produce a novel piece of information. All implemented
+of our systems hovered around 0.1, meaning it would take on average ten updates to produce a novel piece of information. As our error analysis showed,
+misses were the most prevalent error. All implemented
 systems have the highest error rates when trying to find information in the 
 body of an article. This echoes the findings of our previous chapter, where
 position bias is predominant feature being exploited. More efforts on 
