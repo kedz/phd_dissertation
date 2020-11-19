@@ -1,4 +1,5 @@
 \usepackage{subcaption}
+\usepackage{pmboxdraw}
 \usepackage{fixltx2e}
 \usepackage{stmaryrd}
 
@@ -68,3 +69,56 @@
 
 \usepackage[autostyle]{csquotes}
 \usepackage{lscape}
+
+% Used for attribution in quote environments. Removed enclosing parens.
+\usepackage{attrib}
+\renewcommand\PreTrib{}
+\renewcommand\PostTrib{}
+
+%%% Use \S symbol for sections and capitalize auotrefs "Chapter" prefix.
+\def\Snospace~{\S{}}
+\renewcommand*\sectionautorefname{\Snospace}
+\renewcommand*\subsectionautorefname{\Snospace}
+\renewcommand*\subsubsectionautorefname{\Snospace}
+\renewcommand{\chapterautorefname}{Chapter}
+
+
+%\bibliographystyle{plainnat}
+
+% Bibliography
+%Add your bibliography file here
+%\bibliography{references}
+
+% prevent certain fields in references from printing in bibliography
+%?\AtEveryBibitem{\clearfield{issn}}
+%?\AtEveryBibitem{\clearlist{issn}}
+%?
+%?\AtEveryBibitem{\clearfield{language}}
+%?\AtEveryBibitem{\clearlist{language}}
+%?
+%?\AtEveryBibitem{\clearfield{doi}}
+%?\AtEveryBibitem{\clearlist{doi}}
+%?
+%?\AtEveryBibitem{\clearfield{url}}
+%?\AtEveryBibitem{\clearlist{url}}
+%?
+%?\AtEveryBibitem{%
+%?  \ifentrytype{online}
+%?    {}
+%?    {\clearfield{urlyear}\clearfield{urlmonth}\clearfield{urlday}}}
+%?
+
+%\renewbibmacro*{title}{%
+%  \ifboolexpr{
+%    test {\iffieldundef{title}}
+%    and
+%    test {\iffieldundef{subtitle}}
+%  }
+%    {}
+%    {\printtext{%
+%     \printtext[titlecase]{\usefield{\uline}{title}}%
+%     \setunit{\subtitlepunct}%
+%     \printfield[titlecase]{subtitle}}%
+%     \newunit}%
+%  \printfield{titleaddon}}
+

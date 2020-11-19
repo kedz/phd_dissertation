@@ -1,3 +1,25 @@
+% Shortcut for chapter intro block quoting.
+\newcommand{\introquote}[2]{
+    \begin{verse}
+        #1
+        \attrib{#2}
+    \end{verse}
+    \addvspace{2\bigskipamount}
+}
+
+% Intro paragraph starting glyph
+\newcommand{\startglyph}{
+    \colorbox{black}{\makebox(3,6){\textcolor{white}{>>}}}
+}
+
+
+
+
+
+
+
+
+
 \makeatletter
 \newcommand{\specialterms}[1]{%
   \@for\next:=#1\do
