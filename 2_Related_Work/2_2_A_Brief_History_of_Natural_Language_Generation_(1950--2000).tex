@@ -1,0 +1,91 @@
+\section{A Brief History of Natural Language Generation (1950-2000)}
+  
+Returning to the present day, computer aided production of human language
+closely follows the beginning of modern computing, starting with work on
+machine translation (MT) systems developed in the 1950's and 60's
+\citep{ornstein1955mechanical,national1966language,hutchins2003machine}. Early
+work on producing extract summaries of research articles also dates back to
+this period \citep{luhn1958automatic} as well as  also notable experiments in
+generating text purely from syntactic structures \citep{yngve1961random}.
+  
+However, NLG did not begin to coalesce as a distinct subfield until the 1980s
+which saw the first workshops devoted specifically to NLG  and a convergence
+on the formalisms and problems central to language generation
+\citep{reiter1997building,mcdonald2010natural}.  NLG researchers of this
+period were focused on at least four main research programs: (i)
+linguistically motivated grammars for generation, (ii) frameworks for
+representating knowledge and concepts, (iii) models of the human receiver of
+the generated text, and (iv) models of discourse and control for planning the
+realization of utterances \citep{mann1981text}. 
+  
+  
+A variety of grammatical formalism were proposed during this period to be the
+syntactic backbone of language generation algorithms, including Functional
+Grammar \citep{halliday2013halliday}, Transformational Grammar
+\citep{chomsky1965aspects}, Generalized Phrase Structure Grammar
+\citep{gazdar1985generalized}, and others. Many frameworks for generation
+proliferated at this time (often incorporating one of those grammar
+formalisms), including Knowledge and Modalities Planner (KAMP)
+\citep{appelt1982planning}, Penman \citep{hovy1993natural}, MUMBLE
+\citep{McDonald1981MUMBLEAF}, TEXT \citep{mckeown1982text} and others
+\citep{mann1981text}.  While there appears to be a great diversity of
+approaches, over time the community began converging on a fairly similar
+pipeline of modules when it came it implementation \citep{reiter1994has}. 
+  
+Indeed, most NLG systems from this period could be understood as a pipeline of
+modules for text planning, sentence planning, and linguistic realization
+\citep{reiter1997building}.  In the text planning stage, the concepts to be
+conveyed are selected, possibly discarding less essential information, and
+arranged into a discourse plan or ordering. In the sentence planning stage,
+the concepts from the previous stage are grouped into individual sentences,
+and lexicalization of concepts and referring expression generation is
+performed.  Finally, in linguistic realization, the intermediate
+representation from the sentence planning stage is converted into a natural
+language utterance, often by linearizing and inflecting some
+syntactic/morphological representation.
+  
+Since these systems primarily generated language by starting from
+non-linguistic and/or semantic representations of concepts, they are often
+referred to as \textit{concept-to-text} generation or, as more commonly known
+today, \textit{data-to-text} generation \citep{gatt2018survey}. These systems
+were applied to a variety of data-to-text problems including weather forecast
+generation \citep{goldberg1994using}, statistical report  generation (i.e.
+generating a report from numerical or stastical data in a spreadsheet)
+\citep{iordanskaja-etal-1992-generation}, or as a writing aid to improve the
+productivity of human authors \citep{springer1991,mckeown1994,paris1995}.
+Data-to-text generation came to prominence alongside expert systems
+\citep{todd1992introduction}, including as a means to explain them
+\citep{swartout1983xplain}.  As such these NLG systems suffer from some of the
+same drawbacks as expert systems, often requiring extensive domain knowledge
+and manual rule or grammar engineering which became  difficult to maintain or
+ammend over time.
+  
+In the late 1980s and into the 1990s, as larger text corpora became available
+and statistical and/or machine learning techniques spread through the
+community, text-to-text generation (i.e. methods of directly mapping
+unstructured text inputs to text outputs) increased in popularity.
+Text-to-text generation is less defined by a specific generation task, method
+or unifying theory, but on the use of large collections of example
+input/output text pairs. 
+%For example, MT, text simplification, and text
+%summarization are all considered text-to-text generation when the approach
+%uses aligned sentence in input and output languages, pairs of complex and
+%simple sentences with similar meaning, and document/summary pairs
+%respectively.
+  
+Stastical machine translation (SMT) emerges from this period as the dominant
+success story for machine learning applied to text-to-text generation problems.
+The availability of digitized bilingual data made it possible to 
+create parallel sentence translation corpora and
+apply statistical word alignment and translation techniques \citep{gale1993}.
+  The 
+canonical IBM translation models were developed in this period 
+\citep{brown1988,brown1993}. Statistical methods marked a stark improvement
+over attempts at interlingua or semantics based translation systems 
+which often required significant manual effort in pre or post editing
+\citep{hutchins1994}. There were even some limited experiments using 
+learned classifiers to predict sentence salience for summarization
+\citep{kupiec1995trainable}.
+
+
+

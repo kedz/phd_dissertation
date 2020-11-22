@@ -1,61 +1,15 @@
 % Document type, global settings, and packages
 
 \documentclass[12pt]{report}   %12 point font for Times New Roman
-\input{packages.tex}
 
-\bibliographystyle{plainnat}
-
-
-\def\Snospace~{\S{}}
-\renewcommand*\sectionautorefname{\Snospace}
-%\renewcommand{\sectionautorefname}{\S}
-\renewcommand*\subsectionautorefname{\Snospace}
-\renewcommand*\subsubsectionautorefname{\Snospace}
-%\bibliographystyle{plainnat}
-
-% Bibliography
-%Add your bibliography file here
-%\bibliography{references}
-
-% prevent certain fields in references from printing in bibliography
-%?\AtEveryBibitem{\clearfield{issn}}
-%?\AtEveryBibitem{\clearlist{issn}}
-%?
-%?\AtEveryBibitem{\clearfield{language}}
-%?\AtEveryBibitem{\clearlist{language}}
-%?
-%?\AtEveryBibitem{\clearfield{doi}}
-%?\AtEveryBibitem{\clearlist{doi}}
-%?
-%?\AtEveryBibitem{\clearfield{url}}
-%?\AtEveryBibitem{\clearlist{url}}
-%?
-%?\AtEveryBibitem{%
-%?  \ifentrytype{online}
-%?    {}
-%?    {\clearfield{urlyear}\clearfield{urlmonth}\clearfield{urlday}}}
-%?
-
-%\renewbibmacro*{title}{%
-%  \ifboolexpr{
-%    test {\iffieldundef{title}}
-%    and
-%    test {\iffieldundef{subtitle}}
-%  }
-%    {}
-%    {\printtext{%
-%     \printtext[titlecase]{\usefield{\uline}{title}}%
-%     \setunit{\subtitlepunct}%
-%     \printfield[titlecase]{subtitle}}%
-%     \newunit}%
-%  \printfield{titleaddon}}
+\input{packages.tex} % import all the necessary latex packages and some setup.
 
 % Start of Dissertatio Document
 
-\input{macros.tex}
+\input{macros.tex} % import custom macros used throughout the thesis.
 
 \begin{document}
-\doublespacing  %set line spacing to double by default through out the document. This can be overwritten when necessary
+\doublespacing  
 
 % Title Page (No page number)
 \input{titlePage.tex}
@@ -126,23 +80,17 @@
 \addcontentsline{toc}{chapter}{Dedication}
 \input{Dedication.tex}
 
-%%%%%%%
-%	            %
-% Chapters   %
-%                   %
-%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                                             %
+%                                 Chapters                                    %
+%                                                                             %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % General formatting for chapters, appendix, etc. 
-
-
 % reset page numbering for rest of document 
 \clearpage
 \pagenumbering{arabic}
 \setcounter{page}{1} 
-
-% Preface %This is optional
-%\addcontentsline{toc}{chapter}{Introduction or Preface}
-%\input{Preface.tex}
 
 % Adjust chapter title formatting
 \titleformat{\chapter}[display]
@@ -157,39 +105,53 @@
 \titleformat{\subsection}{\normalfont}{\thesubsection}{0em}{\hspace{1em}#1}
 
 % Below is a subsubsection, uncomment it if you need to use it
-%\titleformat{\subsubsection}{\normalfont\itshape}{\thesubsection}{1em}{#1}
+\titleformat{\subsubsection}{\normalfont\itshape}{\thesubsection}{1em}{#1}
 
-%%%%%%%%%%%%%%%%
-% Chapter 1
-%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                                             %
+%                          Chapter 1: Introduction                            %
+%                                                                             %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\input{chapter1.tex}
+\input{1_Introduction/1_Introduction.tex}
+\input{1_Introduction/1_1_Problems_in_Text-to-Text_Generation.tex}
+\input{1_Introduction/1_2_Contributions.tex}
+\input{1_Introduction/1_3_Organization.tex}
 
-%%%%%%%%%%%%%%%%
-% Related Works
-%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                                             %
+%                          Chapter 2: Related Work                            %
+%                                                                             %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\input{related_works/main.tex}
+\input{2_Related_Work/2_Related_Work.tex}
+\input{2_Related_Work/2_1_A_Brief_History_of_Natural_Language_Generation_(Antiquity--1950).tex}
+\input{2_Related_Work/2_2_A_Brief_History_of_Natural_Language_Generation_(1950--2000).tex}
+\input{2_Related_Work/2_3_The_Emergence_of_Data_Driven_Extractive_Summarization_(2000--2014).tex}
 
-%%%%%%%%%%%%%%%%
-%% Chapter 3
-%%%%%%%%%%%%%%%%
+
+\input{2_Related_Work/2_4_A_Brief_History_of_Natural_Language_Generation_(2014--Present).tex}
+
+
+%%%%%%%%%%%%%%%%%
+%%% Chapter 3
+%%%%%%%%%%%%%%%%%
 
 \input{3_nnsum.tex}
 
-%%%%%%%%%%%%%%%%%
-%% Chapter 4
-%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%
+%%% Chapter 4
+%%%%%%%%%%%%%%%%%%
 
 \input{4_strmsum.tex}
 
-%%%%%%%%%%%%%%%%%
-%% Chapter 5
-%%%%%%%%%%%%%%%%%
-
+%%%%%%%%%%%%%%%%%%
+%%% Chapter 5
+%%%%%%%%%%%%%%%%%%
+%
 \input{5_nlg.tex}
 
-
+\input{6_Conclusion.tex}
 %
 %%%%%%%%%%%%%%%%%
 %% Conclusion
@@ -204,18 +166,25 @@
 % References
 %%%%%%%%%%%%%%%%
 
-%\titleformat{\chapter}[display]
-%{\normalfont\bfseries\filcenter}{}{0pt}{\large\bfseries\filcenter{#1}}  % Reset title format for Reference section. (It is different from Chapter titles)
-%\titlespacing*{\chapter}
-%  {0pt}{0pt}{30pt}
+\titleformat{\chapter}[display]
+{\normalfont\bfseries\filcenter}{}{0pt}{\large\bfseries\filcenter{#1}}  % Reset title format for Reference section. (It is different from Chapter titles)
+\titlespacing*{\chapter}
+  {0pt}{0pt}{30pt}
 
 %\begin{singlespace}  % use single-line spacing for multi-line text within a single reference
 %	\setlength\bibitemsep{\baselineskip}  %manually set separataion betwen items in bibliography to double space
 %	\printbibliography[title={References}]
 %\end{singlespace}
 
+%\begin{singlespace}
+\begingroup
+    \setlength{\bibsep}{10pt}
+        \setstretch{1}
   \bibliography{references}
-%\addcontentsline{toc}{chapter}{References}  %add References section to Table of Contents
+            \endgroup
+  \bibliographystyle{acl_natbib}
+ % \end{singlespace}
+\addcontentsline{toc}{chapter}{References}  %add References section to Table of Contents
 
 %%%%%%%%%%%%%%%%%
 %% Appendices

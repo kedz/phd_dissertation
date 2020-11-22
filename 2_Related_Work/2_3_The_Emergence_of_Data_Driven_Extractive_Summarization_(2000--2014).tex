@@ -1,0 +1,116 @@
+\section{The Emergenence of Data Driven Extractive Summarization (2000-2014)}
+
+While the MT community could
+take advantage of large (for the time) parallel corpora,  it was not until the
+2000s that there were readily available collections of documents and their
+summaries for which to perfom the kind of supervised machine learning that was
+being successfully applied to MT. Beginning in 2001, the Document
+Understanding Conferences (DUC) began steadily producing collections of
+documents with reference summaries, bringing together NLP researchers
+particularly around multi-document summarization \citep{nenkova2005b}.
+  
+Many significant summarization systems from this time still relied on
+unsupervised methods to create extract summaries, usually exploiting document
+collection stastics to determine the salience of input text units.
+The representation of text units as TF-IDF weighted bags-of-words
+\citep{jones1972} is prevalent in this era. For example, \cite{radev2000}
+identify salience sentences in a document cluster by their similarity to the
+average TF-IDF vector of the document cluster. In \cite{erkan2004}, sentences
+are treated as vertices in a fully connected graph, with edge weights
+determined by the cosine similarity between each sentence's TF-IDF weighted
+bag-of-words representation. The PageRank algorithm \citep{page1999} is then
+used to determine the graph centrality of each sentence; the sentences most
+central in the graph are considered the most salient and extracted for the
+summary. 
+
+Other methods used alternative formulations to exploit frequency for summarization, most notably \cite{lin2000} who identified topic signatures using
+a likelihood ratio test \citep{dunning1993} to identify terms that occurred unusually
+frequently in a document given a large generic background corpus. After 
+removing stopwords, word frequency on it's own has also been shown to be
+an effective signal for identifying salient sentences \citep{nenkova2005}.
+
+Following on the initial reasearch by \cite{kupiec1995trainable}, other work 
+using supervised learning for summarization begins to emerge from this time
+\citep{conroy2001using,osborne2002using,hirao2002extracting,sipos2012large}.
+Here, summarization is framed as a sentence
+classification task, i.e. which sentences from the input document should be
+included in a summary. 
+
+Most of the text-to-text summarization approaches from the 2000s are primarily
+extractive systems.  While significantly constrained in their expressive
+quality (i.e. only sentences found in the input can be used to construct the
+output) especially compared to earlier data-to-text methods, designing
+data-driven features for unsupervised and supervised stastical machine
+learning proved to be much more scalable and an easier path to improved
+summarization performance \citep{nenkova2011}. 
+ 
+There are some notable works that attempted to perform limited abstractive
+summarization. \cite{barzilay2005} developed an unsupervised method of sentence fusion, i.e., combining sentences with the same or overlapping content using their syntactic
+parses as backbone structure. Heuristically driven phrase deletions were also
+explored to reduce less salient information in extractive summarization
+\citep{jing2000,zajic2007}.  In the supervised case, there were several works
+that attempted to learn to  delete non-essential phrase constituents. 
+This was formulated
+as either a pipeline of learned compression and extraction models
+\citep{wang2013} or as a joint model of extraction and compression
+\citep{martins2009,bergkirkpatrick2011}. While sentence fusion was capable
+of some abstractive rewriting, the other approaches
+mentioned here predominantly focused on compression, i.e. word or phrase
+deletion, to generate novel summary text, which is only one of the many ways
+that human abstractors perform the summarzation task \citep{jing2000b}.
+
+  Streaming or temporal summarization was first explored in the context of
+ topic detection and tracking \citep{khandelwal2001,allan2001} and more recently at
+ the Text Retrieval Conference (TREC) \citep{aslam2013}. Approaches
+to this problem often perform filtering by estimated salience before relying
+on multi-document summarization techniques to select text units to
+construct rolling update summaries \citep{guo2013,mccreadie2014}. These pipelines while effective, do not attempt to jointly optimize the salience and 
+selection.
+
+%Top performers at
+% TREC included an affinity propagation clustering approach
+% \cite{kedziepredict} and a ranking/MDS system combination method
+% \cite{mccreadie2014incremental}.  Both methods are unfortunately constrained
+% to work in hourly batches, introducing potential latency. Perhaps most
+% similar to our work is that of \cite{guo2013updating} which iteratively fits
+% a pair of regression models to predict ngram recall and precision of
+% candidate updates to a model summary. However, their learning objective fails
+% to account for errors made in subsequent prediction steps. 
+%
+
+
+%?  The ability to generate more interesting or novel text also gradually increased
+%?  with time. In the unsupervised case sentence fusion \cite{fusion};
+%?  in the supervised case, learning syntax guided compression and extraction
+%?  appeared \cite{} although generation was still dificult and abstractive summarization was rare \cite{maybemckeownnenkova}.
+%?  
+%? 
+%?
+%?
+%?~\\~\\
+%? 
+%?Other notions term frequency and treating documents 
+%?and corpora as unigram word distributions has also been used to derive
+%?term weights effective for identifying salient sentences. 
+%?Particulary noteable examples sentence extractive 
+%?summarization systems exploiting word frequency statistics from large collections
+%?of newswire to automatically identify sentences containing important terms
+%?\citep{nenkova2005impact,hovy1998automated,lin2000automated}. 
+%?
+%? 
+%?
+%?the cosine similarity
+%?of TF-IDF weighted bag-of-words repre
+%?
+%?
+%?
+%?
+%?Some notable works during this period perform sentence extractive summarization
+%?determining the relative
+%?centrality of sentences in a collection using in a notions of graph \cite{two}, or cluster similarity \cite{hatzivassiloglou2001simfinder,radev2004}.
+%?
+%?  
+%? 
+%?
+%? 
+%?
