@@ -1,0 +1,147 @@
+\section{Neural Natural Language Generation Models (2014--Present)}
+  
+While feed-forward neural networks had been used previously as part of
+phrased-based SMT systems \citep{schwenk2006}, there was an increased interest
+in the early-mid 2010s around using recurrent neural network (RNN) language
+models \citep{mikolov2010} as a rescoring method for an SMT decoder
+\citep{auli2013joint,cho2014learning}.  RNNs could exploit (in theory)
+unbounded source and target prefix information that was difficult to capture
+in ngram or feed-forward models. \citet{cho2014learning} is particularly
+notable because they propose separate encoder/decoder RNNs, and while intended
+for rescoring and not generation directly, this general architecture
+constitutes the ``sequence-to-sequence'' backbone of most neural MT (NMT) and
+neural NLG models.
+  
+Shortly thereafter, \citet{sutskever2014sequence} proposed the now ubiquitous
+sequence-to-sequence model to perform translation directly.
+\citet{bahdanau2015}  also proposed a sequence-to-sequence model with an
+attention mechanism, which both made optimization easier (error feedback,
+i.e., gradients, could now be routed directly from any decoder word prediction
+step to any arbitrarily  distant timesteps in the encoder) and allowed for
+visualization of the NMT decoder's alignment with the encoder.  NMT models,
+while conceptually simpler than phrase-based SMT, were starting to achieve
+state-of-the-art results \citep{bojar2016} and wide-spread industry adoption
+\citep{wu2016google,gehring2017}.  It did not take long for researchers to
+adapt the sequence-to-sequence model to other language generation problems,
+e.g. generating captions from images \citep{vinyals2015a}, sports summaries
+for box scores \cite{lebret2016,wiseman2017}, or from semantic representations
+\citep{wen2015,dusek2016}. 
+  
+The introduction of the CNN-DailyMail corpus by \cite{hermann2015} allowed for
+the application of large-scale training of deep learning models for
+summarization. In sentence extractive summarization, researchers proposed a
+variety of hierarchical models with distinct sentence and document level
+encoder networks that enabled sequential prediction of which sentences or
+words should be included in the summary
+\citep{cheng2016neural,nallapati2017summarunner}.
+
+Perhaps more exciting was the surge in abstractive summary generation.
+\cite{rush2015} developed an attention-based deep learning  model capable of
+generating headlines from the lead sentence of an article. Subsequently,
+\citet{nallapati2016} showed that a sequence-to-sequence model could encode a
+whole news article and then generate an abstractive summary word by word.
+Additionally, the line between extractive and abstractive summarization was
+blurred by the addition of learned copy-mechanisms which could selectively
+transfer named entities and other out-of-vocabulary terms into the output
+summary, further improving summary quality \citep{see2017}.  
+
+Historically, the field of NLG has relied heavily on grammars and templates to
+generate text. The fact that neural models could yield reasonably fluent and
+acceptable summaries given so little pre-specified structure or features is
+truly impressive.  Interestingly, term frequency, was not explicitly
+represented in either the neural extractive or abstractive summarization
+models, begging the question as to how they were learning to identify salient
+content.
+
+Model architecture continued to evolve and in \citeyear{vaswani2017},
+\citeauthor{vaswani2017} proposed a recurrence-free neural sequence model,
+built around so-called \textit{transformer} layers, which rely on multiple
+parallel self- and context-attention mechanisms.  This model was designed with
+optimization speed in mind, and was subsequently used in large scale language
+model pretraining on web-scale text, spawning the BERT-family of models
+\citep{devlin2019}. Large language model pre-training with task-specific
+fine-tuning became a dominant paradigm in NLP with BERT and its descendants
+setting records on many downstream text prediction tasks \citep{ruder2019}.
+
+The transformer layer was also used in the generative pre-training
+(GPT)-family of models \citep{radford2018improving}, which was  also trained
+on web-scale data, but with an auto-regressive language modeling objective.
+The second generation of these models, GPT-2 \citep{radford2019language},
+received notoriety both amongst NLP researchers but also the wider public, as
+its release was initially delayed given ``ethical concerns'' about releasing
+such a powerful language generation model \citep{vincent2019,seabrook2019}.
+GPT-2 exhibited impressive completions of prompt texts, and could be used to
+generate natural looking paragraphs on arbitrary topics, with longer spans of
+fluent text than previously thought possible. 
+  
+GPT-2 could also be fine-tuned to perform task specific conditional generation
+\citep{ziegler2019,golovanov2019}, however, its architecture was that of a
+neural language model without distinct encoder/decoder networks; conditional
+generation was achieved by encoding problem instances as prompts to be
+continued.  Proper sequence-to-sequence variants of the large,
+transformer-based language model were subsequently developed using various
+sequence-level denoising autoencoder objectives \citep{zhang2019,raffel2020,
+lewis2020}.  The intention of such models was that they could be fine-tuned
+for more task-specific sequence-to-sequence problems like summarization,
+translation, or even arbitrary data-to-text tasks like dialogue generation.
+
+While these models were producing text at a level of quality that had not
+previously been realized with traditional NLG approaches, a closer examination
+of model outputs revealed glaring flaws in the semantic correctness of the
+generated text \citep{kryscinski2019,kryscinski2020,maynez2020}.
+\cite{dusek2020} found that the quality of neural NLG models can vary
+significantly, with relatively similar architectures yielding both poor and
+competitive performance with respect to the semantic correctness of model
+outputs. In practice most competitive neural NLG models use a variety of beam
+reranking techniques to improve output faithfulness to the inputs
+\citep{dusek2016,juraska2018,wen2015}, as well as copy and coverage mechanisms
+to improve the recall \citep{see2017,elder2018}.
+
+NLG researchers have also begun to explore the degree to which neural models
+can be constrained to follow discourse plans or other structured objects.
+\citet{nayak2017} and \citet{reed2018} explore several ways of incorporating
+shallow sentence planning into dialogue generation via the  grouping of input
+sequences into distinct subsequences or by inserting discourse variable tokens
+into the encoder input sequences to indicate contrasts, comparisons, or other
+groupings.  \citet{balakrishnan2019} experiment both with tree structured
+input meaning representations  and encoders and compare them to linearized
+trees with standard sequence-to-sequence models.  While these papers find that
+neural NLG models can consistently follow these discourse ordering
+constraints, they do not  systematically explore how other linearization
+strategies compare in terms of faithfulness, and they do not evaluate the
+degree to which a sequence-to-sequence model can follow realization orders not
+drawn from the training distribution.
+
+\citet{castroferreira2017} compare a neural NLG model using various
+linearizations of abstract meaning representation (AMR) graphs, including a
+model-based alignment very similar to the alignment-training linearization
+presented in this work. However, they evaluate only on automatic quality
+measures and do not explicitly measure the semantic correctness of the
+generated text or the degree to which the model realizes the text in the order
+implied by the linearized input.
+
+Works like \citet{moryossef2019a,moryossef2019b} and
+\citet{castroferreira2019} show that treating various planning tasks as
+separate components in a pipeline, where the components themselves are
+implemented with neural models, improves the overall quality and semantic
+correctness of generated utterances relative to a completely end-to-end neural
+NLG model. However, they do not test the ``systematicity'' of the neural
+generation components, i.e. the ability to perform correctly when given an
+arbitrary or random input from the preceding component, as we do here with the
+random permutation stress test.
+
+Many papers mention input linearization order anecdotally but do not quantify
+its impact. For example, \citet{juraska2018} experiment with random
+linearization orderings during development, but do not use them in the final
+model or report results using them, and \citet{gehrmann2018} report that using
+a consistent linearization strategy worked best for their models but do not
+specify the exact order.  \citet{juraska2018} also used sentence level data
+augmentation, i.e. splitting a multi-sentence example in multiple single
+sentence examples, similar in spirit to our proposed phrase based method, but
+they do not evaluate its effect independently.  \citet{wiseman2018} uses an
+order invariant encoder to produce a latent plan which guides the decoder.
+Ignoring the encoder and specifying a latent plan would allow for some control
+over realization order but the degree to which arbitrary realization orders
+can be achieved is under explored. Additionally, it is not guaranteed that
+latent plan states uniquely correspond to different meaning representation
+components.
