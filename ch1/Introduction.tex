@@ -10,11 +10,11 @@
 }
 
 \introquote{
-    \textbf{[Prompt]} Q: How many eyes does a horse have? \\[-5pt]
-    \textbf{[GPT-3]} A: 4. It has two eyes on the outside and two eyes on the 
+    \textsc{[Prompt]} Q: How many eyes does a horse have? \\[-5pt]
+    \textsc{[Gpt-3]} A: 4. It has two eyes on the outside and two eyes on the 
         inside.
 }{
-    GPT-3 \citep{brown2020}, responding to a prompt by \cite{shane2020}
+    \textsc{Gpt-3} \citep{brown2020}, responding to a prompt by \cite{shane2020}
 }
 
 \addvspace{6\bigskipamount}
@@ -41,11 +41,12 @@ shorter summary text, and the research presented aims to both understand and
 tame these machine learning d{\ae}mons, hopefully paving the way for more
 reliable text-to-text~generation algorithms.  Somewhat against the prevailing
 trends, we eschew end-to-end training of an abstractive summarization model,
-and instead breakdown the text summarizaion problem into its consituent tasks.
-At a high level, we divide these tasks into two categories: \textit{content
-selection}, or ``what to say'' and \textit{content realization}, or ``how to
-say it'' \citep{mckeown1985}.  Within these categories we propose models and
-learning algorithms for the following problems:
+and instead breakdown the text summarization problem into its constituent
+tasks.  At a high level, we divide these tasks into two categories:
+\textit{content selection}, or ``what to say'' and \textit{content
+realization}, or ``how to say it'' \citep{mckeown1985}.  Within these
+categories we propose models and learning algorithms for the following
+problems:
     
 \begin{itemize}
   \item Content Selection
@@ -62,11 +63,11 @@ learning algorithms for the following problems:
 \end{itemize}
 
 The first part, content selection, explores various issues around salience
-estimation, that is, predicting the importance of an arbitrary unit of text
+estimation; that is, predicting the importance of an arbitrary unit of text
 given some surrounding context (e.g., the larger document that contains that
 text or a user query). In particular, we experiment with a variety of popular
 and novel deep learning models for salience estimation, and design several
-ablation exeriments to gain some insight into which input signals are most
+ablation experiments to gain some insight into which input signals are most
 important for making predictions. Understanding these signals is critical for
 designing reliable summarization models. 
 
@@ -91,7 +92,8 @@ Finally, under a stress test evaluation protocol, we demonstrate some
 empirical limits on several neural NLG models' ability to encode and properly
 realized a content plan.
  
-It is important to note that the approaches in part two are implemented for
+It is important to note that the approaches in part two are implemented not
+for summarization, but for
 solving \textit{task-oriented dialogue generation} \citep{mairesse2010}, where
 the problem is one of modeling the response of a dialogue agent interacting
 with a human user. The input in this setting is a formal meaning
@@ -104,5 +106,8 @@ meaning that makes it easier to measure progress in model faithfulness and
 control. We therefore consider task-oriented dialogue generation as an
 idealized form of text-to-text generation, where a content selection module
 has mapped input text units to a discrete meaning representation for realizing
-the content.  Possible methods of transferring these approaches to the
-text-to-text regime will be discussed in the final chapter of this thesis.
+the content.  We anticipate that the development of summarization models on
+discrete semantic representations \citep{falke2017,liao2018} will continue and
+that our findings in neural generation methods will carry over
+to the task of generating summaries from semantic representations \citep{hardy2018}. Possible methods of transferring these approaches to the text-to-text
+regime will be discussed in the final chapter of this thesis.
