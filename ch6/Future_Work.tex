@@ -1,0 +1,134 @@
+\section{Future Work}
+
+
+Given our discussion of limitations, we believe the following research directions would yield meaningful future contributions to the automatic summarization
+literature.
+
+\paragraph{Semantic Representations for Summarization}
+
+Our work assumes that research on broad coverage semantic parsing will improve
+to a point such that high accuracy logical representations
+will be automatically producible for arbitrary newswire text.
+However, a variety of open problems remain around appropriate meaning 
+representations for the summarization problem.
+The formalisms for semantics in NLP have realistically only been annotated
+at the level of sentences and aggregating these representations into document
+or multi-document level representations is challenging, even for humans
+\citep{ogorman2018}. 
+
+When performing content selection, we could perform salience estimation and
+selection directly from the text (as we currently do in this thesis) but then
+pass on the automatically parsed meaning representations of the extracted text
+units to the NLG component.  A more interesting alternative is that salience
+estimation and content selection could be done in the meaning representation
+space; a small but growing subset of the summarization literature has explored
+this variant of the content selection problem \citep{falke2017,liao2018,falke2019}.  These works largely
+frame summarization from a semantic or concept graph as one of graph
+compression, selectively deleting unimportant nodes from the graph
+representation of the input. However, compression through deletion is only one
+of many abstraction methods employed by human summarizers \citep{jing2000b}.
+Expansion of existing semantic formalisms with a  catalogue of representation
+transformations that capture not only deletion but also aggregation, metonymy,
+synecdoche, or other forms of abstraction would be of great benefit to the
+development of summarization from semantic graphs/meaning representations.
+
+
+
+\paragraph{Psychological/Motivational Factors in Summarization} We showed
+that existing models struggle to find all the salient information in the input,
+ especially when the document structure or position cues are relatively weak. Arguably,
+simply learning a salient content model from a large collection of
+document-summary pairs (a practice that is presently de rigueur for end-to-end neural summarization models) is likely not sufficient since the goal of the reader or the intended use of the summary remains underspecified in most contemporary research. 
+
+
+For instance, a clinician's notes are not simply a truncated list of the 
+$k$ most frequently mentioned symptoms by the patient. Instead, they are 
+a summary of both the dialogue between the doctor and patient, but focused
+by doctor's deductive procedure for determining the specific malady afflicting
+the patient. That is, during the appointment the doctor maintains a set 
+of possible hypothesis diagnoses, and gradually rules out some while increasing confidence in others through their questioning of the patient \citep{pivovarov2015}. 
+Having a clinical notes summarization model with an explicit representation 
+of this deductive procedure would possibly improve the ability to contextually identify salient questions and answers.
+One could imagine similar scenarios in other domains. In financial news 
+summarization, for example, the salience of particular events depends heavily on an individual's particular investment position. 
+
+
+In any case,  we expect that incorporating an explicit model of the summary reader's beliefs
+and world knowledge into the salience estimation component of a summarization
+system seems likely to improve the accuracy of content selection. Additionally,
+it may also improve model scrutability. We believe work on concept modeling 
+\citep{bosselut2019} might be a fruitful way to explore this idea in summarization.
+
+
+\paragraph{Better Inductive Biases in Generation Models}
+Our generation models improved when we could reliably create synthetic examples
+through data augmentation. In practice, data augmentation is difficult to get
+right as any errors (e.g., disfluencies or bad meaning representation/utterance
+pairings) risk hurting the model more than they benefit. Additionally, they
+have the flavor of a brute force solution, where we attempt to systematically
+generate all gaps in the training data. While this can work for simple datasets
+it is unlikely to scale to generation from more complex combinatorial objects (i.e., meaning representations with recursive structure like graphs and trees).
+
+In future work, we would like to explore ways of building in better inductive
+biases into the model. In particular we would like to adapt some forms of
+contrastive learning popular in the vision community \citep{chen2020} to the
+NLG setting. Under the contrastive learning framework,  constraints
+are put on the model representation via auxiliary discrimination tasks. In
+the image domain, this might mean imposing a constraint that semantics preserving transformations (e.g., rotation)
+of the same image have similar hidden representations under the model, with
+the intuition being that an image classifier should produce the same 
+classification probabilities even if the image is arbitrarily rotated.
+
+In NLP, these kinds of semantics preserving transformations are somewhat
+harder to obtain, but we can begin to imagine some feasible ones that might
+work for the NLG problem as we have posed it. In our controllable generation
+model, the encoder input sequence is actually serving double duty as both a
+representation of the meaning representation but also the utterance plan. That
+is, 
+\[ 
+    \ls_1(\mr) = \left[
+    \textit{inform}, \textit{name=Aromi}, \textit{eat\_type=coffee shop}, 
+    \textit{area=city centre} \right] 
+\] 
+and
+\[
+    \ls_2(\mr) = \left[
+        \textit{inform}, \textit{eat\_type=coffee shop}, 
+    \textit{area=city centre}, \textit{name=Aromi} \right]
+\]
+both correspond to two different utterances plans for the same meaning
+representation,\begin{singlespace}\[
+    \mr = \left[\!\!\left[  \begin{array}{l} \textsc{Inform} \\ \AV{name}{Aromi} \\ \AV{area}{city centre} \\ \AV{eat\_type}{coffee shop} \end{array} \right]\!\!\right].
+\]\end{singlespace}
+\noindent As we currently have it, the encoders of our neural NLG models would produce
+different representations, i.e., $\operatorname{enc}\left(\ls_1(\mr)\right) \ne \operatorname{enc}\left(\ls_2(\mr)\right)$. In the spirit of contrastive
+learning, however, it might be useful to differentiate the part of the hidden 
+state that corresponds to the propositional contents of the  meaning representation and the part that
+corresponds to the plan. We might specify that the encoder produce two
+hidden states, one representing the meaning representation and the other
+representing the plan: $\operatorname{enc}\left(\ls_1(\mr)\right) = \left(\mathbf{h}_\mr, \mathbf{h}_{\ls}\right)$. For two different plans for the same
+meaning representation,  \begin{align*}
+    \operatorname{enc}\left(\ls_1(\mr)\right) &= \left(\mathbf{h}^{(1)}_\mr, \mathbf{h}^{(1)}_{\ls}\right)\\
+    \operatorname{enc}\left(\ls_2(\mr)\right) &= \left(\mathbf{h}^{(2)}_\mr, \mathbf{h}^{(2)}_{\ls}\right)\\
+\end{align*}
+we would enforce the constraint during training
+that
+\[ \mathbf{h}^{(1)}_\mr = \mathbf{h}^{(2)}_\mr \quad \textrm{and} \quad  \mathbf{h}^{(1)}_{\ls} \ne  \mathbf{h}^{(2)}_{\ls}. \]
+For another meaning representation that has the same attributes, but different
+values,\begin{singlespace}\[
+    \mr^\prime = \left[\!\!\left[  \begin{array}{l} \textsc{Inform} \\ \AV{name}{Bar Central} \\ \AV{area}{riverside} \\ \AV{eat\_type}{pub} \end{array} \right]\!\!\right] \quad \textrm{with} \quad  \operatorname{enc}\left(\ls_1(\mr^\prime)\right) = \left(\mathbf{h}^{(3)}_\mr, \mathbf{h}^{(3)}_{\ls}\right),
+\]\end{singlespace} 
+we would have 
+\[ \mathbf{h}^{(3)}_\mr \ne \mathbf{h}^{(1)}_\mr = \mathbf{h}^{(2)}_\mr\quad \textrm{and} \quad  \mathbf{h}^{(3)}_{\ls} = \mathbf{h}^{(1)}_{\ls} \ne  \mathbf{h}^{(2)}_{\ls}. \]
+
+The intuition here is that by creating distinct representations of the 
+content and the plan, the encoder can amortize learning how to represent 
+specific attribute orderings independent of the values of the attributes, while
+the values themselves can reside in $\mathbf{h}_\mr$.
+
+Additionally, it would useful to explore how contrastive learning
+and other semantics preserving transformations can be represented in the 
+encoding of more complex meaning representations. Work on generating text 
+from  trees \citep{balakrishnan2019} or arbitrary graph structures like  AMR
+\citep{wang2020} might benefit from imposing such constraints 
+on the encoder representation.

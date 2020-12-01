@@ -1,0 +1,36 @@
+\section{Final Remarks}
+
+We have studied in this thesis several problems related to text-to-text
+generation generally, and the summarization problem specifically.  Our hope is
+that by breaking down the summarization into sub-tasks we have revealed
+important but tractable problems on the way to more reliable text-to-text
+generation and summarization. 
+
+We also hope that we have given some useful experimental setups for revealing
+how deep learning models perform content selection. We think this level of
+investigation should be carried out whenever deep learning based summarization
+models are proposed. In general, we think that knowing how a model produces an
+answer to a question is just as important as the model getting the correct
+answer. For instance, if we know that the model is exploiting position heuristics to identify important information, we should not expect it to perform well
+when those signals are not present. 
+
+On the generation side, we hope we have emphasized the importance of semantic
+correctness and control when considering a neural NLG model. While ngram
+overlap based metrics \rouge~and \bleu~were relatively reliable metrics of
+summary quality when summarization models were primarily extractive, with the
+move to powerful neural NLG models that can generate fluent and natural text,
+these kinds of metrics become less discriminating.  We think over time they
+should be de-emphasized in favor of some kind of semantic evaluation,
+preferably a manual one. We are still not in a world where neural NLG models
+can be be used reliably in industrial text generation settings. We hope that 
+work continues in the area of faithfulness and control so that this situation
+changes.
+
+
+Code and data for many of the experiments presented in this thesis can be found
+at \url{http://cs.columbia.edu/~kedzie/}. Additionally, conference papers
+corresponding to individual chapter contents can also be found there. Questions 
+with regard to this thesis or any of the linked materials should be directed to
+the author.
+
+

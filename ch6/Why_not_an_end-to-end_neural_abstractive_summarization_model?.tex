@@ -1,0 +1,38 @@
+\section{Why not an end-to-end neural abstractive summarization model?}
+
+While unusual for summarization research in 2020, we have not advocated for an
+end-to-end neural abstractive summarization model.  We argue that learning an
+end-to-end summarization model (while possibly delivering flashy and
+impressive short term results) is unlikely to result in summarization reliable
+enough for use outside of the NLP research community.
+
+First, it has been shown repeatedly, that while large neural language models
+might deliver impressive test set results they often exploit shallow
+heuristics and frequently fail to generalize in ways that suggest they are
+learning hidden syntactic or semantic representations that are cognitively
+plausible \citep{fodor1988,marcus2003,lake18,mccoy2019,linzen2020}.
+
+Second, the summarization task as often studied in NLP (i.e., learning to map
+input texts to summary text from a large parallel corpus) is underspecified.
+Real summaries are grounded in an extrinsic task and serve a particular human
+informational need or goal \citep{jones1999,mckeown2005}.  Without explicitly
+specifying these goals both as model inputs and in evaluation, you can't say
+whether a summarization system that exploits position bias over a deeper
+semantic understanding of the text is good or bad. For example, if the goal
+is, ``help me get the gist of the morning newspaper faster,'' then perhaps
+showing the user the lead paragraphs of each article in the paper is actually
+a quite good summary. If the intended goal is ``a summary of my doctor's
+appointment with an emphasis on the evidence for my having contracted
+COVID-19,'' then it is unlikely that the semantic understanding necessary to
+complete that task can be learned simply from amassing a collection of
+parallel input/summary texts \citep{bender2020,bisk2020}.
+
+While automatic methods of evaluating summary faithfulness are currently being
+explored through question-answering \citep{wang2020b,durmus2020} or estimation
+of \rouge~or \bleu~scores \citep{zhang2020,sellam2020}, they suffer from the
+same drawbacks just mentioned.  Underlying them is same paradigm of training
+large neural models on parallel corpora, which because of the two points
+mentioned will often fail to generalize correctly on the long-tail input
+instances.  Additionally, these methods serve as post-hoc correctives, and do
+not help to attribute errors in an abstractive generation models outputs to
+its decoder or encoder representations.
