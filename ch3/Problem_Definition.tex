@@ -1,0 +1,38 @@
+\section{Problem Definition}
+
+We now formally define the sentence extractive, single document summarization
+task as a sequence tagging problem, following \cite{conroy2001}.  Let a
+document $\doc\in \docSpace$ be a sequence of $\docSize$ sentences, 
+\[ 
+    \doc = \left[ \sent_1, \sent_2, \ldots, \sent_\docSize\right].
+\] 
+Sentences are themselves sequences of words,
+\[
+    \sent_i=\left[
+        \word_{i,1}, \word_{i,2}, \ldots, \word_{i,{\sentSize_i}}\right],
+\]
+where $\sentSize_i\in\naturals$ is the length of sentence $\sent_i$ in words.
+The words themselves are drawn from a finite vocabulary $\wordVocab$.
+
+The binary \salience~of a sentence $\sent_i$ is $\bsal_i \in\{0,1\}$.
+$\bsal_i=1$ indicates that sentence $\sent_i$ is \salient~and should be
+included in the extract summary while $\bsal_i=0$ is assigned to
+non-\salient~sentences that should be excluded from the summary.  We indicate
+the vector of salience judgements for the $\docSize$ sentences in $\doc$ as
+$\bsals = \left[\bsal_1,\ldots,\bsal_\docSize\right]\in  \labelSpace$.  The
+objective of this sequence tagging problem is to learn a function $f :
+\docSpace \rightarrow \labelSpace$ which maps a document $\doc$ to a sequence
+of \salience~labels $\bsals$. In this work, we learn a probabilistic mapping
+$\model(\bsals|\doc;\params)$ where $\model$ is a neural network with
+parameters $\theta$ and $\model(\cdot|\doc;\params) : \labelSpace \rightarrow
+(0,1)$. 
+
+Prediction is achieved by finding $\predbsals = \operatorname{arg\;max}_{\bsals
+\in \labelSpace} \model(\bsals|\doc;\params)$, either by approximation or when
+the structure of $\model$ allows, exactly.  Additionally, a typical constraint
+on summarization is that the extract summary not exceed a word budget
+$\wordbudget \in \naturals$, that is, $\sum_{i=1}^\docSize \hat{\bsal}_i \cdot
+\sentSize_i \le \wordbudget$.  Since it is not trivial to incorporate this
+constraint into the sequence labeling formulation, we instead rely on a greedy
+heuristic to enforce the budget constraint in practice. More details on test
+time inference can be found in \autoref{sec:inference}.
