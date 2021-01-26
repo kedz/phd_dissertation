@@ -1,0 +1,131 @@
+\input{ch3/tables/overall_results.tex}
+\input{ch3/tables/overall_results_other.tex}
+
+\section{Results}
+
+The results of our main experiment comparing the different extractors/encoders
+on news and non-news domains are shown in \autoref{tab:newsresults} and
+\autoref{tab:otherresults} respectively.  Overall, we find no major advantage
+when using the \convolutionalneuralnetwork~and \recurrentneuralnetwork~sentence
+encoders over the averaging encoder. The best performing encoder/extractor pair
+either uses the averaging encoder (five out of six datasets) or the differences
+are not statistically significant. 
+
+When looking at extractors, the Seq2Seq extractor is either part of the best
+performing system (three out of six datasets) or is not statistically
+distinguishable from the best extractor. 
+
+Overall, on the news and medical journal domains, the differences are quite
+small with the differences between worst and best systems on the CNN/DM dataset
+spanning only .56 of a ROUGE point. While there is more performance variability
+in the Reddit and AMI data, there is less distinction among systems: no
+differences are significant on Reddit and every extractor has at least one
+configuration that is indistinguishable from the best system on the AMI corpus.
+This is probably due to the small test size of these datasets.
+
+\input{ch3/tables/table_embs.tex}
+
+\subsection{Ablation Experiments}
+
+In addition to our main evaluation above, we also perform several ablation
+experiments to further understand how the various summarization models perform
+when certain information is witheld from the model. In particular, we evaluate
+the effect of fine-tuning word embeddings, part-of-speech (POS) based
+ablations, and sentence-order shuffling.
+
+\paragraph{Word Embedding Fine-tuning} Given that learning a sentence encoder
+(averaging has no learned parameters) does not yield significant improvement,
+it is natural to consider whether fine-tuning word embeddings is also
+necessary.  In \autoref{tab:embeddings} we compare the performance of different
+extractors using the averaging encoder, when the word embeddings are held fixed
+or fine-tuned during training. In both cases, word embeddings are initialized
+with GloVe embeddings trained on a combination of Gigaword and Wikipedia.  When
+fine-tuning embeddings, words occurring fewer than three times in the training
+data are mapped to an unknown token (with learned embedding).
+ 
+In all but one case, fixed embeddings are as good or better than the fine-tuned
+embeddings.  This is a somewhat surprising finding on the CNN/DM data since it
+is reasonably large, and learning embeddings should give the models more
+flexibility to identify important word features.\footnote{The AMI corpus is an
+exception here where learning \emph{does} lead to small performance boosts,
+however, only in the Seq2Seq extractor is this diference significant; it is
+quite possible that this is an artifact of the very small test set size.} This
+suggests that we cannot extract much generalizable learning signal from the
+content other than what is already present from initialization.  Even on
+PubMed, where the language is quite different from the news/Wikipedia articles
+the GloVe embeddings were trained on, fine-tuning leads to significantly worse
+results.
+
+\input{ch3/tables/table_pos.tex}
+
+\paragraph{POS Ablation} It is also not well explored what word features are
+being used by the encoders.  To understand which classes of words were most
+important we ran an ablation study, selectively removing nouns, verbs
+(including participles and auxiliaries), adjectives \& adverbs, and function
+words (adpositions, determiners, conjunctions).  All datasets were
+automatically tagged using the spaCy POS
+tagger\footnote{https://github.com/explosion/spaCy}.   The embeddings of
+removed words were replaced with a zero vector, preserving the order and
+position of the non-ablated words in the sentence.  Ablations were performed on
+training, validation, and test partitions, using the RNN extractor with
+averaging encoder.  Note that while the input to the models has redacted word
+classes, the produced summaries are evaluated with all words present. See
+\autoref{fig:wordabl} for example inputs under the different word class
+ablations.
+
+\input{ch3/figures/wordabl.tex}
+
+\autoref{tab:ablations} shows the results of the POS tag ablation experiments.
+While removing any word class from the representation generally hurts
+performance (with statistical significance), on the news domains, the absolute
+values of the differences are quite small (.18 on CNN/DM, .41 on NYT, .3 on
+DUC) suggesting that the model's predictions are not overly dependent on any
+particular word types. 
+
+Qualitatively, we see little difference in outputs produced under the redacted
+models.  For example, see \autoref{fig:sumwordabl} where we show output
+summaries from the different word class redacted models. All four variants
+identify the lead two sentences as most important, while also including
+sentences five and six. Three of the summaries also selected sentence 13.  The
+summarizers appear to have selected most content from the front of the article
+suggesting the lead is identfiable even when different content is ablated.
+
+\input{ch3/figures/sumabl.tex}
+
+On the non-news datasets, the ablations have a larger effect (max differences
+are 1.89 on Reddit, 2.56 on AMI, and 1.3 on PubMed).  Removing nouns leads to
+the largest drop on AMI and PubMed.  Removing adjectives and adverbs leads to
+the largest drop on Reddit, suggesting the intensifiers and descriptive words
+are useful for identifying important content in personal narratives.
+Curiously, removing the function word POS class yields a significant
+improvement on DUC 2002 and AMI.
+
+\input{ch3/tables/table_order.tex}
+
+\textbf{Sentence Order Shuffling} Sentence position is a well known and
+powerful feature for news summarization \citep{hong2014improving}, owing to the
+intentional lead bias in the news article
+writing\footnote{\url{https://en.wikipedia.org/wiki/Inverted_pyramid_(journalism)}};
+it also explains the difficulty in beating the lead baseline for
+single-document summarization \citep{nenkova2005b,brandow1995}.  In examining
+the generated summaries, we found most of the selected sentences in the news
+domain came from the lead paragraph of the document. This is despite the fact
+that there is a long tail of sentence extractions from later in the document in
+the ground truth extract summaries (31\%, 28.3\%, and 11.4\% of DUC, CNN/DM,
+and NYT training extract labels come from the second half of the document).
+Because this lead bias is so strong, it is questionable whether the models are
+learning to identify important content or just find the start of the document.
+We conduct a sentence order experiment where each document's sentences are
+randomly shuffled during training. We then evaluate each model performance on
+the unshuffled test data, comparing to the model trained on unshuffled data; if
+the models trained on shuffled data drop in performance, then this indicates
+the lead bias is the relevant factor.
+
+\autoref{tab:shuffle} shows the results of the shuffling experiments.  The news
+domains and PubMed suffer a significant drop in performance when the document
+order is shuffled. By comparison, there is no significant difference between
+the shuffled and in-order models on the Reddit domain, and shuffling actually
+improves performance on AMI.  This suggest that position is being learned by
+the models in the news/journal article domain even when the model has no
+explicit position features, and that this feature is more important than either
+content or function words.
