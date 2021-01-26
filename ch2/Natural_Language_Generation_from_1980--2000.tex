@@ -9,14 +9,14 @@ this period \citep{luhn1958automatic} as well as  also notable experiments in
 generating text purely from syntactic structures \citep{yngve1961random}.
   
 However, NLG did not begin to coalesce as a distinct subfield until the 1980s
-which saw the first workshops devoted specifically to NLG  and a convergence
-on the formalisms and problems central to language generation
-\citep{reiter1997building,mcdonald2010natural}.  NLG researchers of this
-period were focused on at least four main research programs: (i)
-linguistically motivated grammars for generation, (ii) frameworks for
-representing knowledge and concepts, (iii) models of the human receiver of the
-generated text, and (iv) models of discourse and control for planning the
-realization of utterances \citep{mann1981text,mckeown1986}. 
+which saw the first workshops devoted specifically to NLG  and a convergence on
+the formalisms and problems central to language generation
+\citep{reiter1997building,mcdonald2010natural}.  NLG researchers of this period
+were focused on at least four main research programs: (i) linguistically
+motivated grammars for generation, (ii) frameworks for representing knowledge
+and concepts, (iii) models of the human receiver of the generated text, and
+(iv) models of discourse and control for planning the realization of utterances
+\citep{mann1981text,mckeown1986}. 
     
 A variety of grammatical formalism were proposed during this period to be the
 syntactic backbone of language generation algorithms, including Functional
@@ -35,9 +35,9 @@ Indeed, most NLG systems from this period could be understood as a pipeline of
 modules for text planning, sentence planning, and linguistic realization
 \citep{reiter1997building}.  In the text planning stage, the concepts to be
 conveyed are selected, possibly discarding less essential information, and
-arranged into a discourse plan or ordering. In the sentence planning stage,
-the concepts from the previous stage are grouped into individual sentences,
-and lexicalizing concepts and referring expression generation is performed.
+arranged into a discourse plan or ordering. In the sentence planning stage, the
+concepts from the previous stage are grouped into individual sentences, and
+lexicalizing concepts and referring expression generation is performed.
 Finally, in linguistic realization, the intermediate representation from the
 sentence planning stage is converted into a natural language utterance, often
 by linearizing and inflecting some syntactic/morphological representation.
@@ -53,27 +53,27 @@ generating a report from numerical or statistical data in a spreadsheet)
 productivity of human authors \citep{springer1991,mckeown1994,paris1995}.
 Data-to-text generation came to prominence alongside expert systems
 \citep{todd1992introduction}, including as a means to explain them
-\citep{swartout1983xplain}.  As such, these NLG systems suffer from some of
-the same drawbacks as expert systems, often requiring extensive domain
-knowledge and manual rule or grammar engineering which became  difficult to
-maintain or amend over time.
+\citep{swartout1983xplain}.  As such, these NLG systems suffer from some of the
+same drawbacks as expert systems, often requiring extensive domain knowledge
+and manual rule or grammar engineering which became  difficult to maintain or
+amend over time.
   
 In the late 1980s and into the 1990s, as larger text corpora became available
 and statistical and/or machine learning techniques spread through the
 community, text-to-text generation (i.e. methods of directly mapping
 unstructured text inputs to text outputs) increased in popularity.
 Text-to-text generation is less defined by a specific generation task, method
-or unifying theory, but on the use of large collections of example
-input/output text pairs. 
+or unifying theory, but on the use of large collections of example input/output
+text pairs. 
   
 Statistical machine translation (SMT) emerges from this period as the dominant
-success story for machine learning applied to text-to-text generation
-problems.  The availability of digitized bilingual data made it possible to
-create parallel sentence translation corpora and apply statistical word
-alignment and translation techniques \citep{gale1993}.  The canonical IBM
-translation models were developed in this period \citep{brown1988,brown1993}.
-Statistical methods marked a stark improvement over attempts at interlingua or
-semantics based translation systems which often required significant manual
-effort in pre or post editing \citep{hutchins1994}. There were even some
-limited experiments using learned classifiers to predict sentence salience for
-summarization \citep{kupiec1995trainable}.
+success story for machine learning applied to text-to-text generation problems.
+The availability of digitized bilingual data made it possible to create
+parallel sentence translation corpora and apply statistical word alignment and
+translation techniques \citep{gale1993}.  The canonical IBM translation models
+were developed in this period \citep{brown1988,brown1993}.  Statistical methods
+marked a stark improvement over attempts at interlingua or semantics based
+translation systems which often required significant manual effort in pre or
+post editing \citep{hutchins1994}. There were even some limited experiments
+using learned classifiers to predict sentence salience for summarization
+\citep{kupiec1995trainable}.

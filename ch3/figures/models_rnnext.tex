@@ -74,7 +74,7 @@
         \node[sal={sal}] (sal_\step) 
             at (\stepsize *\step, \lvlbase + 3*\lvlheight) {};    
         \node at (\stepsize *\step, \lvlbase + 3*\lvlheight) 
-            {$\psal_i$}; 
+            {$\nnpsal_\step$}; 
         \draw[dep] (ctx_\step.north) -- (sal_\step.south);
         %\draw[dep] (lrnn_\step.north) -- (ctx_\step.south);
 
@@ -135,8 +135,8 @@
 
 
 \end{tikzpicture}}
+\end{minipage}}
 
 \caption{Schematic for the \rnnext~sentence extractor.}
 \label{fig:rnnext}
-\end{minipage}}
 \end{figure}

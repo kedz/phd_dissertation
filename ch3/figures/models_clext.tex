@@ -1,8 +1,6 @@
-
 \begin{figure}
-    \fbox{\begin{minipage}{\textwidth}
 \center
-\scalebox{0.75}{
+\fbox{\resizebox{\textwidth}{!}{
 \begin{tikzpicture}[
   dep/.style ={
     ->,line width=0.3mm
@@ -33,7 +31,6 @@
   \def\stepsize{2}%
   \def\lvlbase{0}%
   \def\lvlheight{3}%
- 
 
     % Sentence Embeddings    
   \foreach \step in {1,...,3} {
@@ -146,10 +143,6 @@
         at (\stepsize * 8.5,\lvlbase + 1.4*\lvlheight) 
         {\textit{(c) Extractor -- Decoder}};
 
-
-
-
-
     \draw[rectangle,draw=black,dotted] 
         (\stepsize*4.6,\lvlbase + 0.5*\lvlheight) -- 
         (\stepsize*8.5, \lvlbase + 0.5*\lvlheight) -- 
@@ -161,14 +154,9 @@
         at (\stepsize * 4.6,\lvlbase + -0.9*\lvlheight) 
         {\textit{(b) Salience Gated Sentence Embeddings}};
 
-
-    
-
-
-
 \end{tikzpicture}
-}
+}}
 
 \caption{Schematic for the \clext~sentence extractor.}
-\label{fig:clext} \end{minipage}}
+\label{fig:clext} 
 \end{figure}

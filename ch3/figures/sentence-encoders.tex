@@ -1,30 +1,197 @@
 \begin{figure}
+{
+\begin{minipage}{\textwidth}
 \begin{subfigure}{\textwidth}
-  \centering
-  %\includegraphics[width=.8\linewidth]{images/ch2/avgsentencoder.pdf}
-  \includegraphics{images/ch2/avgsentencoder.pdf}
   \caption{Averaging Sentence Encoder}
   \label{fig:sfig1}
+  \centering
+~\\~\\
+\fbox{\begin{minipage}{\textwidth}\centering\resizebox{0.4\textwidth}{!}{
+    \begin{tikzpicture}[
+  hid/.style 2 args={
+    rectangle split,
+    draw=#2,
+    rectangle split parts=#1,
+    fill=#2!20,
+    outer sep=1mm}]
+
+  \node[hid={3}{green}] (s2) at (4.5 * .8, 2) {};
+  \node (s2l) at (4.5 *.8, 3) {$\sentEmb_i$};
+
+  \foreach \i [count=\step from 1] in {1, 2, 3, 4, 5, 6, 7, 8} {
+      \node (i\step) at (.8*\step, -2) {$\vphantom{\nnwordEmbs_i}\wordEmb_{i,\i}$};
+    \node[hid={3}{red}] (e\step) at (.8*\step, -1) {};    
+    \draw[->] (e\step.north) -> (s2.south);
+  }
+
+  \node at  (0, -2) {$\nnwordEmbs_i=\left[\right.$};
+      \node at  (.8*9, -2) {$\left.\right]$~~~~~~~~~};
+
+\end{tikzpicture}}\end{minipage}}
 \end{subfigure}
+
+~\\~\\
 
 \begin{subfigure}{\textwidth}
   \centering
-  %\includegraphics[width=.8\linewidth]{images/ch2/cnnsentencoder.pdf}
-  \includegraphics{images/ch2/rnnsentencoder.pdf}
-  \caption{\RecurrentNeuralNetwork~Sentence Encoder}
+  \caption{Recurrent Neural Network Sentence Encoder}
   \label{fig:sfig2}
+~\\~\\
+\fbox{\begin{minipage}{\textwidth}\centering\resizebox{0.9\textwidth}{!}{
+\begin{tikzpicture}[
+  hid/.style 2 args={
+    rectangle split,
+    draw=#2,
+    rectangle split parts=#1,
+    fill=#2!20,
+    outer sep=1mm}]
+
+    \def\SEP{1.25}
+
+  \foreach \i [count=\step from 1,evaluate=\i as \imo using int(\i-1)] 
+        in {1, 2, 3, 4, 5, 6, 7, 8} {
+            \node (i\step) at (\SEP*\step, -2) {$\vphantom{\nnwordEmbs_i}\wordEmb_{i,\i}$};
+    \node[hid={3}{red}] (e\step) at (\SEP*\step, -1) {};    
+  }
+  \node at  (\SEP*0, -2) {$\nnwordEmbs_i=\left[\right.$};
+      \node at  (\SEP*9, -2) {$\left.\right]$~~~~~~~~~};
+  \foreach \i [count=\step from 1,evaluate=\i as \imo using int(\i-1)] 
+        in {1, 2, 3, 4, 5, 6, 7, 8} { 
+    \node[hid={2}{yellow}] (hr\step) at (\SEP *\step - 0.30, 1.85) {};    
+            \node at (\SEP *\step - 0.30, 1.85) {\tiny $\lSentEmb_{i,\i}$};    
+    \ifthenelse{\i>1}{
+        \draw[->] (hr\step.west) -- (hr\imo.east);
+    }{}
+  }
+
+  \foreach \i [count=\step from 1,evaluate=\i as \imo using int(\i-1)] 
+        in {1, 2, 3, 4, 5, 6, 7, 8} { 
+            \node[hid={2}{yellow}] (hf\step) at (\SEP *\step + 0.30, 1.0) {};    
+            \node at (\SEP *\step + 0.30, 1.0) {\tiny $\rSentEmb_{i,\i}$};    
+
+    \ifthenelse{\i>1}{
+        \draw[->] (hf\imo.east) -- (hf\step.west);
+    }{}
+    \draw[->] (e\step.north) to [out=135,in=270] (hr\step.south);
+    \draw[->] (e\step.north) to [out=45,in=270] (hf\step.south);
+  }
+
+    \node[hid={4}{green}] (s) at (\SEP*4.5, 3.5) {};    
+    \node at (\SEP*4,3.5) {$\sentEmb_i$};
+    \draw[->] (hr1.west) to [out=180,in=180] ($(hr1.west)+(0,1.15)$)
+            -- ($(s.west)+(0,-0.5)$);
+
+    \draw[->] (hf8.east) to [out=0,in=0] ($(hf8.east)+(0,3.00)$)
+            -- ($(s.east)+(0,0.5)$);
+
+            \node (annr) at (\SEP*10.5,0.0) {\small $\rSentEmb_{i,8} = \fgru(\wordEmb_{i,8}, \rSentEmb_{i,7}; \rSentGRUParams)$};
+            \node (annl) at (-\SEP*1.0,0.0) {\small $\lSentEmb_{i,1} = \fgru(\wordEmb_{i,1}, \lSentEmb_{i,2}; \lSentGRUParams)$};
+            \draw[dashed,->] (annr) -- (hf8);
+            \draw[dashed,->] (annl) -- (hr1);
+\end{tikzpicture}}\end{minipage}}
 \end{subfigure}
 
+~\\~\\
+
 \begin{subfigure}{\textwidth}
-  \centering
-  %\includegraphics[width=.8\linewidth]{images/ch2/cnnsentencoder.pdf}
-  \includegraphics{images/ch2/cnnsentencoder.pdf}
-  \caption{\convolutionalneuralnetwork~Sentence Encoder}
+  \caption{Convolutional Neural Network Sentence Encoder}
   \label{fig:sfig2}
-\end{subfigure}
-    \caption{Schematics for the averageing, \recurrentneuralnetwork,
+  \centering
+~\\~\\
+\fbox{\begin{minipage}{\textwidth}\centering\resizebox{0.8\textwidth}{!}{
+\begin{tikzpicture}[x=0.5cm, y=0.5cm,
+  convcon/.style={black,line width=0.5mm},
+  hid/.style 2 args={
+    rectangle split,
+    draw=#2,
+    rectangle split parts=#1,
+    fill=#2!20,
+    outer sep=1mm}]
+
+
+
+          \node[align=center] (x) at (6,10.1) {Convolutional\\Feature Detectors};
+
+\fill[red!20!] (0,-1) rectangle (3,7);
+\draw[step=.5cm,red] (0,-1) grid (3,7);
+  \foreach \i [count=\step from 1] in {1,...,8} {
+      \node (w\step) at (-1, 7.4 - \step) {$\wordEmb_{i,\step}$};
+  }
+
+  \node at (1.5, -2) {$\nnwordEmbs_i$};
+        %\fill[purple!40!] (0,5) rectangle (3,7);
+        \draw[step=.5cm,purple,line width=1mm] (0,5) grid (3,7);
+        \draw[convcon] (0,5) -- (7, 7);
+        \draw[convcon] (3,5) -- (8, 7);
+        \draw[convcon] (0,7) -- (7, 8);
+        \draw[convcon] (3,7) -- (8, 8);
+
+        %\fill[purple!40!] (0,2) rectangle (3,2 + 2);
+        \draw[step=.5cm,purple,line width=1mm] (0,2) grid (3,2 + 2);
+        \draw[convcon] (0,2+2) -- (7, 5);
+        \draw[convcon] (3,2+2) -- (8, 5);
+        \draw[convcon] (0,2) -- (7, 4);
+        \draw[convcon] (3,2) -- (8, 4);
+
+        %\fill[blue!20!] (0,1) rectangle (3,2);
+        \draw[step=.5cm,blue,line width=1mm] (0,1) grid (3,2);
+        \draw[convcon] (0,2) -- (5, 1);
+        \draw[convcon] (3,2) -- (6, 1);
+        \draw[convcon] (0,1) -- (5, 0);
+        \draw[convcon] (3,1) -- (6, 0);
+
+        %\fill[blue!20!] (0,-1) rectangle (3,0);
+        \draw[step=.5cm,blue,line width=1mm] (0,-1) grid (3,0);
+        \draw[convcon] (0,0) -- (5, -1);
+        \draw[convcon] (3,0) -- (6, -1);
+        \draw[convcon] (0,-1) -- (5, -2);
+        \draw[convcon] (3,-1) -- (6, -2);
+
+  \foreach \x [count=\step from 1] in {5,10,10,20,30,10,40,20} {
+
+          \fill[blue!\x!] (5,6-\step) rectangle (6,6-\step+1);
+          \draw[step=.5cm,blue] (5,6-\step) grid (6,6-\step+1);
+  }
+
+  \node (annl) at (12, -1.5) {$\relu\left(\cBias^{(1)} + \cMatrix^{(1)\T}\wordEmb_{i,8}\right)$};
+  \node[anchor=west] (annlm) at (16, 0.5) {\small $\max_j \relu\left(\cBias^{(1)} + \cMatrix^{(1)\T}\wordEmb_{i,j}\right)$};
+  \node at (12, 0.5) {\small Max Pooling};
+  \node (annr) at (14, 7.5) {$\relu\left(\cBias^{(2)} + \cMatrix^{(2)\T}\left[\begin{array}{l} \wordEmb_{i,1}\\\wordEmb_{i,2} \end{array}\right] \right)$};
+  \node[anchor=west] (annrm) at (16, 4.5) {\small $\max_j \relu\left(\cBias^{(2)} + \cMatrix^{(2)\T}\left[\begin{array}{l} \wordEmb_{i,j}\\\wordEmb_{i,j+1} \end{array}\right] \right)$};
+    \draw[dashed,->] (annr) -- (8.1, 7.5);
+    \draw[dashed,->] (annl) -- (6.1, -1.5);
+    \draw[dashed,->] (annlm) -- (11.1, 2.5);
+    \draw[dashed,->] (annrm) -- (11.1, 3.5);
+    
+
+    \foreach \x [count=\step from 1] in {20,25,50,40,35,20,25} {
+          \fill[purple!\x!] (7,8-\step) rectangle (8,8-\step+1);
+          \draw[step=.5cm,purple] (7,8-\step) grid (8,8-\step+1);
+    }
+
+
+        \draw[convcon] (7,6) -- (10, 4);
+        \draw[convcon] (8,6) -- (11, 4);
+        \draw[convcon] (7,5) -- (10, 3);
+        \draw[convcon] (8,5) -- (11, 3);
+
+        \draw[convcon] (5,0) -- (10, 3);
+        \draw[convcon] (6,0) -- (11, 3);
+        \draw[convcon] (5,-1) -- (10, 2);
+        \draw[convcon] (6,-1) -- (11, 2);
+
+          \fill[green!50!] (10,3) rectangle (11,4);
+          \draw[step=.5cm,green] (10,3) grid (11,4);
+          \fill[green!40!] (10,2) rectangle (11,3);
+          \draw[step=.5cm,green] (10,2) grid (11,3);
+          \node at (12,3) {$\sentEmb_i$};
+
+
+  \end{tikzpicture}}\end{minipage}}
+
+
+\end{subfigure}\end{minipage}}
+    \caption{Schematics for the averaging, \recurrentneuralnetwork,
     and \convolutionalneuralnetwork~sentence encoders.}
 \label{fig:sentenceEncoders}
 \end{figure}
-
-

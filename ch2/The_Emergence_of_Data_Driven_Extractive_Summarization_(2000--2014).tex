@@ -12,29 +12,28 @@ NLP researchers particularly around multi-document summarization
 Many significant summarization systems from this time still relied on
 unsupervised methods to create extract summaries, usually exploiting document
 collection statistics to determine the salience of input text units.  The
-representation of text units as TF-IDF weighted bags-of-words
-\citep{jones1972} is prevalent in this era. For example, \cite{radev2000}
-identify salience sentences in a document cluster by their similarity to the
-average TF-IDF vector of the document cluster. In \cite{erkan2004}, sentences
-are treated as vertices in a fully connected graph, with edge weights
-determined by the cosine similarity between each sentence's TF-IDF weighted
-bag-of-words representation. The PageRank algorithm \citep{page1999} is then
-used to determine the graph centrality of each sentence; the sentences most
-central in the graph are considered the most salient and extracted for the
-summary. 
+representation of text units as TF-IDF weighted bags-of-words \citep{jones1972}
+is prevalent in this era. For example, \cite{radev2000} identify salience
+sentences in a document cluster by their similarity to the average TF-IDF
+vector of the document cluster. In \cite{erkan2004}, sentences are treated as
+vertices in a fully connected graph, with edge weights determined by the cosine
+similarity between each sentence's TF-IDF weighted bag-of-words representation.
+The PageRank algorithm \citep{page1999} is then used to determine the graph
+centrality of each sentence; the sentences most central in the graph are
+considered the most salient and extracted for the summary. 
 
 Other methods used alternative formulations to exploit frequency for
 summarization, most notably \cite{lin2000} who identified topic signatures
 using a likelihood ratio test \citep{dunning1993} to identify terms that
 occurred unusually frequently in a document given a large generic background
-corpus. After removing stopwords, word frequency on its own has also been
-shown to be an effective signal for identifying salient sentences
+corpus. After removing stopwords, word frequency on its own has also been shown
+to be an effective signal for identifying salient sentences
 \citep{nenkova2005}.
 
 Following on the initial research by \cite{kupiec1995trainable}, other work
 using supervised learning for summarization begins to emerge from this time
-\citep{conroy2001using,osborne2002using,hirao2002extracting,sipos2012large}.
-Here, summarization is framed as a sentence classification task (i.e., which
+\citep{conroy2001,osborne2002using,hirao2002extracting,sipos2012large}.  Here,
+summarization is framed as a sentence classification task (i.e., which
 sentences from the input document should be included in a summary). 
 
 Most of the text-to-text summarization approaches from the 2000s are primarily
@@ -47,19 +46,19 @@ summarization performance \citep{nenkova2011}.
  
 There are some notable works that attempted to perform limited abstractive
 summarization. \cite{barzilay2005}  developed an unsupervised method of
-sentence fusion (i.e., combining sentences with the same or overlapping
-content using their syntactic parses as backbone structure), that has been
-extended and  refined by others \citep{marsi2005,filippova2008}. Heuristically
-driven phrase deletions were also explored to reduce less salient information
-in extractive summarization \citep{jing2000,zajic2007}.  In the supervised
-case, there were several works that attempted to learn to  delete
-non-essential phrase constituents.  This was formulated as either a pipeline
-of learned compression and extraction models \citep{wang2013} or as a joint
-model of extraction and compression \citep{martins2009,bergkirkpatrick2011}.
-While sentence fusion was capable of some abstractive rewriting, the other
-approaches mentioned here predominantly focused on compression, i.e. word or
-phrase deletion, to generate novel summary text, which is only one of the many
-ways that human abstractors perform the summarization task \citep{jing2000b}.
+sentence fusion (i.e., combining sentences with the same or overlapping content
+using their syntactic parses as backbone structure), that has been extended and
+refined by others \citep{marsi2005,filippova2008}. Heuristically driven phrase
+deletions were also explored to reduce less salient information in extractive
+summarization \citep{jing2000,zajic2007}.  In the supervised case, there were
+several works that attempted to learn to  delete non-essential phrase
+constituents.  This was formulated as either a pipeline of learned compression
+and extraction models \citep{wang2013} or as a joint model of extraction and
+compression \citep{martins2009,bergkirkpatrick2011}.  While sentence fusion was
+capable of some abstractive rewriting, the other approaches mentioned here
+predominantly focused on compression, i.e. word or phrase deletion, to generate
+novel summary text, which is only one of the many ways that human abstractors
+perform the summarization task \citep{jing2000b}.
 
 Streaming or temporal summarization was first explored in the context of topic
 detection and tracking \citep{khandelwal2001,allan2001} and more recently at

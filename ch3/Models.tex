@@ -1,0 +1,872 @@
+\section{Models}
+
+We implement our salience estimation model $\nnmodel(\nnsals|\nndoc;\params)$
+hierarchically following the analogous structure of the documents we are
+modeling.  Every model $\nnmodel$ proposed in this chapter consists of three
+modules or layers: \textit{(i)} the word embedding layer, \textit{(ii)} the
+sentence encoder layer, and \textit{(iii)} the sentence extractor layer.  The
+word embedding layer maps the words in a sentence to a sequence of word
+embeddings. The sentence encoder layer similarly maps sequences of word
+embeddings to a sentence embedding. Finally, the sentence extractor maps
+sequences of sentence embeddings to sequence of salience labels.
+
+Choosing an architecture for each of the modules defines the model. We define
+several architectures for the sentence encoder and extractor layers and show
+how particular settings of each correspond to prior summarization models
+proposed by \citet{cheng2016neural} and \citet{nallapati2017summarunner}.
+Additionally, we propose two novel sentence extractor layers, and in
+experiments consider all combinations of sentence encoder/extractor pairings.
+In the next subsections, we describe each layer in more detail, and conclude
+this section showing how certain configurations of each layer maps to
+previously proposed or novel salience estimation models and how the models
+generate an extract summary at test time (which we refer to as inference).
+
+\subsection{Word Embedding Layer}
+
+The word embedding layer, $\embLayer(\cdot\,;\embParams) : \wordVocab^*
+\rightarrow \reals^{* \times \embDim},$ maps a sequence of words 
+\[
+    \sent_i = \left[\word_{i,1},\ldots, \word_{i,\sentSize_i}\right]
+\] 
+to a sequence of word embeddings 
+\[
+\nnwordEmbs_i = \left[ \wordEmb_{i,1}, \ldots, \wordEmb_{i,\sentSize_i} \right]
+    \in \reals^{\sentSize_i \times \embDim}
+\]
+where the sole parameter $\embParams \in \mathbb{R}^{|\wordVocab| \times
+\embDim}$ is a $\embDim$-dimensional embedding matrix and $\wordEmb_{i,j} =
+\embParams_{\word_{i,j}}$ is the word embedding for word $\word_{i,j}$.
+$\embParams$ is initialized prior to training the full model with embeddings
+obtained using the unsupervised Global Vector (GloVe) embedding method on a
+large collection of text \citep{pennington2014glove}.  Additionally,
+$\embParams$ can be held fixed during training or updated with other model
+parameters. We use $\embDim = 200$-dimensional embeddings in our models.
+
+\input{ch3/figures/sentence-encoders.tex}
+
+\subsection{Sentence Encoder Layer} \label{sec:senc}
+
+The sentence encoder layer, \sentEncFuncDef, maps a sequence of word embeddings
+\[
+\nnwordEmbs_i = \left[\wordEmb_{i,1},\ldots, \wordEmb_{i,\sentSize_i}\right]
+\] 
+to a $\sentDim$-dimensional embedding representation of sentence $\sent_i$.
+The set of associated parameters, $\sentEncParams$, depends on the exact
+architecture for implementing the encoder. We experiment with three
+architectures for mapping sequences of word embeddings to a fixed length
+vector: averaging, recurrent neural networks, and convolutional neural
+networks.
+
+We describe each variant now, and also briefly discuss the trade-offs
+associated with each architecture. The main distinction amongst the encoders is
+to how they can exploit the context and structure of the words they are
+encoding. With the averaging encoder, the resulting sentence embedding captures
+all words equally, but is insensitive to phrase structure phenomenon like
+negation. The convolutional encoder can capture local phrase structure but may
+not be able to capture long range phrase structure. The recurrent encoder can
+capture long range phrase structure and context but is computationally more
+expensive than the recurrent encoder.  Schematics of each encoder architecture
+can be found in \autoref{fig:sentenceEncoders}.
+
+\subsubsection{Averaging Sentence Encoder} 
+
+Under the averaging encoder, a sentence embedding $\sentEmb_i \in
+\reals^{\sentDim}$ is simply the average of its word embeddings,
+\begin{align} 
+    \sentEmb_i & = \sentEnc(\nnwordEmbs_i;\sentEncParams) =  
+        \frac{1}{\sentSize_i} \sum_{j=1}^{\sentSize_i} \wordEmb_{i,j}.
+\end{align}
+The sentence representation here is effectively a bag of word embeddings.
+There are no parameters associated with this encoder (i.e.  $\sentEncParams =
+\emptyset$). The size of the sentence embedding is simply $\sentDim = \embDim =
+200$. Dropout with drop probability 0.25 is applied to each word embedding
+$\wordEmb_{i,j}$ during training. 
+
+\subsubsection{\RecurrentNeuralNetwork~Sentence Encoder} 
+
+When using the \recurrentneuralnetwork~encoder we apply both forward and
+backward \recurrentneuralnetwork s over the word embedding sequences produced
+by the embedding layer. To obtain the actual sentence embedding, we concatenate
+the final output step of the forward and backward networks.  For the actual
+recurrence function, we use the \gatedrecurrentunit~(GRU)
+\citep{cho2014learning}.  The GRU function, $\gruFuncDef{\embDim}{\hidDim}$, is
+defined as
+\begin{align}
+\fgru(\wordEmb, \sentEmb; \varphi) & 
+    = (1-\GRUupdategate) \odot \GRUcandgate + \GRUupdategate \odot \sentEmb \label{eqn:gru}\\
+    \textit{(Reset gate)} & \nonumber \\
+\GRUresetgate &= 
+    \sigma\left(
+      \GRUWeight^{(\wordEmbChar\GRUresetchar)} \wordEmb 
+        + \GRUBias^{(\wordEmbChar\GRUresetchar)} +
+      \GRUWeight^{(\sentEmbChar\GRUresetchar)} \sentEmb 
+        + \GRUBias^{(\sentEmbChar\GRUresetchar)} 
+    \right)\\
+    \textit{(Update gate)} & \nonumber \\
+\GRUupdategate &= 
+    \sigma\left(
+      \GRUWeight^{(\wordEmbChar\GRUupdatechar)} \wordEmb 
+        + \GRUBias^{(\wordEmbChar\GRUupdatechar)} +
+      \GRUWeight^{(\sentEmbChar\GRUupdatechar)} \sentEmb 
+        + \GRUBias^{(\sentEmbChar\GRUupdatechar)} 
+    \right)\\
+    \textit{(Candidate state)} & \nonumber \\
+\GRUcandgate &= \tanh\left(
+    \GRUWeight^{(\wordEmbChar\GRUcandchar)} \wordEmb 
+        + \GRUBias^{(\wordEmbChar\GRUcandchar)} + 
+    \GRUresetgate \odot \left(
+        \GRUWeight^{(\sentEmbChar\GRUcandchar)} \sentEmb 
+            + \GRUBias^{(\sentEmbChar\GRUcandchar)} 
+    \right) \right)
+\end{align}
+where $\GRUparams = \left\{   \GRUWeight^{(ab)}, \GRUBias^{(ab)} \Big\vert a
+\in \{v,h\}, b \in \{r,u,o\} \right\}$ is the set of \gru~parameters with
+$\GRUWeight^{(\wordEmbChar\cdot)} \in \reals^{\hidDim \times \embDim}$,
+$\GRUWeight^{(\sentEmbChar\cdot)} \in \reals^{\hidDim \times \hidDim}$, and
+$\GRUBias^{(\cdot)} \in \reals^{\hidDim }$, and $\sigma(x) =
+\frac{1}{1+e^{-x}}$, $\tanh(x) = \frac{e^x-1}{e^x+1}$, and $\odot$ is the
+Hadamard product.
+ 
+
+Under the \recurrentneuralnetwork~encoder, a sentence embedding $\sentEmb_i$ is
+then defined as
+\begin{align} 
+  \sentEmb_i = \sentEnc\Big(\nnwordEmbs_i; \sentEncParams\Big) & = \left[
+                \begin{array}{l}\rSentEmb_{i,\sentSize_i}\\ \lSentEmb_{i,1}
+    \end{array}
+  \right] \\
+  \textit{(Forward GRU)} \nonumber & \\
+  \rSentEmb_{i,0} &= \zeroEmb, \\ 
+  \rSentEmb_{i,j} &= 
+      \fgru(\wordEmb_{i,j}, \rSentEmb_{i,j-1}; \rSentGRUParams) 
+      & \forall j \in \{1,\ldots,\sentSize_i\} \\  
+  \textit{(Backward GRU)} \nonumber & \\
+  \lSentEmb_{i,\sentSize_i + 1} &= \zeroEmb, \\
+  \lSentEmb_{i,j} &= 
+      \fgru(\wordEmb_{i,j},\lSentEmb_{i,j+1}; \lSentGRUParams)
+      & \forall j \in \{\sentSize_i, \ldots, 1\} 
+\end{align}
+where $[\cdots]$ is the vector concatenation operator and $\rSentGRUParams$ and
+$\lSentGRUParams$ are distinct parameters for the forward and backward GRUs
+respectively.  Collectively the set of parameters for the recurrent neural
+network sentence encoder is $\sentEncParams = \left\{ \rSentGRUParams,
+\lSentGRUParams \right\}$. We use $\hidDim=300$ dimensional hidden layers for
+each \gru, making the size of the sentence embedding $\sentDim=2\hidDim=600$.
+Dropout with drop probability $0.25$ is applied to \gru~outputs
+$\rSentEmb_{i,j}$ and $\lSentEmb_{i,j}$ for $j \in \{1,\ldots,\sentSize_i\}$
+during training.
+
+\subsubsection{\ConvolutionalNeuralNetwork~Sentence Encoder} 
+\label{sec:sentconvenc}
+
+The \convolutionalneuralnetwork~sentence encoder uses a series of convolutional
+feature maps to encode each sentence. This encoder is similar to the
+convolutional architecture of \citet{kim2014convolutional} used for text
+classification tasks. It performs a series of ``one-dimensional'' convolutions
+over word embeddings. The \kernelwidth~$\ckernelWidth \in \naturals$ of a
+feature map determines the number of contiguous words that a feature map is
+sensitive to. For $\ckernelWidth=3$, for example, the feature map would
+function as a trigram feature detector essentially.  We denote a single
+convolutional feature map of kernel width $\ckernelWidth$ as
+$\ckernel_\ckernelWidth : \reals^{*\times \embDim} \rightarrow \reals$ with
+\begin{align}
+    \ckernel_\ckernelWidth(\wordEmb_i;\upsilon,\beta)  & 
+= \max_{j \in \{ 
+    1 - \left\lfloor \frac{\ckernelWidth}{2} \right\rfloor, 
+    \ldots, \sentSize_i +  
+    \left\lfloor \frac{\ckernelWidth}{2} \right\rfloor - \ckernelWidth + 1 \}}
+  \relu\left( \cBias + \cMatrix \cdot \left[ \begin{array}{c} \wordEmb_{i,j}\\ \wordEmb_{i,j+1} \\ \vdots \\ \wordEmb_{i,j+k-1} \end{array} \right] \right),
+\end{align}
+where $\relu(x) = \max(0, x)$ is the rectified linear unit \citep{nair2010},
+$\left\lfloor\cdot\right\rfloor$ is the floor operator, and $\cMatrix \in
+\reals^{\ckernelWidth \embDim}$ and $\cBias \in \reals$ are learned parameters.
+Note that we use a ``zero-padded'' convolution \citep{dumoulin2016}. That is,
+the $\max$ operator ranges over  $j \in \left\{1 - \left\lfloor
+\frac{\ckernelWidth}{2} \right\rfloor, \ldots, \sentSize_i +  \left\lfloor
+\frac{\ckernelWidth}{2} \right\rfloor - \ckernelWidth + 1 \right\}$ instead of
+$\left\{1,\ldots,\sentSize_i - \ckernelWidth + 1\right\}$, and $\wordEmb_{i,j}
+= \zeroEmb$ for $j < 1$ and $j > \sentSize_i$. Padded convolutions help
+alleviate the problem of reduced receptive fields on the boundaries of the
+sequence. See \autoref{fig:paddedconv} for a visual example.
+
+\input{ch3/figures/cnn_padding.tex}
+
+The final sentence embedding $\sentEmb_i$ is a concatenation of many
+convolutional feature maps ranging over multiple kernel widths with each filter
+having its own distinct sets of parameters.  Let $\ckernelWidths =
+\{\ckernelWidth_1, \ldots, \ckernelWidth_m \} \subset \naturals$ be the set of
+the sentence encoder's $m$ kernel widths, and $\cFeatureMaps_\ckernelWidth \in
+\naturals$ be the number of feature maps for kernel width $\ckernelWidth$. The
+final sentence embedding produced by the \convolutionalneuralnetwork~sentence
+encoder is defined as 
+\begin{align}
+\sentEmb_i & = \sentEnc(\wordEmb_i; \sentEncParams) = \left[  
+    \ckernel^{\left(1\right)}_{\ckernelWidth_1},
+    \ldots, 
+    \ckernel^{\left(\cFeatureMaps_{\ckernelWidth_1}\right)}_{\ckernelWidth_1}, 
+    \ckernel^{\left(1\right)}_{\ckernelWidth_2},
+    \ldots, 
+    \ckernel^{\left(\cFeatureMaps_{\ckernelWidth_2}\right)}_{\ckernelWidth_2}, 
+    \ldots, 
+    \ckernel^{\left(1\right)}_{\ckernelWidth_m},
+    \ldots, 
+    \ckernel^{\left(\cFeatureMaps_{\ckernelWidth_m}\right)}_{\ckernelWidth_m}
+  \right]  
+\end{align}
+where $\ckernel^{(j)}_{\ckernelWidth} =
+\ckernel^{(j)}_{\ckernelWidth}(\nnwordEmbs_i;\cMatrix^{(j,\ckernelWidth)},\cBias^{(j,\ckernelWidth)})$
+and  $\sentEncParams = \left\{ \cMatrix^{\left(k,l\right)},
+\cBias^{\left(k,l\right)}\Big\vert \forall k,l : k \in \ckernelWidths, l \in
+\{1,\ldots,\cFeatureMaps_k\}\right\}$ are the sentence encoder's learned
+parameters.  In our instantiation, we use kernel widths $\ckernelWidths =
+\{1,\ldots, 6\}$ with corresponding feature maps sizes $\cFeatureMaps_1=25$,
+$\cFeatureMaps_2=25$, $\cFeatureMaps_3=50$, $\cFeatureMaps_4=50$,
+$\cFeatureMaps_5=50$, and $\cFeatureMaps_6=50$, making the resulting sentence
+embedding dimensionality $\sentDim=250$.  Dropout with drop probability $0.25$
+is also applied to $\sentEmb_i$ during training.
+
+\subsubsection{Sentence Encoder Trade-offs}
+
+The sentence encoder's role is to obtain a vector representation of a finite
+sequence of word embeddings that is useful for the sentence extraction stage.
+Therefore, it must aggregate features in the word embedding space that are
+predictive of salience. Averaging embeddings is not an unreasonable approach to
+this. Empirically there is evidence that word embedding averaging is a fairly
+competitive sentence representation generally
+\citep{iyyer2015,wieting2015,arora2017,wieting2017}. In the context of
+summarization, averaging can be thought of as a noisy OR; if any of the words
+in a sentence are indicative of salience, this representation should capture
+them.  Computationally, the averaging encoder is the fastest to compute and
+does not require learning of parameters, reducing the memory and computation
+time during training. 
+
+The \recurrentneuralnetwork~sentence encoder can in theory capture some
+compositional features of a word sequence that would be difficult or impossible
+to represent in the averaging encoder (e.g. negation or co-reference).
+However, this comes at a much heavier computational cost, as
+\recurrentneuralnetwork s cannot be fully parallelized due to the inherently
+sequential nature of their computation.
+
+The \convolutionalneuralnetwork~encoder represents a middle ground between the
+averaging and \recurrentneuralnetwork~encoders. When using modestly sized
+kernel widths (e.g., 1-5), the receptive window should be sensitive short
+phrases and some locally scoped negation. It will not be able to capture the
+longer ranged dependencies that the \recurrentneuralnetwork~encoder would.
+However, it is much faster to compute than the \recurrentneuralnetwork~as the
+individual feature maps can be computed completely in parallel. 
+
+\subsection{Sentence Extraction Layer} \label{sec:sext}
+
+The role of the sentence extractor, $\sentExt(\cdot; \xParams) : \reals^{*
+\times \sentDim} \rightarrow \labelSpace$, is to map a sequence of sentence
+embeddings $\sentEmb_1,\ldots,\sentEmb_\docSize$ produced by the sentence
+encoder layer to a sequence of salience judgements 
+\[
+    \nnsals = \left[ \bsal_1,\ldots, \bsal_\docSize\right].
+\] %y_1, ..., y_n.%
+The proposed sentence extractors do this by first implementing a probability
+distribution over salience label sequences conditioned on
+$\sentEmb_1,\ldots,\sentEmb_\docSize$,
+$\nnmodel(\nnsals|\sentEmb_1,\ldots,\sentEmb_\docSize; \xParams)$, and then
+inferring the (approximate) maximum likelihood sequence, i.e., 
+\[ 
+    \sentExt(\sentEmb_1,\ldots,\sentEmb_\docSize; \xParams) = \nnpredsals \approx \argmax_{\nnsals \in \labelSpace} \nnmodel(\nnsals|\sentEmb_1,\ldots,\sentEmb_\docSize;\xParams).
+\]
+Previous neural network approaches to sentence extraction have assumed an
+\autoregressive~model, leading to the following factorization of the salience
+label distribution
+\[
+    \nnmodel(\nnsal_{1},\ldots,\nnsal_\docSize|\sentEmb_1,\ldots,\sentEmb_\docSize;\xParams)=
+      \prod_{i=1}^\docSize 
+        \model(\nnsal_i|\nnsal_1,\ldots,\nnsal_{i-1},\sentEmb_1,\ldots,\sentEmb_\docSize;\xParams),
+\]
+where each prediction $\nnsal_i$ is dependent on \emph{all} previous $\bsal_j$
+for all $j < i$. We compare two such models proposed by
+\citet{cheng2016neural} and \citet{nallapati2017summarunner}. 
+
+While intuitively it makes sense that previous extraction decisions might
+affect the probability of extracting subsequent sentences, (e.g., highly
+salient sentences might cluster together), it has not been empirically
+investigated whether this dependence is necessary for deep learning models in
+practice. For example, in the models of \citet{cheng2016neural} and
+\citet{nallapati2017summarunner}, individual predictions of $\nnsal_i$ are made
+using information from some or all of the sentence embeddings $\sentEmb_1,
+\ldots, \sentEmb_\docSize$, such that information about neighboring sentences
+could be propagated through sentence embedding interactions rather than on
+previous salience decisions.  Additionally, from an efficiency perspective, the
+autoregressive design prevents parallelization of individual $\nnsal_i$
+predictions, since they must now be sequentially computed.  Motivated by these
+considerations, we propose two \nonautoregressive~sentence extractor
+architectures where individual salience labels $\nnsal_i$ are independent of
+each other, that is, 
+\[
+    \nnmodel(\nnsal_1,\ldots,\nnsal_\docSize|\sentEmb_1,\ldots,\sentEmb_\docSize;\xParams) = \prod_{i=1}^\docSize 
+\nnmodel(\nnsal_i|\sentEmb_1,\ldots,\sentEmb_\docSize;\xParams).
+\]
+
+While the sentence extractor architectures are quite different in their
+details, under our unified treatment of them here, we view them as producing in
+their intermediate computations a sequence of contextual sentence embeddings
+$\xHid_1,\ldots,\xHid_\docSize$.  Unlike the ``context free'' sentence
+embeddings $\sentEmb_i$ which are constructed only using words from sentence
+$\sent_i$,  each $\xHid_i$ is computed using information information propagated
+from neighboring sentence embeddings $\sentEmb_1, \ldots, \sentEmb_{i-1}$ and
+$\sentEmb_{i+1}, \ldots, \sentEmb_\docSize$ and in the case of the
+autoregressive models, salience estimates $\nnpsal_1,\ldots,\nnpsal_{i-1}$
+where 
+\[
+    \nnpsal_i = \nnmodel(\nnsal_i=1|\nnsal_1,\ldots,\nnsal_{i-1},\sentEmb_1, \ldots, \sentEmb_\docSize;\xParams).
+\]
+Additionally, the SummaRunner extractor produces an embedding representation of
+the document, $\srDocEmb$, as well as iterative representations of the summary
+$\srSum_1,\ldots, \srSum_{\docSize-1}$ which also affect the creation of the
+contextual sentence embeddings.
+
+We now describe in detail how  the \autoregressive~sentence extractors (the
+\clext~extractor and  the \srext~extractor) and our proposed
+\nonautoregressive~ones (the \rnnext~extractor and the \stsext~extractor),
+produce the these various representations and make sentence salience estimates. 
+
+\input{ch3/figures/models_clext.tex}
+
+\subsubsection{\clext~Extractor}
+
+The \clext~extractor \citep{cheng2016neural} is built around a somewhat
+idiosyncratic \unidirectional~\sequencetosequence~model. A schematic outlining
+the structure of the encoder and closely following the subsequent equations can
+be found in \autoref{fig:clext}.
+
+The encoder is fairly standard. The initial state is initialized to a zero
+embedding, $\zeroEmb$, and each sentence embedding $\sentEmb_i$ is fed into the
+encoder, to obtain the final encoder hidden state $\xEncHid_\docSize \in
+\reals^\xhidSize$. That is,\\
+
+\noindent\fcolorbox{encemb}{encemb!20!}{\textit{(\hyperref[fig:clext]{Figure~\ref{fig:clext}.a}) Extractor -- Encoder}}\\[-40pt]
+\begin{align}
+    \xEncHid_0 & = \zeroEmb \\
+    \xEncHid_i &= \fgru(\sentEmb_i, \xEncHid_{i-1};\clEncParams) & 
+    \forall i : i \in \{1,\ldots,\docSize\}. 
+\end{align}
+
+The initial decoder hidden state $\xDecHid_0 \in \reals^{\xhidSize}$ is
+initialized with the last encoder hidden state, $\xEncHid_\docSize$.  The
+inputs to decoder step $i$, for $i >1$, are the salience gated
+$(i-1)^\textrm{th}$ sentence embeddings,\\
+
+\noindent\fcolorbox{salsentemb}{salsentemb!20!}{\textit{(\hyperref[fig:clext]{Figure~\ref{fig:clext}.b}) Salience Gated Sentence Embeddings}}\\[-40pt]
+\begin{align}
+    \salSentEmb_{i-1} & = \nnpsal_{i-1}\sentEmb_{i-1} &
+    \forall i: i \in \{2,\dots,\docSize\},
+\end{align}
+where the salience gate is $\nnpsal_i =
+\nnmodel(\nnsal_i|\nnsal_1,\ldots,\nnsal_{i-1},
+\sentEmb_1,\ldots,\sentEmb_\docSize;\xParams)$, is the salience estimate
+computed for sentence $\sent_{i-1}$.  For the first decoder step (i.e. $i=1$),
+since there is no $\nnpsal_0$, $\salSentEmb_0$ is a special learned parameter.
+
+The extractor decoder outputs are then computed as,\\
+
+\noindent\fcolorbox{decemb}{decemb!20!}{\textit{(\hyperref[fig:clext]{Figure~\ref{fig:clext}.c}) Extractor -- Decoder}}\\[-40pt]
+\begin{align}
+    \xDecHid_0  &= \xEncHid_\docSize  \\
+   \xDecHid_i &= \fgru(\salSentEmb_{i-1}, \xDecHid_{i-1};\clDecParams)
+   &  
+    \forall i : i \in \{1,\ldots,\docSize\}  \label{eq:cl1} 
+\end{align}
+Note in \autoref{eq:cl1} that the decoder side \gru~input is the sentence
+embedding from the previous time step, $\sentEmb_{i-1}$, weighted by its
+probability of extraction, $\nnpsal_{i-1}$, from the previous step, inducing
+dependence of each output $\nnsal_i$ on all previous outputs
+$\nnsal_1,\ldots,\nnsal_{i-1}$.
+
+The contextual sentence embeddings $\xPredHid_i$ are then computed by
+concatenating the encoder and decoder outputs $\xEncHid_i$ and $\xDecHid_i$ and
+running them through a \feedforward~layer with $\relu$ activation,\\
+
+\noindent\fcolorbox{ctxemb}{ctxemb!20!}{\textit{(\hyperref[fig:clext]{Figure~\ref{fig:clext}.d}) Contextual Sentence Embeddings}}\\[-30pt]
+\begin{align}
+\xPredHid_i &= \relu\left(\xpWeight^{(1)} \left[\begin{array}{c}\xEncHid_i \\ \xDecHid_i \end{array}\right] + \xpBias^{(1)} \right) & 
+    \forall i : i \in \{1,\ldots,\docSize\}.
+\end{align}
+
+The actual salience estimate for sentence $\sent_i$ is then computed by feeding
+$\xPredHid_i$ through another \feedforward~layer with logistic sigmoid
+activation,\\
+
+\noindent\fcolorbox{sal}{sal!20!}{\textit{(\hyperref[fig:clext]{Figure~\ref{fig:clext}.e}) Salience Estimates}}\\[-40pt]
+\begin{align}
+ p_i = \model(\bsal_i =1|\bsal_1,\ldots,\bsal_{i-1}, \sentEmb_1,\ldots,\sentEmb_\docSize; \xParams) &= \sigma\left(\xpWeight^{(2)}\xPredHid_i + \xpBias^{(2)}  \right) & 
+    \forall i : i \in \{1,\ldots,\docSize\}. 
+\end{align}
+
+The contextual embedding and salience estimate layers have parameters are
+$\xpWeight^{(1)} \in \reals^{\xpHidSize \times 2 \xhidSize}$, $\xpBias^{(1)}
+\in \reals^{\xpHidSize}$, $\xpWeight^{(2)} \in \reals^{1 \times \xpHidSize}$,
+and $\xpBias^{(2)}\in \reals$.  The entire set of learned parameters for the
+\clext~extractor are
+\[
+    \chi = \left\{ 
+    \clEncParams, \clDecParams,
+    \salSentEmb_0,
+    \xpWeight^{(1)}, \xpBias^{(1)}, \xpWeight^{(2)}, \xpBias^{(2)}\right\}.
+\]
+The hidden layer dimensionality of the \gru~and the contextual embedding layer
+is $\xhidSize = 300$ and $\xpHidSize=100$, respectively.  Dropout with drop
+probability $0.25$ is applied to the \gru~outputs ($\xEncHid_i$ and
+$\xDecHid_i$),   and to $\xPredHid_i$.
+
+\subsubsection{\srext~Extractor}
+
+\citet{nallapati2017summarunner} proposed a sentence extractor, which we refer
+to as the \srext~Extractor, that factorizes the salience estimates for each
+sentence into contributions from five different sources, which we refer to as
+\saliencefactors.  The \saliencefactors~take into account interactions between
+contextual sentence embeddings and document embeddings or summary embeddings,
+as well as sentence position embeddings. Salience estimates are made
+sequentially, starting with the first sentence $\sent_1$ and preceding to the
+last $\sent_\docSize$. When computing the salience estimate of sentence
+$\sent_i$, the previous $i-1$ salience estimates are used to update the summary
+representation.
+
+In order to construct the contextual sentence embeddings, document embeddings,
+and summary embeddings, the \srext~extractor first runs a
+\bidirectional~\gru~over the sentence embeddings created by the sentence
+encoder (visually depicted in \autoref{fig:sr1}),\\
+
+\input{ch3/figures/models_sr1.tex}
+
+\noindent\fcolorbox{rencemb}{rencemb!20!}{\textit{(\hyperref[fig:sr1]{Figure~\ref{fig:sr1}.a}) Forward and Backward \gru~Outputs}}\\[-40pt]
+\begin{align}
+    \srrHid_0 &= \zeroEmb, \\
+    \srrHid_i &= \fgru(\sentEmb_i, \srrHid_{i-1}; \srRRNNParams) &
+    \forall i : i \in \{1,\ldots,\docSize\},\\
+    \srlHid_{\docSize + 1} &= \zeroEmb,\\
+    \srlHid_i &= \fgru(\sentEmb_i, \srlHid_{i+1}; \srLRNNParams)
+    & \forall i : i \in \{1,\ldots,\docSize\},
+\end{align}
+where $\srrHid_i,\srlHid_i \in \reals^{\srRNNDim}$ and $\srRRNNParams$ and
+$\srLRNNParams$ are the forward and backward \gru~parameters respectively.
+
+The \gru~output is concatenated and run through a feed-forward layer to obtain
+a contextual sentence embedding representation $\srHid_i \in
+\reals^{\srRepDim}$,\\
+
+\noindent\fcolorbox{ctxemb}{ctxemb!20!}{\textit{(\hyperref[fig:sr1]{Figure~\ref{fig:sr1}.b}) Contextual Sentence Embeddings}} 
+\begin{align}
+\srHid_i  & = \relu\left(\srSentBias + \srSentWeight \left[ \begin{array}{c} \srrHid_i \\ \srlHid_i  \end{array} \right]  \right) &
+    \forall i : i \in \{1,\ldots,\docSize\},
+\end{align}
+where $\srSentWeight \in \reals^{\srRepDim \times 2\srRNNDim}$ and $\srSentBias
+\in \reals^{\srRepDim}$ are learned parameters.
+
+To construct the document embedding $\srDocEmb$, the forward and backward
+\gru~outputs are concatenated and averaged before running through a different
+\feedforward~layer,\\
+
+\noindent\fcolorbox{doc}{doc!20!}{\textit{(\hyperref[fig:sr1]{Figure~\ref{fig:sr1}.c}) Document Embedding}}\\[-40pt]
+\begin{align}
+\srDocEmb  & = \tanh\left(\srDocBias + \srDocWeight \left(\frac{1}{\docSize}\sum_{i=1}^{\docSize} \left[ \begin{array}{c} \srrHid_i \\ \srlHid_i  \end{array} \right] \right) \right)
+\end{align}
+where $\srDocWeight \in \reals^{\srRepDim \times 2\srRNNDim}$ and $\srDocBias
+\in \reals^{\srRepDim}$ are learned parameters.
+
+Additionally, an iterative representation of the extract summary at step $i$,
+$\srSum_i$, is constructed by summing the $i-1$ contextual sentence embeddings
+weighted by their salience estimates,\\
+
+\noindent\fcolorbox{sum}{sum!20!}{\textit{(\autoref{fig:sr2}) Summary Embeddings}}\\[-40pt]
+\begin{align}
+\srSum_1 & = \zeroEmb, \\
+\srSum_i & = \tanh\left(\sum_{j=1}^{i-1} \nnpsal_j \cdot \srHid_j\right)
+& \forall i: i \in \{2,\ldots,\docSize-1 \},
+\end{align}
+where $\nnpsal_j=
+\nnmodel\left(\nnsal_j=1|\nnsal_1,\ldots,\nnsal_{j-1},\sentEmb_1, \ldots,
+\sentEmb_\docSize; \xParams\right)$ are previously computed salience estimates
+for sentences $\sent_1,\ldots,\sent_{i-1}$.
+
+\input{ch3/figures/models_sr2.tex}
+
+When computing the salience of a sentence $\nnpsal_i$, the SummaRunner model
+uses the contextual sentence embedding $\xHid_i$, the document embedding
+$\srDocEmb$, the summary embedding $\srSum_i$, and the document position $i$.
+These representations are used to compute five different factors, which are
+then summed and run through a logistic sigmoid to the salience estimate.  The
+five factors are named the content factor ($\srContentFactor$), the centrality
+factor ($\srSalienceFactor$),\footnote{\citet{nallapati2017summarunner} refer
+to this as the salience factor, but we rename it here to avoid confusion with
+the model's final predictions which we call salience estimates.} the novelty
+factor ($\srNoveltyFactor$), the fine grained position factor
+($\srFinePositionFactor$), and the coarse grained position factor
+($\srCoarsePositionFactor$).
+
+First, there is the content factor which is simply the dot product of the
+contextual sentence embedding with a learned parameter vector,\\
+
+\noindent\fcolorbox{factor}{factor!20!}{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.a}) Content Factor}}\\[-40pt]
+\begin{align}
+    \srContentFactor_i &={\srContentWeight}^\T \srHid_i & \forall i : i \in \{1,\ldots,\docSize\}, 
+\end{align}
+where $\srContentWeight \in \reals^{\srRepDim}$. This term is intended to
+represent contributions of the individual sentences to their salience.
+
+The centrality factor is intended to capture a sentence's similarity to the
+document embedding. This interaction computed as\\
+
+\noindent\fcolorbox{factor}{factor!20!}{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.b}) Centrality Factor}}\\[-40pt]
+\begin{align}
+    \srSalienceFactor_i & = \srHid_i^\T\srSalienceWeight \srDocEmb & \forall i : i \in \{1,\ldots,\docSize\}, 
+\end{align}
+and is mediated by a learned parameter matrix, $\srSalienceWeight \in \reals^{\srRepDim \times \srRepDim}$.
+
+The third factor, novelty, is similarly an interaction between the contextual
+sentence embedding and the $i$-th summary embedding,\\
+
+\noindent\fcolorbox{factor}{factor!20!}{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.c}) Novelty Factor}}\\[-40pt]
+\begin{align}
+    \srNoveltyFactor_i &= -\srHid_i^\T \srNoveltyWeight \srSum_i
+    & \forall i : i \in \{1,\ldots,\docSize\},
+    \label{eq:srnov} 
+\end{align}
+where $\srNoveltyWeight \in \reals^{\srRepDim \times \srRepDim}$ is a learned
+parameter matrix. Note also this factor is multiplied by negative to indicate
+that high levels of similarity between $\srHid_i$ and $\srSum_i$ should be
+discouraged. 
+
+\input{ch3/figures/models_sr3.tex}
+
+Finally, there are two factors for the fine- and coarse-grained position,\\
+
+\noindent\fcolorbox{factor}{factor!20!}{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.d}) Fine-grained Position Factor}}\\[-40pt]
+\begin{align}
+    \srFinePositionFactor& = {\srFinePositionWeight}^\T \srFinePositionEmb_i
+& \forall i : i \in \{1,\ldots,\docSize\}, 
+\end{align}
+\noindent\fcolorbox{factor}{factor!20!}{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.e}) Coarse-grained Position Factor}}\\[-40pt]
+\begin{align}
+    \srCoarsePositionFactor& = {\srCoarsePositionWeight}^\T \srCoarsePositionEmb_i & \forall i : i \in \{1,\ldots,\docSize\}, 
+\end{align}
+where $\srFinePositionEmb_i$ and $\srCoarsePositionEmb_i$ are embeddings
+associated with the sentence position and sentence position quartile of the
+$i$-th sentence (e.g., sentence $s_7$ in a document with 12 sentences, would
+have embeddings $\srFinePositionEmb_7$ and $\srCoarsePositionEmb_2$
+corresponding to the seventh sentence position and $2^\textrm{nd}$ sentence
+position quartile respectively).  Both $\srFinePositionWeight,
+\srCoarsePositionWeight \in \reals^{\srPosDim}$, and
+$\srFinePositionEmb_1,\ldots,\srFinePositionEmb_\docSizeMax,\srCoarsePositionEmb_1,\ldots,\srCoarsePositionEmb_4
+\in \reals^{\srPosDim}$ are learned parameters of the \srext~extractor, and
+$\docSizeMax\in\naturals$ is the maximum document size in sentences (when
+handling unusually long documents, sentences with positions greater than
+$\docSizeMax$ are all mapped to $\srFinePositionEmb_\docSizeMax$).
+
+Each salience estimate $\psal_i$ is calculated as the sum of those five
+factors~run through a logistic sigmoid function,\\~\\
+
+\noindent\fcolorbox{sal}{sal!20!}{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.f}) Salience Estimates}}\\[-40pt]
+\begin{align}
+  \nnpsal_i =  \nnmodel(\nnsal_i=1|\nnsal_1,\dots,\nnsal_{i-1},\sentEmb_1,\ldots,\sentEmb_\docSize;\xParams)
+         & = 
+        \sigma\left(\srContentFactor_i 
+        + \srSalienceFactor_i + \srNoveltyFactor_i
+    + \srFinePositionFactor_i + \srCoarsePositionFactor_i   \right) \nonumber \\
+    & \phantom{= } \quad \forall i : i \in \{1,\ldots,\docSize\}.
+\end{align}
+We should give a bit of caution about interpreting the individual factors along
+the lines of their given names as the learning procedure does not enforce that
+their actual values meaningfully correspond to their names. For example, it
+could be that a sentence's similarity to the summary embedding is actually
+positively correlated with high salience. In such a case, the model could learn
+to produce a large negative value for $\srHid_i^\T \srNoveltyWeight \srSum_i$,
+such that the ``novelty'' factor $\srNoveltyFactor_i$ now has large positive
+values when the $i$-th sentence is not novel to the summary. In this sense, for
+a sufficiently over-parameterized network, the negative in novelty term is
+superfluous as the model can learn around it. 
+
+The complete set of parameters for the \srext~extractor is 
+\[
+    \xParams = \left\{\srRRNNParams,\srLRNNParams,\srSentWeight,\srSentBias,
+\srDocWeight,\srDocBias, \srContentWeight, \srSalienceWeight, \srNoveltyWeight,
+\srFinePositionWeight, \srCoarsePositionWeight, \srFinePositionEmb_1,\ldots,\srFinePositionEmb_{\docSizeMax}, \srCoarsePositionEmb_1,\ldots,\srCoarsePositionEmb_4,\right\}. 
+\]
+In our experiments, we set $\srRNNDim=300$, $\srRNNDim=100$, and
+$\srPosDim=16$. Dropout with drop probability of $0.25$ is applied to the
+\gru~outputs $\srrHid_i$ and $\srlHid_i$, as well as the contextual sentence
+embeddings $\srHid_i$ for all $i \in \{1,\ldots,\docSize\}$.
+
+\subsubsection{\rnnext~Extractor}
+
+\input{ch3/figures/models_rnnext.tex}
+
+Our first proposed non-autoregressive model is a very simple
+\bidirectional~\recurrentneuralnetwork~based tagging model
+\citep{graves2005,wang2015}, which we refer to as the \rnnext~extractor.  See
+\autoref{fig:rnnext} for a visual depiction of   the extractor.  As in the
+\srext~extractor, the first step of the \rnnext~extractor is to run a
+\bidirectional~\recurrentneuralnetwork~over the sentence embeddings produced by
+the sentence encoder layer, which produces left and right partial contextual
+embeddings $\rnnextRHid_i$ and $\rnnextLHid_i$ respectively,\\
+
+\noindent\fcolorbox{rencemb}{rencemb!20!}{\textit{(\hyperref[fig:rnnext]{Figure~\ref{fig:rnnext}.a}) Left and Right Partial Contexual Sentence Embeddings}}\\[-40pt]
+\begin{align}
+    \rnnextRHid_0 & = \zeroEmb,\\ 
+ \rnnextRHid_i &= \fgru\left(\sentEmb_i, \rnnextRHid_{i-1}; \rnnextRParams\right) &
+    \forall i : i \in \{1,\ldots,\docSize\}, \\
+  \rnnextLHid_{\docSize+1} & = \zeroEmb, \\
+ \rnnextLHid_i &= \fgru\left(\sentEmb_i, \rnnextLHid_{i+1};\rnnextLParams\right) &
+    \forall i : i \in \{\docSize, \ldots, 1\}, 
+\end{align}
+where $\rnnextRHid_i,\rnnextLHid_i \in \reals^{\rnnextRNNDim}$,
+and $\rnnextRParams$ and $\rnnextLParams$ are the forward and backward
+\gru~parameters.
+
+The left and right partial contextual embeddings of each sentence 
+are then passed through a \feedforward~layer to produce contextual
+sentence embeddings $\rnnextHid_i$,\\
+
+\noindent\fcolorbox{ctxemb}{ctxemb!20!}{\textit{(\hyperref[fig:rnnext]{Figure~\ref{fig:rnnext}.b}) Contexual Sentence Embeddings}}\\[-35pt]
+\begin{align}
+   \rnnextHid_i &= \relu\left(
+    \rnnextHidWeight
+    \left[ \begin{array}{c} 
+        \rnnextRHid_i \\
+        \rnnextLHid_i \end{array}\right] + \rnnextHidBias \right)
+    & \forall i :\;\; i \in \{1,\ldots,\docSize\},
+\end{align}
+where $\rnnextHidWeight \in \reals^{\rnnextHidDim \times 2 \rnnextRNNDim}$
+and $\rnnextHidBias \in \reals^{\rnnextHidDim}$ are learned parameters.
+
+Another \feedforward~layer with a logistic sigmoid activation computes the
+actual salience estimates $\nnpsal_1,\ldots,\nnpsal_\docSize$ where $\nnpsal_i
+= \nnmodel(\nnsal_i=1|\sentEmb_1,\ldots,\sentEmb_\docSize;\xParams)$ and \\
+
+\noindent\fcolorbox{sal}{sal!20!}{\textit{(\hyperref[fig:rnnext]{Figure~\ref{fig:rnnext}.c}) Salience Estimates}}\\[-40pt]
+\begin{align}
+    \nnpsal_i &= \nnmodel(\nnsal_i=1|\sentEmb_i,\ldots,\sentEmb_\docSize; \xParams) = \sigma\left(\rnnextPredWeight\rnnextHid_i + \rnnextPredBias  \right) &
+    \forall i :  i \in \{1,\ldots,\docSize\},
+\end{align}
+where $\rnnextPredWeight \in \reals^{1 \times \rnnextHidDim}$
+and $\rnnextPredBias \in \reals$ are learned parameters.
+
+The complete set of parameters for the extractor is 
+\[ \xParams = \left\{\rnnextRParams, \rnnextLParams, \rnnextHidWeight, \rnnextHidBias, \rnnextPredWeight, \rnnextPredBias \right\}.\]
+In our experiments, we set $\rnnextRNNDim=300$ and $\rnnextHidDim=100$.
+Dropout with drop probability of $0.25$ is applied to $\rnnextRHid_i,
+\rnnextLHid_i,$ and $\rnnextHid_i$ for $i \in \{1,\ldots,\docSize\}$.
+
+\FloatBarrier
+
+\subsubsection{\sts~Extractor} 
+
+One shortcoming of the RNN extractor is that long range information from one
+end of the document may not easily be able to affect extraction probabilities
+of sentences at the other end.  Our second proposed model, the \sts~extractor
+mitigates this problem with an attention mechanism commonly used for neural
+machine translation \citep{bahdanau2015,luong2015} and abstractive
+summarization \citep{see2017}. The \sts~extractor has distinct encoder and
+decoder bidirectional GRUs  which create distinct sequences of encoder
+contextual embeddings and decoder contextual embeddings (see
+\autoref{fig:stsext1} and \autoref{fig:stsext2} respectively).  Using the
+attention mechanism, each decoder contextual embedding $\stsextDecHid_i$
+attends to the encoder contextual embeddings,
+$\stsextEncHid_1,\ldots,\stsextEncHid_\docSize$, to create the final contextual
+sentence embedding $\stsextHid_i$. The final contextual embedding,
+$\stsextHid_i$, thus contains a representation of sentence $\sent_i$ as well as
+its relation to the other contextual representations of the remaining
+sentences.  The salience estimate for $\sent_i$ is then produces by running
+$\stsextHid_i$ through a feed-forward layer with logistic sigmoid output (see
+\autoref{fig:stsext3}). We now describe in detail the encoder, decoder, and
+attention/salience estimation layers.
+
+The sentence embeddings produced by the sentence encoder are first encoded by a
+\bidirectional~\gru, which produces left and right partial contextual sentence
+embeddings, \\
+
+\input{ch3/figures/models_stsext1.tex}
+
+\noindent\fcolorbox{rencemb}{rencemb!20!}{\textit{(\hyperref[fig:stsext1]{Figure~\ref{fig:stsext1}.a}) Encoder Left and Right Partial Contextual Sentence Embeddings}}\\[-40pt]
+\begin{align}
+        \stsextREncHid_0  &= \zeroEmb, \\
+\stsextREncHid_i & = \fgru\left(
+            \sentEmb_i, \stsextREncHid_{i-1}; 
+            \stsextREncParams\right) &
+\forall i : i \in \{1,\ldots,\docSize\}, \\
+        \stsextLEncHid_{\docSize + 1}  &= \zeroEmb, \\
+\stsextLEncHid_i &= \fgru\left(
+            \sentEmb_i, \stsextLEncHid_{i+1}; 
+            \stsextLEncParams\right) &
+\forall i : i \in \{\docSize,\ldots,1\}, 
+\end{align}
+where $\stsextREncHid_i,\stsextLEncHid_i \in \reals^{\stsextRNNDim}$ and
+$\stsextREncParams$ and $\stsextLEncParams$ are the forward and backward
+encoder \gru~parameters respectively. The encoder contextual sentence
+embeddings are then formed by simply concatenating the encoder left and right
+partial contextual embeddings,\\
+
+\noindent\fcolorbox{encctxemb}{encctxemb!20!}{\textit{(\hyperref[fig:stsext1]{Figure~\ref{fig:stsext1}.b}) Encoder Contextual Sentence Embeddings}}\\[-20pt]
+\begin{align}
+        \stsextEncHid_i & = \left[\begin{array}{c}
+            \stsextREncHid_i\\ 
+            \stsextLEncHid_i\end{array}\right]  &
+\forall i :  i \in \{1,\ldots,\docSize\}.
+\end{align}
+
+
+\input{ch3/figures/models_stsext2.tex}
+
+The final output of each encoder \gru~initializes a separate decoder \gru~which
+is then run over the sentence embeddings a second time, \\
+
+
+\noindent\fcolorbox{rdecemb}{rdecemb!20!}{\textit{(\hyperref[fig:stsext2]{Figure~\ref{fig:stsext2}.a}) Decoder Left and Right Partial Contextual Sentence Embeddings}}\\[-40pt]
+\begin{align}
+\stsextRDecHid_0 & = \fgru\left(\stsextSent_>,   \stsextREncHid_\docSize; \stsextRDecParams\right),\\ 
+        \stsextRDecHid_i & = \fgru(
+            \sentEmb_i,  \stsextRDecHid_{i-1}; 
+            \stsextRDecParams) &
+    \forall i : i \in \{1,\ldots,\docSize\}, \\
+\stsextLDecHid_{\docSize+1} & = \fgru\left(\stsextSent_<, \stsextLEncHid_1;\stsextLDecParams\right),\\ 
+        \stsextLDecHid_i & = \fgru(
+            \sentEmb_i,  \stsextLDecHid_{i+1}; 
+            \stsextLDecParams) &
+    \forall i : i \in \{1,\ldots,\docSize\}, 
+\end{align}
+where $\stsextSent_>$ and $\stsextSent_<$ are special ``begin decoding'' input
+embeddings for the forward and backward decoder respectively,
+$\stsextRDecHid_i, \stsextLDecHid_i \in \reals^{\stsextRNNDim}$, and
+$\stsextRDecParams$ and $\stsextLDecParams$ are the parameters for the forward
+and backward decoder \gru s respectively.
+
+The decoder left and right partial contextual sentence embeddings
+($\stsextRDecHid_i$ and $\stsextLDecHid_i$) are then concatenated to form the
+decoder contextual sentence embeddings,\\
+
+\noindent\fcolorbox{decctxemb}{decctxemb!20!}{\textit{(\hyperref[fig:stsext2]{Figure~\ref{fig:stsext2}.b}) Decoder Contextual Sentence Embeddings}}\\[-20pt]
+\begin{align}
+        \stsextDecHid_i & = \left[\begin{array}{c}
+            \stsextRDecHid_i\\ 
+            \stsextLDecHid_i\end{array}\right] &
+    \forall i :  i \in \{1,\ldots,\docSize\}.
+\end{align}
+
+
+\input{ch3/figures/models_stsext3.tex}
+
+\clearpage
+
+Each decoder contextual sentence embedding $\stsextDecHid_i$ then attends to
+the encoder contextual sentence embeddings $\stsextEncHid_1,\ldots,
+\stsextEncHid_\docSize$, to produce an attention-weighted encoder sentence
+embedding $\stsextAttnHid_i$,\\
+    
+\noindent\fcolorbox{yellow}{yellow!20!}{\textit{(\hyperref[fig:stsext3]{Figure~\ref{fig:stsext3}.a}) Attention Weights}}\\[-20pt]
+\begin{align}
+    \stsextAttn_{i,j} & = 
+        \frac{\exp \left(\stsextDecHid_i \cdot  \stsextEncHid_j \right)}{
+            \sum_{j^\prime=1}^{\docSize}\exp\left(  
+                \stsextDecHid_i \cdot  \stsextEncHid_{j^\prime} \right)} &
+    \forall i : i \in \{1,\ldots,\docSize\}, 
+\end{align}
+\noindent\fcolorbox{yellow}{yellow!20!}{\textit{(\hyperref[fig:stsext3]{Figure~\ref{fig:stsext3}.b}) Attention-weighted Encoder Sentence Embeddings}}\\[-20pt]
+\begin{align}
+    \stsextAttnHid_i & = 
+        \sum_{j=1}^{\docSize} \alpha_{i,j} \left[\begin{array}{c}
+            \stsextREncHid_j\\ 
+            \stsextLEncHid_j\end{array}\right] & 
+    \forall i : i \in \{1,\ldots,\docSize\}.
+\end{align}
+
+The attention-weighted encoder sentence embeddings and the decoder contextual
+sentence embedding are then concatenated and fed through a \feedforward~layer
+to produce the $i^\textrm{th}$ contextual sentence embedding $\stsextHid_i$,
+which is itself fed through a final \feedforward~layer to compute the
+$i^\textrm{th}$ salience estimate $\nnpsal_i =
+\nnmodel(\nnsal_i=1|\sentEmb_1,\ldots,\sentEmb_\docSize;\xParams)$,\\
+
+\noindent\fcolorbox{ctxemb}{ctxemb!20!}{\textit{(\hyperref[fig:stsext3]{Figure~\ref{fig:stsext3}.c}) Contextual Sentence Embeddings}}\\[-20pt]
+\begin{align}
+    \stsextHid_i &= \relu\left(\stsextHidWeight \left[\begin{array}{c}
+        \stsextAttnHid_i \\ 
+        \stsextDecHid_i \end{array}\right] 
+        + \stsextHidBias \right) &
+    \forall i : i \in \{1,\ldots,\docSize\},
+\end{align}
+
+
+\noindent\fcolorbox{sal}{sal!20!}{\textit{(\hyperref[fig:stsext3]{Figure~\ref{fig:stsext3}.d}) Salience Estimates}}\\[-40pt]
+\begin{align}
+\nnpsal_i =    \nnmodel(\nnsal_i=1|\sentEmb_1, \ldots,\sentEmb_\docSize;\xParams)& = 
+            \sigma\left(\stsextPredWeight \stsextHid_i + \stsextPredBias  
+            \right) &
+    \forall i : i \in \{1,\ldots,\docSize\}.
+\end{align}
+where $\stsextHidWeight \in \reals^{\stsextHidDim \times 3\stsextRNNDim}$,
+$\stsextHidBias \in \reals^{\stsextHidDim}$, 
+$\stsextPredWeight \in \reals^{1 \times \stsextHidDim}$, and
+$\stsextPredBias \in \reals$ are model parameters.
+The complete set of \stsext~extractor parameters is 
+\[\xParams = \left\{ \stsextREncParams, \stsextLEncParams,
+        \stsextRDecParams, \stsextLDecParams, \stsextHidWeight, \stsextHidBias, \stsextPredWeight, \stsextPredBias, \right\}. \]
+In our experiments, we set $\stsextRNNDim=300$, $\stsextHidDim=100$.  Dropout
+with drop probability of 0.25 is applied to $\stsextREncHid_i,
+\stsextLEncHid_i, \stsextRDecHid_i, \stsextLDecHid_i$, and $\stsextHid_i$ for
+all $i \in \{1,\ldots,\docSize\}$.
+
+\subsubsection{Comparison of Sentence Extractors}
+
+All of the extractors rely on running at least one \gru~over the sentence
+embeddings to propagate contextual information of neighboring sentences to
+$\xHid_i$. However, only the \clext~and \srext~extractors rely on
+$\psal_1,\ldots,\psal_{i-1}$ to compute $\psal_i$.  After the \gru~layers are
+computed in the \rnnext~and \stsext~extracts, all salience estimates can be
+computed in parallel; the \clext~and \srext~must make their salience
+predictions sequentially.  Additionally, we hypothesize that including this
+dependence is not necessary to achieve good performance, as similar
+information about the salience of neighboring sentences will already be
+captured in the left and right partial contextual sentence embeddings used to
+construct $\xHid_i$.
+
+\subsection{Inference and Summary Generation} \label{sec:inference}
+
+Given a setting of encoder and extractor architectures, and the appropriate
+embedding, encoder, and extractor parameters ($\embParams$, $\sentEncParams$,
+and $\xParams$ respectively), we can compute the probability of a salience
+label sequence given a document, $\model\left(\bsals|\doc;\theta\right)$, as 
+\begin{align*}
+\model\left(\bsals|\doc;\theta\right) &= \model\Big(\bsals|
+\sentEnc\big(\embLayer\left(\sent_1;\embParams\right),\ldots,\embLayer\left(\sent_\docSize;\embParams\right)  ;\sentEncParams\big);\xParams\Big) \\
+    & = \prod_{i=1}^\docSize \nnpsal_i^{\nnsal_i} (1 - \nnpsal_i)^{(1- \nnsal_i)}.
+\end{align*}
+Since even in the autoregressive case discrete extraction decisions are never
+fed back into the model\footnote{In the autoregressive extractors, the salience
+estimates $\nnpsal_i$ are fed back into the model to compute
+$\nnpsal_{i+1},\ldots, \nnpsal_\docSize$. However, since these quantities are
+not determined by whether or not the model actually extracts sentence
+$\sent_i$, they do not create a combinatorial search space.} we can easily find
+the most likely extractive sequence 
+\[ \nnpredsals = \argmax_{\nnsals\in\labelSpace} \model\left(\nnsals|\doc;\params\right),
+\] 
+where 
+\[\nnpredsal_i = \begin{cases}
+       1 & \textrm{if $\nnpsal_i > 0.5$} \\ 0 & \textrm{otherwise}. 
+\end{cases}
+\]
+
+This method of inference does not take into account the summary word budget
+$\wordbudget$ and the resulting $\predbsals$ may imply an extract summary that
+is either too short or too long with respect to the budget constraint. Overly
+long summaries are less of a problem because they can always be truncated.
+Short summaries, however, will suffer more in evaluation as \rouge-recall
+monotonically increases with summary size until reaching the word budget.
+Additionally, for fair comparisons between systems, summary lengths should
+always be the same size \citep{napoles2011}.
+
+To account for this and obtain a summary of length $\wordbudget$, we first
+compute $\nnpsal_1,\ldots,\nnpsal_\docSize$. Then we sort the sentences  in
+descending order $\sent_{\pi_1}, \ldots, \sent_{\pi_\docSize}$ where
+$\psal_{\pi_i} \ge \psal_{\pi_{i+1}}$. We then construct the extract summary by
+selecting the first $k$ sentences such that $\sum_{i=1}^{k-1} \sentSize_{\pi_i}
+< \wordbudget \le \sum_{i=1}^{k} \sentSize_{\pi_i}$ (i.e., the first $k$
+sentences that  meet or exceed the length budget). When evaluating or
+displaying summaries, we show the extracted sentences in the original document
+order since this improves the coherence, and we truncate the final sentence
+where it exceeds $\wordbudget$.

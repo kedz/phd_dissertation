@@ -1,0 +1,128 @@
+\begin{figure}
+\centering 
+\fbox{\resizebox{\textwidth}{!}{
+\begin{tikzpicture}[x=0.25cm, y=0.25cm,
+    embs/.style={step=0.25cm,red},
+    bigram/.style={step=0.25cm,blue,line width=0.5mm},
+  convcon/.style={black,line width=0.5mm},
+  hid/.style 2 args={
+    rectangle split,
+    draw=#2,
+    rectangle split parts=#1,
+    fill=#2!20,
+    outer sep=1mm}]
+
+\def\SEP{10}
+\def\YSEP{15}
+
+\foreach \a [count=\step from 1,
+             evaluate=\step as \smo using int(\step - 1),
+             evaluate=\step as \fnwx using \SEP*\step+3,
+             evaluate=\step as \fnwy using 4-\step+2,
+             evaluate=\step as \fsex using \SEP*\step,
+             evaluate=\step as \fsey using 4-\step,
+             evaluate=\step as \anwx using \SEP*\step+7,
+             evaluate=\step as \anwy using 5-\step+1-0.5,
+             evaluate=\step as \asex using \SEP*\step+6,
+             evaluate=\step as \asey using 5-\step-0.5,
+] in {10,25,50,35,30} {
+
+    \foreach \i [count=\w from 1] in {1,...,4} {
+        \node[font=\tiny] at (\SEP*\step-1,5-\i-0.5) {$w_\w$};
+    }
+    \fill[red!20!] (\SEP*\step,0) rectangle (\SEP*\step+3,4);
+    \draw[embs] (\SEP*\step,0) grid (\SEP*\step+3,4);
+    
+    \draw[bigram] (\fsex,\fsey) grid (\fnwx,\fnwy);
+    
+    \draw (\fsex,\fnwy) -- (\asex,\anwy);
+    \draw (\fsex,\fsey) -- (\asex,\asey);
+    \draw (\fnwx,\fnwy) -- (\anwx,\anwy);
+    \draw (\fnwx,\fsey) -- (\anwx,\asey);
+
+    \fill[blue!\a!] (\asex,\asey) rectangle (\anwx,\anwy);
+    \draw[step=0.25cm,black,yshift=-0.125cm] 
+        (\SEP*\step+6,0) grid (\SEP*\step+7,5); 
+
+    \node at (\SEP*\step+3.5,-3.0) {$j=\smo$};
+}
+
+\foreach \a [count=\step from 1,
+             evaluate=\step as \smo using int(\step - 1),
+             evaluate=\step as \anwx using \SEP*6.5+1,
+             evaluate=\step as \anwy using 5-\step+1-0.5,
+             evaluate=\step as \asex using \SEP*6.5,
+             evaluate=\step as \asey using 5-\step-0.5,
+] in {10,25,50,35,30} {
+    \fill[blue!\a!] (\asex,\asey) rectangle (\anwx,\anwy);
+}
+\draw[step=0.25cm,black,yshift=-0.125cm] (\SEP*6.5,0) grid (\SEP*6.5+1,5); 
+\node[align=center] at (\SEP*6.5+0.5,8) {Convolutional\\Feature Values};
+\draw[->] (\SEP*6-1.25,2.25) -- (\SEP*6.25,2.25);
+\node[align=left,anchor=north west] at (\SEP*1,9) 
+    {Bigram Feature Detector ($k=2$)};
+
+
+\node[font=\tiny] (zp1) at (\SEP*.5,4.5) {zero padding};
+\draw[->] (zp1.east) -- ($(zp1.east)+(1.5,0)$);
+\node[font=\tiny] (zp1) at (\SEP*1.5,4.5-\YSEP) {zero padding};
+\draw[->] (zp1.east) -- ($(zp1.east)+(1.5,0)$);
+\node[font=\tiny] (zp1) at (\SEP*4.5,-1.0-\YSEP) {zero padding};
+\draw[->] (zp1.east) -- ($(zp1.east)+(1.5,0.5)$);
+\node[font=\tiny] (zp1) at (\SEP*4.5,-1.0) {zero padding};
+\draw[->] (zp1.east) -- ($(zp1.east)+(1.5,0.5)$);
+
+\foreach \a [count=\step from 2,
+             evaluate=\step as \smo using int(\step - 2),
+             evaluate=\step as \fnwx using \SEP*\step+3,
+             evaluate=\step as \fnwy using 4-\step+3-\YSEP,
+             evaluate=\step as \fsex using \SEP*\step,
+             evaluate=\step as \fsey using 4-\step-\YSEP,
+             evaluate=\step as \anwx using \SEP*\step+7,
+             evaluate=\step as \anwy using 5-\step+1-\YSEP,
+             evaluate=\step as \asex using \SEP*\step+6,
+             evaluate=\step as \asey using 5-\step-\YSEP,
+] in {25,27,45,30} {
+
+
+    \foreach \i [count=\w from 1] in {1,...,4} {
+        \node[font=\tiny] at (\SEP*\step-1,5-\i-0.5-\YSEP) {$w_\w$};
+    }
+    \fill[red!20!] (\SEP*\step,0-\YSEP) rectangle (\SEP*\step+3,4-\YSEP);
+    \draw[embs] (\SEP*\step,0-\YSEP) grid (\SEP*\step+3,4-\YSEP);
+    
+    \draw[bigram] (\fsex,\fsey) grid (\fnwx,\fnwy);
+    
+    \draw (\fsex,\fnwy) -- (\asex,\anwy);
+    \draw (\fsex,\fsey) -- (\asex,\asey);
+    \draw (\fnwx,\fnwy) -- (\anwx,\anwy);
+    \draw (\fnwx,\fsey) -- (\anwx,\asey);
+
+    \fill[blue!\a!] (\asex,\asey) rectangle (\anwx,\anwy);
+    \draw[step=0.25cm,black] 
+        (\SEP*\step+6,0-\YSEP) grid (\SEP*\step+7,4-\YSEP); 
+
+    \node at (\SEP*\step+3.5,-3.0-\YSEP) {$j=\smo$};
+}
+
+\foreach \a [count=\step from 2,
+             evaluate=\step as \smo using int(\step - 1),
+             evaluate=\step as \anwx using \SEP*6.5+1,
+             evaluate=\step as \anwy using 5-\step+1-\YSEP,
+             evaluate=\step as \asex using \SEP*6.5,
+             evaluate=\step as \asey using 5-\step-\YSEP,
+] in {25,27,45,30} {
+    \fill[blue!\a!] (\asex,\asey) rectangle (\anwx,\anwy);
+}
+\draw[step=0.25cm,black] (\SEP*6.5,0-\YSEP) grid (\SEP*6.5+1,4-\YSEP); 
+\node[align=center] at (\SEP*6.5+0.5,8-\YSEP) {Convolutional\\Feature Values};
+\draw[->] (\SEP*6-1.25,2.25-\YSEP) -- (\SEP*6.25,2.25-\YSEP);
+\node[align=left,anchor=north west] at (\SEP*1,9-\YSEP) 
+    {Trigram Feature Detector ($k=3$)};
+
+\end{tikzpicture}}}
+
+\caption{Examples of zero padding with bigram ($k=2$) and trigram ($k=3$) features for a sequence of length $l_i=4$.}
+\label{fig:paddedconv}
+
+\end{figure}
