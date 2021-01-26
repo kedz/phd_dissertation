@@ -1,6 +1,8 @@
 % Document type, global settings, and packages
 
-\documentclass[12pt]{report}   %12 point font for Times New Roman
+\documentclass[12pt,usenames,dvipsnames]{report}   %12 point font for Times New Roman
+\usepackage[title]{appendix}
+
 
 \input{packages.tex} % import all the necessary latex packages and some setup.
 
@@ -14,10 +16,10 @@
 % Title Page (No page number)
 \input{titlePage.tex}
 \currentpdfbookmark{Title Page}{titlePage}  %add PDF bookmark for this page
-
+  
 % Copyright  Page (No page number)
 \input{CopyrightPage.tex}
-
+  
 % Abstract (No page number)
 \pagenumbering{gobble}
 \input{Abstract.tex}
@@ -33,16 +35,17 @@
 \renewcommand{\cftchappagefont}{}  %set page number font weight
 \renewcommand{\cftchappresnum}{Chapter }
 \renewcommand{\cftchapaftersnum}{:}
-\renewcommand{\cftchapnumwidth}{5em}
+
+\renewcommand{\cftchapnumwidth}{5.0em}
 \renewcommand{\cftchapafterpnum}{\vskip\baselineskip} %set correct spacing for entries in single space environment
 \renewcommand{\cftsecafterpnum}{\vskip\baselineskip}  %set correct spacing for entries in single space environment
 \renewcommand{\cftsubsecafterpnum}{\vskip\baselineskip} %set correct spacing for entries in single space environment
 \renewcommand{\cftsubsubsecafterpnum}{\vskip\baselineskip} %set correct spacing for entries in single space environment
-
+  
 %format title font size and position (this also applys to list of figures and list of tables)
 \titleformat{\chapter}[display]
 {\normalfont\bfseries\filcenter}{\chaptertitlename\ \thechapter}{0pt}{\large{#1}}
-
+  
 \renewcommand\contentsname{Table of Contents}
 
 \begin{singlespace}
@@ -105,7 +108,8 @@
 \titleformat{\subsection}{\normalfont}{\thesubsection}{0em}{\hspace{1em}#1}
 
 % Below is a subsubsection, uncomment it if you need to use it
-\titleformat{\subsubsection}{\normalfont\itshape}{\thesubsection}{1em}{#1}
+\titleformat{\subsubsection}{\normalfont\itshape}{\thesubsubsection}{1em}{#1}
+\setcounter{secnumdepth}{3}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                                                             %
@@ -113,10 +117,10 @@
 %                                                                             %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\input{1_Introduction/1_Introduction.tex}
-\input{1_Introduction/1_1_Problems_in_Text-to-Text_Generation.tex}
-\input{1_Introduction/1_2_Contributions.tex}
-\input{1_Introduction/1_3_Organization.tex}
+\input{ch1/Introduction.tex}
+\input{ch1/Problems_in_Text-to-Text_Generation.tex}
+\input{ch1/Contributions.tex}
+\input{ch1/Organization.tex}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                                                             %
@@ -124,84 +128,116 @@
 %                                                                             %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\input{2_Related_Work/2_Related_Work.tex}
-\input{2_Related_Work/2_1_A_Brief_History_of_Natural_Language_Generation_(Antiquity--1950).tex}
-\input{2_Related_Work/2_2_A_Brief_History_of_Natural_Language_Generation_(1950--2000).tex}
-\input{2_Related_Work/2_3_The_Emergence_of_Data_Driven_Extractive_Summarization_(2000--2014).tex}
+\input{ch2/Related_Work.tex}
+\input{ch2/Natural_Language_Generation_in_Antiquity.tex}
+%%  \input{ch2/Natural_Language_Generation_from_1980--2000.tex}
+%%  \input{ch2/The_Emergence_of_Data_Driven_Extractive_Summarization_(2000--2014).tex}
+%%  \input{ch2/Neural_Natural_Language_Generation_Models_(2014--present).tex}
+%%  
+%%  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  %                                                                             %
+%%  % Chapter 3: Salience Estimation with Deep Learning Content Selection Models  %
+%%  %                                                                             %
+%%  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  
+%%  \input{ch3/Salience_Estimation_with_Deep_Learning_Content_Selection_Models.tex}
+%%  \input{ch3/Problem_Definition.tex}
+%%  \input{ch3/Models.tex}
+%%  \input{ch3/Datasets.tex}
+%%  \input{ch3/Experiments.tex}
+%%  \input{ch3/Results.tex}
+%%  %\input{ch3/figures/sumref.tex}
+%%  \input{ch3/discussion.tex}
+%%  \input{ch3/Conclusion.tex}
+%%  
+%%  
+%%  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  %                                                                             %
+%%  %   Chapter 4: Salience Estimation with Structured Content Selection Models   %
+%%  %                                                                             %
+%%  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  
+%%  \input{ch4/Salience_Estimation_with_Structured_Content_Selection_Models.tex}
+%%  \input{ch4/Task_Definition.tex}
+%%  \input{ch4/Dataset.tex}
+%%  \input{ch4/The_Salience-biased_Affinity_Propagation_(SAP)_Summarizer.tex}
+%%  \input{ch4/The_Learning-to-Search_(L2S)_Summarizer.tex}
+%%  \input{ch4/Conclusion.tex}
+%%  
+%%  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  %                                                                             %
+%%  %                Chapter 5: Faithful and Controllable Generation              %
+%%  %                                                                             %
+%%  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  
+%%  \input{ch5/Faithful_and_Controllable_Generation.tex}
+%%  \input{ch5/MRs_for_Task_Oriented_Dialogue_Generation.tex}
+%%  \input{ch5/Modeling_MR2Text_Generation_with_S2S_Architectures.tex}
+%%  \input{ch5/Faithful_Generation_Through_Data_Augmentation.tex}
+%%  \input{ch5/Alignment_Training_for_Controllable_Generation.tex}
+%%  \input{ch5/Conclusion.tex}
+%%  
+%%  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  %                                                                             %
+%%  %                          Chapter 6: Conclusion                              %
+%%  %                                                                             %
+%%  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  
+%%  \input{ch6/Conclusion.tex}
+%%  \input{ch6/Limitations_and_Open_Problems_for_Abstractive_Summarization_Beyond_End-to-End_Neural_Models.tex}
+%%  \input{ch6/Why_not_an_end-to-end_neural_abstractive_summarization_model?.tex}
+%%  \input{ch6/Future_Work.tex}
+%%  \input{ch6/Final_Remarks.tex}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                                             %
+%                                  References                                 %
+%                                                                             %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\input{2_Related_Work/2_4_A_Brief_History_of_Natural_Language_Generation_(2014--Present).tex}
-
-
-%%%%%%%%%%%%%%%%%
-%%% Chapter 3
-%%%%%%%%%%%%%%%%%
-
-\input{3_nnsum.tex}
-
-%%%%%%%%%%%%%%%%%%
-%%% Chapter 4
-%%%%%%%%%%%%%%%%%%
-
-\input{4_strmsum.tex}
-
-%%%%%%%%%%%%%%%%%%
-%%% Chapter 5
-%%%%%%%%%%%%%%%%%%
-%
-\input{5_nlg.tex}
-
-\input{6_Conclusion.tex}
-%
-%%%%%%%%%%%%%%%%%
-%% Conclusion
-%%%%%%%%%%%%%%%%%
-%
-%
-%\input{Conclusion.tex}
-%\addcontentsline{toc}{chapter}{Conclusion or Epilogue}
-%
-%
-%%%%%%%%%%%%%%%%
-% References
-%%%%%%%%%%%%%%%%
-
+% Reset title format for Reference section. (It is different from Chap. titles)
 \titleformat{\chapter}[display]
-{\normalfont\bfseries\filcenter}{}{0pt}{\large\bfseries\filcenter{#1}}  % Reset title format for Reference section. (It is different from Chapter titles)
+{\normalfont\bfseries\filcenter}{}{0pt}{\large\bfseries\filcenter{#1}}  
 \titlespacing*{\chapter}
   {0pt}{0pt}{30pt}
 
-%\begin{singlespace}  % use single-line spacing for multi-line text within a single reference
-%	\setlength\bibitemsep{\baselineskip}  %manually set separataion betwen items in bibliography to double space
-%	\printbibliography[title={References}]
-%\end{singlespace}
-
-%\begin{singlespace}
 \begingroup
-    \setlength{\bibsep}{10pt}
-        \setstretch{1}
-  \bibliography{references}
-            \endgroup
-  \bibliographystyle{acl_natbib}
- % \end{singlespace}
-\addcontentsline{toc}{chapter}{References}  %add References section to Table of Contents
+\setlength{\bibsep}{10pt}
+\setstretch{1}
+\bibliography{references}
+\endgroup
+\bibliographystyle{acl_natbib}
+\addcontentsline{toc}{chapter}{References} 
 
-%%%%%%%%%%%%%%%%%
-%% Appendices
-%%%%%%%%%%%%%%%%%
-%
-%%Readjust Title format for Appendicies
-%\titleformat{\chapter}[display]
-%{\normalfont\bfseries\filcenter}{}{0pt}{\large\chaptertitlename\ \large\thechapter : \large\bfseries\filcenter{#1}}  
-%\titlespacing*{\chapter}
-%  {0pt}{0pt}{30pt}	%controls vertical margins on title
-%  
-%% Adjust section title formatting
-%\titleformat{\section}{\normalfont\bfseries}{\thesection}{1em}{#1}
-%
-%% Adjust subsection title formatting
-%\titleformat{\subsection}{\normalfont}{\thesubsection}{0em}{\hspace{1em}#1}
-%
-%\input{appendix.tex}
-%
+%%%%  %%%%%%%%%%%%%%%%%
+%%%%  %% Appendices
+%%%%  %%%%%%%%%%%%%%%%%
+%%%%  %
+%%%%  %%Readjust Title format for Appendicies
+%%%%  \titleformat{\chapter}[display]
+%%%%  {\normalfont\bfseries\filcenter}{}{0pt}{\large Appendix\ \large\thechapter : \large\bfseries\filcenter{#1}}  
+%%%%  %\titlespacing*{\chapter}
+%%%%  %  {0pt}{0pt}{30pt}	%controls vertical margins on title
+%%%%  %  
+%%%%  %% Adjust section title formatting
+%%%%  %\titleformat{\section}{\normalfont\bfseries}{\thesection}{1em}{#1}
+%%%%  %
+%%%%  %% Adjust subsection title formatting
+%%%%  %\titleformat{\subsection}{\normalfont}{\thesubsection}{0em}{\hspace{1em}#1}
+%%%%  %\renewcommand{\appendixtocon}{BLORT}
+%%%%  %\renewcommand{\appendixname}{Appendix}
+%%%%  %\renewcommand{\appendixtocname}{BBLORT}
+%%%%  
+%\addcontentsline{toc}{chapter}{Appendices}
+
+\renewcommand\chaptername{Appendix}
+% insert the change into the toc file
+
+\addtocontents{toc}{\protect\renewcommand\protect\cftchapnumwidth{5.7em}}
+\addtocontents{toc}{\protect\renewcommand\protect\cftchappresnum{Appendix\ }}
+
+\begin{appendices}
+\input{appendix/GRU_Architecture.tex}
+\input{appendix/Transformer_Architecture.tex}
+\end{appendices}
 \end{document} 

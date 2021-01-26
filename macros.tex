@@ -13,6 +13,101 @@
 }
 
 
+\newcommand\T{{\mathpalette\raiseT\intercal}}
+\newcommand\raiseT[2]{\raisebox{0.45ex}{$#1#2$}}
+
+%%%% Chapter 4 %%%%
+
+\newcommand{\query}{\ensuremath{q}}
+\newcommand{\docstream}{\ensuremath{\mathcal{D}}}
+\newcommand{\snuggets}{\ensuremath{\mathcal{N}}}
+\newcommand{\docstreamq}{\ensuremath{\docstream^{(\query)}}}
+\newcommand{\sentstream}{\ensuremath{\mathcal{S}}}
+\newcommand{\sentstreamq}{\ensuremath{\mathcal{X}^{(\query)}}}
+\newcommand{\sdoc}{\ensuremath{d}}
+\newcommand{\ssent}{\ensuremath{s}}
+\newcommand{\ssize}{\ensuremath{{m^{(\docstream)}}}}
+\newcommand{\sssize}{\ensuremath{{m^{(\sentstream)}}}}
+\newcommand{\dssize}{\ensuremath{n}}
+\newcommand{\ts}{\ensuremath{\tau}}
+\newcommand{\docts}{\ensuremath{\tau^{(\docstream)}}}
+\newcommand{\sentts}{\ensuremath{\tau^{(\sentstream)}}}
+\newcommand{\uts}{\ensuremath{\tau^{(\updateSummary)}}}
+\newcommand{\nts}{\ensuremath{\tau^{(\snuggets)}}}
+\newcommand{\systs}{\ensuremath{\hat{\tau}}}
+\newcommand{\sact}{\ensuremath{y}}
+\newcommand{\supdate}{\ensuremath{u}}
+\newcommand{\snugget}{\ensuremath{\gamma}}
+\newcommand{\nsize}{\ensuremath{r}}
+\newcommand{\utuple}[1]{\ensuremath{\left(\supdate_{#1},\uts_{#1}\right)}}
+\newcommand{\ntuple}[1]{\ensuremath{\left(\snugget_{#1},\nts_{#1}\right)}}
+\newcommand{\nEG}{\ensuremath{n\mathbb{E}[\gain]}}
+\newcommand{\EG}{\ensuremath{\mathbb{E}[\gain]}}
+\newcommand{\harm}{\ensuremath{\mathcal{H}}}
+\newcommand{\poestart}{\ensuremath{\ts_\starttok}}
+\newcommand{\poestop}{\ensuremath{\ts_\stoptok}}
+\newcommand{\dhour}{\ensuremath{\delta_{hour}}}
+\newcommand{\featf}[1]{\ensuremath{\phi\left(#1\right)}}
+\newcommand{\latf}[1]{\ensuremath{\psi\left(#1\right)}}
+\newcommand{\salmodf}[1]{\ensuremath{f\left(#1\right)}}
+\newcommand{\Exemplars}{\ensuremath{\mathcal{E}}}
+\newcommand{\spredsals}{\ensuremath{\boldsymbol{\hat{\mathbf{y}}}}}
+\newcommand{\spredsal}{\ensuremath{\hat{y}}}
+
+
+\newcommand{\spredacts}{\ensuremath{\boldsymbol{\hat{\mathbf{y}}}}}
+\newcommand{\tmo}{\ensuremath{{t-1}}}
+\newcommand{\salop}[1]{\ensuremath{\operatorname{salience}\left(#1\right)}}
+\newcommand{\simop}[1]{\ensuremath{\operatorname{similarity}\left(#1\right)}}
+\newcommand{\cossim}[1]{\ensuremath{\operatorname{cosine-similarity}\left(#1\right)}}
+\newcommand{\sdimw}{\ensuremath{{D_w}}}
+\newcommand{\sdims}{\ensuremath{{D_s}}}
+\newcommand{\sdiml}{\ensuremath{{D_h}}}
+\newcommand{\tsmat}{\ensuremath{\mathbf{K}}}
+\newcommand{\wmat}{\ensuremath{\mathbf{W}}}
+\newcommand{\wproj}{\ensuremath{\mathbf{P}}}
+\newcommand{\sproj}{\ensuremath{\mathbf{Q}}}
+\newcommand{\obj}[1]{\ensuremath{\mathcal{L}\left(#1\right)}}
+\newcommand{\exemplar}{\varepsilon}
+\newcommand{\exemplars}{\boldsymbol{\varepsilon}}
+\newcommand{\cin}{\ensuremath{\mathcal{X}}}
+\newcommand{\cinsize}{\ensuremath{n}}
+\newcommand{\csim}{\ensuremath{\operatorname{sim}}}
+\newcommand{\apcons}{\ensuremath{g}}
+\newcommand{\apop}{\ensuremath{\operatorname{APCluster}}}
+\newcommand{\sapsalth}{\ensuremath{{\lambda_{sal}}}}
+\newcommand{\sapsimth}{\ensuremath{{\lambda_{sim}}}}
+
+%%%
+
+
+\newcommand{\strmDoc}{\ensuremath{\mathbf{d}}}
+\newcommand{\strmDocSize}{\ensuremath{m}}
+\newcommand{\strmSentSize}{\ensuremath{n}}
+\newcommand{\strmSent}{\ensuremath{\mathbf{x}}}
+\newcommand{\strmExtr}{\ensuremath{y}}
+\newcommand{\timestamp}{\tau}
+\newcommand{\senttimestamp}{\timestamp^{(x)}}
+\newcommand{\doctimestamp}{\timestamp^{(d)}}
+\newcommand{\systemtime}{\timestamp^{(s)}}
+\newcommand{\strmupdate}{\ensuremath{\mathbf{u}}}
+\newcommand{\strmUpdateSize}{\ensuremath{{n_u}}}
+\newcommand{\updatetimestamp}{\timestamp^{(u)}}
+\newcommand{\nuggetSize}{\ensuremath{{n_\gamma}}}
+\newcommand{\strmnugget}{\gamma}
+\newcommand{\nugtimestamp}{\timestamp^{(\gamma)}}
+\newcommand{\updateSummary}{\ensuremath{\mathcal{U}}}
+\newcommand{\strmNuggets}{\ensuremath{\mathcal{N}}}
+\newcommand{\earlymatch}{\ensuremath{M}}
+\newcommand{\invearlymatch}{\ensuremath{M^{-1}}}
+\newcommand{\gain}{G}
+\newcommand{\latency}{L}
+\newcommand{\comp}{C}
+
+%%%%%%%%%%%%%%%
+
+\newcommand{\stream}{\ensuremath{\mathcal{S}}}
+
 
 
 
@@ -153,6 +248,7 @@
 \newcommand{\embLayer}{\operatorname{Emb}}
 \newcommand{\wordEmbChar}{v}
 \newcommand{\wordEmb}{\ensuremath{\mathbf{\wordEmbChar}}}
+\newcommand{\nnwordEmbs}{\ensuremath{\mathbf{V}}}
 \newcommand{\wordbudget}{\ensuremath{c}}
 \newcommand{\zeroEmb}{\ensuremath{\mathbf{0}}}
 \newcommand{\doc}{\ensuremath{x}}
@@ -200,8 +296,8 @@
 %% RNN Encoder
 
 \newcommand{\rSentEmb}{\ensuremath{\overrightarrow{\sentEmb}}}
-\newcommand{\rSentGRUParams}{\ensuremath{\overrightarrow{\sentEncParams}}}
-\newcommand{\lSentGRUParams}{\ensuremath{\overleftarrow{\sentEncParams}}}
+\newcommand{\rSentGRUParams}{\ensuremath{\overrightarrow{\varphi}}}
+\newcommand{\lSentGRUParams}{\ensuremath{\overleftarrow{\varphi}}}
 \newcommand{\lSentEmb}{\ensuremath{\overleftarrow{\sentEmb}}}
 
 
@@ -229,8 +325,8 @@
     \newcommand{\xpHidSize}{\ensuremath{{D_{z}}}}
     \newcommand{\xEncHid}{\ensuremath{\boldsymbol{\eta}}}
     \newcommand{\xDecHid}{\ensuremath{\boldsymbol{\zeta}}}
-    \newcommand{\clEncParams}{\ensuremath{\chi_\eta}}
-    \newcommand{\clDecParams}{\ensuremath{\chi_\zeta}}
+    \newcommand{\clEncParams}{\ensuremath{\varphi_\eta}}
+    \newcommand{\clDecParams}{\ensuremath{\varphi_\zeta}}
     \newcommand{\xweight}{\ensuremath{p}}
     \newcommand{\xPredHid}{\ensuremath{\mathbf{z}}}
     \newcommand{\xpWeight}{\ensuremath{\mathbf{U}}}
@@ -241,8 +337,8 @@
     \newcommand{\srHid}{\ensuremath{\mathbf{z}}}
     \newcommand{\srrHid}{\ensuremath{\boldsymbol{\overrightarrow{z}}}}
     \newcommand{\srlHid}{\ensuremath{\boldsymbol{\overleftarrow{z}}}}
-    \newcommand{\srRRNNParams}{\overrightarrow{\xParams}}
-    \newcommand{\srLRNNParams}{\overleftarrow{\xParams}}
+    \newcommand{\srRRNNParams}{\overrightarrow{\varphi}}
+    \newcommand{\srLRNNParams}{\overleftarrow{\varphi}}
     \newcommand{\srRNNDim}{{D_r}}
     \newcommand{\srRepDim}{{D_z}}
     \newcommand{\srPosDim}{{D_g}}
@@ -276,8 +372,8 @@
     \newcommand{\rnnextHid}{\ensuremath{\mathbf{z}}}
     \newcommand{\rnnextRHid}{\ensuremath{\boldsymbol{\overrightarrow{\eta}}}}
     \newcommand{\rnnextLHid}{\ensuremath{\boldsymbol{\overleftarrow{\eta}}}}
-    \newcommand{\rnnextRParams}{\ensuremath{\overrightarrow{\xParams}}}
-    \newcommand{\rnnextLParams}{\ensuremath{\overleftarrow{\xParams}}}
+    \newcommand{\rnnextRParams}{\ensuremath{\overrightarrow{\varphi}}}
+    \newcommand{\rnnextLParams}{\ensuremath{\overleftarrow{\varphi}}}
     \newcommand{\rnnextHidWeight}{\ensuremath{\boldsymbol{W}^{(1)}}}
     \newcommand{\rnnextHidBias}{\ensuremath{\boldsymbol{b}^{(1)}}}
     \newcommand{\rnnextPredWeight}{\ensuremath{\boldsymbol{W}^{(2)}}}
@@ -307,10 +403,10 @@
     \newcommand{\stsextPredBias}{\ensuremath{\boldsymbol{b}^{(2)}}}
     \newcommand{\stsextRNNDim}{{D_\chi}}
     \newcommand{\stsextHidDim}{{D_z}}
-    \newcommand{\stsextREncParams}{{\overrightarrow{\chi}_\eta}}
-    \newcommand{\stsextLEncParams}{{\overleftarrow{\chi}_\eta}}
-    \newcommand{\stsextRDecParams}{{\overrightarrow{\chi}_\zeta}}
-    \newcommand{\stsextLDecParams}{{\overleftarrow{\chi}_\zeta}}
+    \newcommand{\stsextREncParams}{{\overrightarrow{\varphi}_\eta}}
+    \newcommand{\stsextLEncParams}{{\overleftarrow{\varphi}_\eta}}
+    \newcommand{\stsextRDecParams}{{\overrightarrow{\varphi}_\zeta}}
+    \newcommand{\stsextLDecParams}{{\overleftarrow{\varphi}_\zeta}}
 %
 
 %
@@ -558,33 +654,6 @@
 \newcommand{\acount}{\operatorname{count}}
 
 
-\newcommand{\query}{\ensuremath{q}}
-\newcommand{\stream}{\ensuremath{\mathcal{S}}}
-\newcommand{\docstream}{\ensuremath{\mathcal{D}}}
-\newcommand{\sentstream}{\ensuremath{\mathcal{X}}}
-\newcommand{\strmDoc}{\ensuremath{\mathbf{d}}}
-\newcommand{\strmDocSize}{\ensuremath{m}}
-\newcommand{\strmSentSize}{\ensuremath{n}}
-\newcommand{\strmSent}{\ensuremath{\mathbf{x}}}
-\newcommand{\strmExtr}{\ensuremath{y}}
-\newcommand{\timestamp}{\tau}
-\newcommand{\senttimestamp}{\timestamp^{(x)}}
-\newcommand{\doctimestamp}{\timestamp^{(d)}}
-\newcommand{\systemtime}{\timestamp^{(s)}}
-\newcommand{\strmupdate}{\ensuremath{\mathbf{u}}}
-\newcommand{\strmUpdateSize}{\ensuremath{{n_u}}}
-\newcommand{\updatetimestamp}{\timestamp^{(u)}}
-\newcommand{\nuggetSize}{\ensuremath{{n_\gamma}}}
-\newcommand{\strmnugget}{\gamma}
-\newcommand{\nugtimestamp}{\timestamp^{(\gamma)}}
-\newcommand{\updateSummary}{\ensuremath{\mathcal{U}}}
-\newcommand{\strmNuggets}{\ensuremath{\mathcal{N}}}
-\newcommand{\earlymatch}{\ensuremath{M}}
-\newcommand{\invearlymatch}{\ensuremath{M^{-1}}}
-\newcommand{\gain}{G}
-\newcommand{\latency}{L}
-\newcommand{\comp}{C}
-
 \newcommand{\tabitem}{~~\llap{\textbullet}~~}
 \newcommand{\category}{c}
 \newcommand{\queries}{\mathcal{Q}}
@@ -594,15 +663,10 @@
 \newcommand{\Feat}{\phi}
 \newcommand{\modelzero}{\policy_0}
 \newcommand{\rolloutpolicy}{\policy^{(o)}}
-\newcommand{\state}{s}
-\newcommand{\states}{\mathcal{S}}
+\newcommand{\state}{x}
+\newcommand{\states}{\mathcal{X}}
 \newcommand{\cost}{c}
 
-
-\newcommand\T{{\mathpalette\raiseT\intercal}}
-\newcommand\raiseT[2]{\raisebox{0.45ex}{$#1#2$}}
-\newcommand{\exemplar}{\varepsilon}
-\newcommand{\exemplars}{\boldsymbol{\varepsilon}}
 
 
 \newcommand{\lossfunc}{\ell}
@@ -610,3 +674,16 @@
 \newcommand{\roat}{\bsal^{\left(t,\hat{\bsal},\rolloutpolicy\right)}}
 \newcommand{\roaseq}[2]{\boldsymbol{\hat{\bsals}}^{\left(#1,#2,\rolloutpolicy\right)}}
 \newcommand{\roa}[2]{\bsal^{\left(#1,#2,\rolloutpolicy\right)}}
+
+
+
+%%%%%%%%%%%%%%%%%%%%% Chapter3 %%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\nnmodel}{\model}
+\newcommand{\nndoc}{\doc}
+\newcommand{\nnsals}{\bsals}
+\newcommand{\nnsal}{\bsal}
+\newcommand{\nnpredsals}{\predbsals}
+\newcommand{\nnpredsal}{\predbsal}
+\newcommand{\nnpsal}{\psal}
+

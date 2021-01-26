@@ -1,4 +1,13 @@
+\usepackage{dcolumn}
+%\usepackage[titletoc,page]{appendix}
+
+\usepackage{etoolbox}% http://ctan.org/pkg/etoolbox
+
+
+
 \usepackage{subcaption}
+%\usepackage{etoolbox}
+\robustify{\fbox}
 \usepackage{pmboxdraw}
 \usepackage{fixltx2e}
 \usepackage{stmaryrd}
@@ -49,7 +58,8 @@
 \definecolor{decsentemb}{HTML}{7FDAFF}
 \definecolor{encemb}{HTML}{FFAA1D}
 \definecolor{rencemb}{HTML}{FFAA1D}
-\definecolor{lencemb}{HTML}{CC7700}
+%\definecolor{lencemb}{HTML}{CC7700}
+\definecolor{lencemb}{HTML}{FFAA1D}
 
 \definecolor{rdecemb}{HTML}{EFEC43}
 \definecolor{ldecemb}{HTML}{BCB910}
@@ -121,4 +131,13 @@
 %     \printfield[titlecase]{subtitle}}%
 %     \newunit}%
 %  \printfield{titleaddon}}
+
+\newtcbox{\greenbox}[1][]{colframe=green, colback=green!15, boxrule=0.1mm,
+                       nobeforeafter, tcbox raise base, shrink tight, extrude
+                       by=0.32mm, #1}
+
+\newtcbox{\redbox}[1][]{colframe=red, colback=red!15, boxrule=0.1mm,
+                       nobeforeafter, tcbox raise base, shrink tight, extrude
+                       by=0.32mm, #1}
+
 

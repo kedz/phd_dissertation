@@ -1,74 +1,66 @@
 \section{Contributions}
   
-  We now briefly overview the contributions of this thesis.
+We now briefly overview the contributions of this thesis.
   
-  %This thesis  makes the following contributions to NLG.
-  %In the areas of text-to-text generation,
-  
-  \begin{enumerate}
-          \item We propose a systematic evaluation of deep learning models
-              for extractive single document summarizations \citep{kedzie2018}. 
-              Our evaluation of several popular neural architectures shows 
-              that:
-              \begin{itemize}
-                  \item Position features, even when not explicitly represented
-                      in the model architecture, are a dominant feature
-                      exploited by the model in news and research article
-summarization. This arguably makes neural models of summarization on these domains a computationally expensive way to identify the lead paragraph of an article.
-                  \item Content features exist across a variety of word classes (e.g., nouns)
-                      but are not as strong of a signal as position.
-                  \item Word embedding averaging is about as effective as 
-                      recurrent or convolutional sentence encoders. This suggests that current neural summarizaton models are not able to effectively exploit
-sentence content beyond the notion of a bag-of-words.
-                \item Autoregressive sentence extraction models (i.e., where prior sentence extraction decisions are fed back into the model before making subsequent decisions) are as effective as non-autoregressive sentence extraction
-models. This finding implies that at the point of identifying salience, the existing models are not effectively able to exploit the document level context. 
-              \end{itemize}
-          \item In the task of query focused, sentence extractive, streaming news 
-              summarization, we propose two models for providing 
-              extractive update summaries. \citep{kedzie2015,kedzie2016}
-              \begin{itemize}
-                    \item We show that in a setting where position or 
-frequency heuristics are less reliable, we can construct a sentence 
-salience estimation model that effectively uses domain knowledge to identify
-important content. Additionally, we can embed this salience model in a 
-clustering algorithm, such that sentence selection is done in a way that
-considers a sentence's salience as well as its representativeness when making extraction decisions. This model
-is able to identify salient content in a more timely fashion as news comes in than competing approaches.
+\begin{enumerate}
+  \item We propose a systematic evaluation of deep learning models for
+extractive single document summarizations \citep{kedzie2018}.  Our evaluation
+of several popular neural architectures shows that:
+  \begin{itemize}
+    \item Position features, even when not explicitly represented in the model
+architecture, are a dominant feature exploited by the model in news and
+research article summarization. This arguably makes neural models of
+summarization on these domains a computationally expensive way to identify the
+lead paragraph of an article.
+    \item Content features exist across a variety of word classes (e.g., nouns)
+but are not as strong of a signal as position.
+    \item Word embedding averaging is about as effective as recurrent or
+convolutional sentence encoders. This suggests that current neural summarizaton
+models are not able to effectively exploit sentence content beyond the notion
+of a bag-of-words.
+    \item Autoregressive sentence extraction models (i.e., where prior sentence
+extraction decisions are fed back into the model before making subsequent
+decisions) are as effective as non-autoregressive sentence extraction models.
+This finding implies that at the point of identifying salience, the existing
+models are not effectively able to exploit the document level context. 
+  \end{itemize}
+  \item In the task of query focused, sentence extractive, streaming news
+summarization, we propose two models for providing extractive update summaries.
+\citep{kedzie2015,kedzie2016}
+  \begin{itemize}
+    \item We show that in a setting where position or frequency heuristics are
+less reliable, we can construct a sentence salience estimation model that
+effectively uses domain knowledge to identify important content. Additionally,
+we can embed this salience model in a clustering algorithm, such that sentence
+selection is done in a way that considers a sentence's salience as well as its
+representativeness when making extraction decisions. This model is able to
+identify salient content in a more timely fashion as news comes in than
+competing approaches.
 
-
-%                  \item The first method processes the stream in  batches. 
-%                      It uses a regression model
-%                      to estimate the salience of individual 
-%                      sentences, and a biased clustering algorithm to select
-%                      the most representative and salient outputs.
-%                  \item The second method processes the stream in a fully
-%                      online manner. A linear model makes extraction
-%                      decisions, and we experiment with a learning-to-search
-%                      algorithm for training. 
-
-\item We then show how to learn a greedy sentence extraction policy that
+    \item We then show how to learn a greedy sentence extraction policy that
 optimizes the complete summarization task (as opposed to the previous approach
-which only learned salience estimation). This policy combines information
-about sentence salience and redundancy, as well as previous extraction
-decisions and it yields a high quality extract summary, even while operating 
-in a greedy manner. This method further improves on the
-clusering approach in terms of identifying salience content with minimal
-latency.
-              \end{itemize}
-      \end{enumerate}
+which only learned salience estimation). This policy combines information about
+sentence salience and redundancy, as well as previous extraction decisions and
+it yields a high quality extract summary, even while operating in a greedy
+manner. This method further improves on the clusering approach in terms of
+identifying salience content with minimal latency.
+  \end{itemize}
+\end{enumerate}
   
-      In the area of data-to-text generation, we make the following 
-      contributions to faithful and controllable generation of 
-      text from a meaning representation \citep{kedzie2019,kedzie2020}.  
-      \begin{enumerate}
-          \item We propose a novel data augmentation technique called 
-                noise injection and self-training, which allows us to create
-                additional synthetic training examples for the meaning representation to text generation task. We show that the synthetic corpus created by
-                this method, does not possess some of the spurious correlations
-and dataset creation artifacts present in the human authored training data.
-Neural NLG models trained on the union of original and  synthetic data are more faithful, (i.e., they generate utterances with fewer semantic errors, than more computationally expensive models that rely on 
+In the area of data-to-text generation, we make the following contributions to
+faithful and controllable generation of text from a meaning representation
+\citep{kedzie2019,kedzie2020}.  
+\begin{enumerate}
+  \item We propose a novel data augmentation technique called noise injection
+and self-training, which allows us to create additional synthetic training
+examples for the meaning representation to text generation task. We show that
+the synthetic corpus created by this method, does not possess some of the
+spurious correlations and dataset creation artifacts present in the human
+authored training data.  Neural NLG models trained on the union of original and
+synthetic data are more faithful, (i.e., they generate utterances with fewer
+semantic errors, than more computationally expensive models that rely on
 discriminative reranking  to ensure correctness).
-\item We propose an encoder input linearization strategy for
+  \item We propose an encoder input linearization strategy for
 sequence-to-sequence NLG models called alignment training.   This technique
 yields neural NLG models that are controllable, i.e., capable of following a
 discourse ordering plan.  We demonstrate that this technique works for both
@@ -77,10 +69,8 @@ scratch as well as when fine-tuning a large, pretrained sequence-to-sequence
 model. We also perform extensive stress testing of the plan following behavior
 under adversarial conditions, and propose a phrase-based data augmentation
 method to improve performance in this more challenging setting.
-      \end{enumerate}
+\end{enumerate}
   
-Finally, we conclude with a discussion of the limitations and future
-directions this work might take. In particular, we focus on how faithful
-generation might be applied to text-to-text summarization. 
-%where an explicit representation
-%of the content meaning is currently not available. 
+Finally, we conclude with a discussion of the limitations and future directions
+this work might take. In particular, we focus on how faithful generation might
+be applied to text-to-text summarization. 
