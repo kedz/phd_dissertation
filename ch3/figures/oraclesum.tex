@@ -12,13 +12,13 @@
 %
 %  ~ \\
     $\hat{i} \gets {\argmax}_{\substack{ i \in \{1, \ldots, n\}, \\ y_i \ne 1 }} 
-        \textsc{Rouge}(\extractSummary + [\sent_i], R)$
+        \textsc{Rouge}(\extractSummary \oplus [\sent_i], R)$
     \tcp*{Find next best extract.}
 
 %        
 %  ~ \\
-\eIf{$\textsc{Rouge}(\extractSummary + [ \sent_{\hat{i}} ], R ) > \textsc{Rouge}(\extractSummary, R)$}{
-            $\extractSummary \gets \extractSummary + [ \sent_{\hat{i}} ]$
+\eIf{$\textsc{Rouge}(\extractSummary \oplus [ \sent_{\hat{i}} ], R ) > \textsc{Rouge}(\extractSummary, R)$}{
+    $\extractSummary \gets \extractSummary \oplus [ \sent_{\hat{i}} ]$
         \tcp*{Update extract and salience judgements.}
         $\bsal_{\hat{i}} \gets 1$ 
         }{ \textbf{break} \tcp*{No further improvements possible, so end.}}
@@ -27,7 +27,7 @@
     }
 %    
     \KwResult{Salience judgements $\bsals = \left[ \bsal_1, \ldots, \bsal_\docSize\right]$}
-    \caption{\textsc{OracleExtractSummaryLabels}}
+    \caption{Salience Label Creation}
 \label{alg:oraclesum}
 \end{algorithm}
 

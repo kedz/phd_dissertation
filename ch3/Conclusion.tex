@@ -1,15 +1,37 @@
 \section{Conclusion}
-We have presented an empirical study of deep learning based salience 
-estimation
-algorithms for summarization. Our findings suggest such models face stark limitations in their ability to learn robust features for this task and that 
-more work is needed on sentence representation for summarization.
-In the next chapter, we explore feature based models of sentence 
-representation that allow us to capture domain specific intuitions 
-of salience
-for a streaming summarization problem. Additionally, we develop more wholistic 
-summarization algorithms that can incorporate  salience estimates (which
-could be produced  either
-by a \deeplearning~or classical \machinelearning~based salience estimator)
-while taking into account features of redundancy or novelty. 
 
+We have presented an empirical study of deep learning-based salience estimation
+models for summarization. In particular, we examined three different sentence
+encoders for representing sentences and four different extraction models for
+predicting sentence salience.  Our findings suggest that position heuristics
+are in many cases  exploitable when performing sentence selection, and that
+models are not making extensive use of content features. As a result, simple
+encoders like the averaging encoder and simple extractors like the RNN
+extractor are fairly competitive with more sophisticated models that explicitly
+model dependencies in the output.
 
+Interestingly, the performance ceiling on extractive, single-document news
+summarization continues to be raised.  When these experiments were carried out,
+large, pretrained models like BERT \citep{devlin2019} were not yet in use.
+Subsequent work on fine-tuning BERT-based models has shown a modest increase in
+\rouge~performance on the CNN-DailyMail dataset \citep{liu2019}.  Additionally,
+\cite{liu2019} show that the BERT based models select from the lead sentences
+less than the oracle, and draw more frequently from the long tail of the
+document as well. Meanwhile, a comparable model trained from scratch selected
+lead sentences much more frequently than the oracle would have (something we
+also observed). This suggests large, pretrained language models are better able
+to exploit features beyond position bias, although it would be interesting to
+tease this out in more detail in future work.
+
+In either case, it would seem advisable to revise the paradigm of training
+single document summarization systems to do ``generic summarization,'' where
+there is no goal or prior instruction on what is relavent or intended to be
+searched for. Since this generic task is underspecified, it is relatively easy
+for models to exploit heuristics as opposed to learning to reason about the
+salience of a text from features that are more semantically relavent to the
+task.  In the next chapter, we explore this idea further by attempting to
+summarize a large stream of documents where position heuristics are less
+useful.  Additionally, we develop more wholistic summarization algorithms that
+can incorporate  salience estimates (which could be produced  either by a
+\deeplearning~or classical \machinelearning~based salience estimator) while
+taking into account features of redundancy or novelty. 
