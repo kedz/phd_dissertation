@@ -1,0 +1,520 @@
+
+\chapter{Transformer-based Sequence-to-Sequence Architecture}
+\label{sec:nlgtf}
+
+\input{nlg/figures/tf.tex}
+
+
+The transformer \sequencetosequence~model eschews the recurrence as a mechanism
+for propagating information, and instead leans solely on several 
+attention mechanisms to learn representations of the input sequence $\mrtoks$
+as well as the decoder input prefix $\utttoks_{1:i}$. Like the GRU,
+each encoder and decoder consist of $\numLayer$ distinct
+layers which are applied to $\mrtoks$ and $\utttoks_{1:i}$ respectively.
+Ultimately,
+the decoder outputs are used to compute the next word probability,
+$\gen(\utttok_{i+1}|\utttoks_{1:i},\mrtoks)$. 
+
+A schematic diagram of the transformer-based \sequencetosequence~model
+is shown in \autoref{fig:tf}. Like the GRU schematic, the model diagram is 
+color-coded to correspond with the text descriptions of each component.
+While the transformer looks significantly more complex than the 
+GRU architecture, it is fundamentally built around only three 
+different kinds of 
+neural network layers, \textit{(i)} multi-head attention, 
+\textit{(ii)} \feedforward layers, and \textit{(iii)} 
+layer normalization. Before describing the encoder and decoder layers
+in detail, we first describe these basic components and how they form 
+the various ``block'' structures which are employed throughout the model.
+
+\subsubsection{Transformer Components}
+
+\paragraph{Multi-Head Attention} The first basic layer to be defined is the 
+multi-head attention layer. We begin by describing ``single-head'' attention
+from the point of view of a soft key-value store and then generalize to 
+the ``multi-head'' case. In this view, we assume we want to attend to 
+a sequence of $\mrSize$ items. Each item has two representations,
+a key representation and a value representation, which are written collectively
+as rows in a key and value matrix, $\Key \in \reals^{\mrSize \times \embDim}$
+and $\Value \in \reals^{\mrSize \times \embDim}$ respectively.
+We then  have $\uttSize$ query items that will each individually attend to the 
+$\mrSize$ items; we similarly represent the query items as rows in a matrix
+$\Query \in \reals^{\uttSize \times \embDim}$. An attention
+layer, denoted $\Attn : \reals^{\uttSize \times \embDim} \times \reals^{\mrSize \times \embDim} \times \reals^{\mrSize \times \embDim} \rightarrow \reals^{\uttSize \times \embDim}$, then computes an attention weighted read of the value
+matrix as,
+  \[\Attn\left(\Query, \Key, \Value\right) = \softmax\left(\frac{\Query \Key^T}{\sqrt{\embDim}} \right)\Value, \]
+  where \[\softmax\left(\frac{\Query \Key^T}{\sqrt{\embDim}} \right)_{i,j} = \frac{\exp\left(\embDim^{-\frac{1}{2}} \mathbf{q}_i \cdot \mathbf{k}_j\right) }{ \sum_{j^\prime=1}^\mrSize \exp\left( \embDim^{-\frac{1}{2}} \mathbf{q}_i \cdot \mathbf{k}_{j^\prime}\right)} \quad \forall i,j : i \in \{1,\ldots,\uttSize\}, j \in \{1,\ldots,\mrSize\}.\]
+  Because the $\mrSize$ items have distinct key and value matrices,
+  representation of similarity between a query and a key can be different
+  than the value that is produced in the output, unlike the attention
+  mechanisms discussed in the GRU decoder, where essentially, the key
+  and values were identical representations.
+
+
+  The idea behind multi-head attention is to compute $\numHeads$ distinct
+  attention operations by first projecting the query, keys, and values
+  down to a smaller representation. That is, given projection
+  matrices, $\weight{Q_{in},k}, \weight{K_{in},k}, \weight{V_{in},k} \in \reals^{\embDim \times \frac{\embDim}{\numHeads}}$ for $k \in \{1,\ldots,\numHeads\}$, and $\weight{V_{out}} \in \reals^{\embDim \times \embDim}$,
+the  multi-headed attention layer computes
+\[ \MultiAttn(\Query, \Key, \Value) = \left(\begin{array}{lc}
+            &\Attn\left(\Query\weight{Q_{in},1},  
+                 \Key\weight{K_{in},1}, \Value\weight{V_{in},1}\right)\\
+              \oplus &   
+                  \Attn\left(\Query\weight{Q_{in},2}, 
+              \Key\weight{K_{in},2}, \Value\weight{V_{in},2}\right)\\
+              & \vdots \\
+              \oplus & 
+            \Attn\left(\Query\weight{Q_{in},\numHeads},  
+                 \Key\weight{K_{in},\numHeads}, \Value\weight{V_{in},\numHeads}\right)\\
+        \end{array}\right) \weight{V_{out}}
+ \]
+  where $\oplus$ indicates column-wise concatenation. Each use of a
+  multi-head attention layer uses distinct projection matrices
+  and are learned parameters of the model.
+
+%~\\~\\
+%
+%the single-headed attention layer takes three matrices as input:
+%a query matrix, $\Query \in \reals^{\uttSize \times \embDim}$,
+%a key matrix, $\Key \in \reals^{\mrSize \times \embDim}$,
+%and a value matrix, $\Value \in \reals^{\mrSize \times \embDim}$.
+%
+
+%The query matrix typically represents a series of $\uttSize$ 
+%state vectors, for example, the decoder hidden states of the token
+%prefix $\utttoks_{1:\uttSize}$. The key matrix represents a 
+%sequence of $\mrSize$ state vectors that will be attended to by the
+%query matrix, for example, the encoder hidden states of the input $\mrtoks$. 
+
+Additionally, there is a masked variant of attention, $\MaskedMultiAttn$
+  where the individual attention layers are computed as
+  \[\Attn\left(\Query, \Key, \Value\right) = \softmax\left(\frac{\Query \Key^T \odot \Mask }{\sqrt{\embDim}} \right)\Value \]
+where $\Mask \in \reals^{\uttSize \times \mrSize}$ 
+ is a lower triangular matrix, i.e. values on or below the diagonal are 1
+  and all other values are $-\infty$.  The masked multi-head attention
+  is used for the decoder self-attention and prevents the $i$-th decoder
+  step from attending to future steps, i.e. giving it clairvoyant knowledge 
+  of future tokens.
+
+  \paragraph{\FeedForward~Layer} The next bulding block is a single hidden layer \feedforward~network, $\ff : \reals^{*\times \embDim} \rightarrow \reals^{*\times \embDim}$, with $\relu$ activation in its hidden layer and
+  no activation in its output.
+  %applied independently 
+%to each row of  
+  Let the input to the layer be a sequence of $\mrSize$ vectors, represented 
+  as rows in a matrix $\tfEncInput =\left[\tfEncInputRow_1,\ldots,\tfEncInputRow_\mrSize \right]\in \reals^{\mrSize \times \tfFeats}$.
+%  where $\tfEncInput$ is a sequence $\mrSize$ embeddings
+%with $\tfFeats$ features, 
+The output of the $\ff$ layer is then computed
+%%  ($\relu(\encInput) = \max\left(\zeroEmb, \encInput\right)$) \cite{nair2010}, 
+%applied to each row of an $m \times n$ input matrix, i.e. a sequence of $m$ objects
+%%  with $n$ features,\\
+%%  
+%%  
+\[\ff\left(\tfEncInput;\weight{i},\weight{j},\bias{i},\bias{j}\right) = 
+\relu\left(\tfEncInput\weight{i} + \bias{i}\right)\weight{j} + \bias{j}.     \]
+where $\weight{i} \in \reals^{\embDim \times \hidDim}$, $\bias{i} \in \reals^{\hidDim}$,
+$\weight{j} \in \reals^{\hidDim \times \embDim}$, $\bias{j} \in \reals^{\embDim}$ are learned parameters and 
+ matrix-vector additions  are broadcast across  the matrix rows
+ (i.e. $\mathbf{H} + \mathbf{b} = \left[\mathbf{h}_1 + \mathbf{b};\cdots \mathbf{h}_\mrSize + \mathbf{b}\right]$)
+
+ \paragraph{Layer Normalization}
+The final component is layer normalization
+ \citep{ba2016}.
+ Let $\tfEncInputRow = \left[\tfEncInputEl_1,\ldots,\tfEncInputEl_\tfFeats\right] \in \reals^{\tfFeats}$ be a vector, representing
+ an embedding of an item with $\tfFeats$ features, and with mean and standard deviation
+\[\bar{\tfEncInputEl}= \frac{1}{\tfFeats} \sum_{i=1}^\tfFeats \tfEncInputEl_i
+    \quad \textrm{and} \quad
+  \tfEncInputEl_\sigma = \left(
+      \frac{1}{\tfFeats-1} \sum_{k=1}^\tfFeats \left( 
+  \tfEncInputEl_k - \bar{\tfEncInputEl} \right)^2  + \epsilon\right)^\frac{1}{2},\]
+  respectively 
+  (the $\epsilon$ term is a small constant for numerical stability,
+  set to $10^{-5}$).
+Layer normalization, 
+$\layerNorm : \reals^{\tfFeats} \rightarrow \reals^{\tfFeats}$,
+normalizes the input have zero mean/unit variance before scaling each element
+and adding a bias,
+\[\layerNorm(\tfEncInputRow; \lnweight, \lnbias) = \lnweight \odot \left(\tfEncInputRow - \bar{\tfEncInputEl}\right) \cdot \tfEncInputEl_\sigma^{-1} + \lnbias \]
+where $\lnweight, \lnbias \in \reals^{\tfFeats}$ are learned parameters
+and $\odot$ is the \elementwise~product.
+When applying layer normalization to a matrix $\tfEncInput =\left[\tfEncInputRow_1,\ldots,\tfEncInputRow_\mrSize \right]\in \reals^{\mrSize \times \tfFeats}$, where $\tfEncInput$ is a sequence $\mrSize$ embeddings
+with $\tfFeats$ features, layer normalization is applied independently to 
+each row,
+\[ \layerNorm(\tfEncInput;\lnweight, \lnbias) = \layerNorm\left( \left[ \begin{array}{c}\tfEncInputRow_1 \\ \vdots \\ \tfEncInputRow_\mrSize  \end{array} \right]; \lnweight, \lnbias\right) =  \left[ \begin{array}{c} \layerNorm\left( \tfEncInputRow_1;\lnweight,\lnbias\right) \\ \vdots \\ \layerNorm\left( \tfEncInputRow_\mrSize;\lnweight,\lnbias\right)  \end{array} \right].  \]
+
+
+
+
+
+%
+%~\\~\\
+%
+%$\MultiAttn$. The input to the $\MultiAttn$ 
+%
+%~\\~\\
+%Let $\Query \in \reals^{\uttSize \times \embDim}$ be the ``query matrix,''
+%which consists of $\uttSize$ query vectors, each of which will be attending
+%to the ``key matrix,'' $\Key \in \reals^{\mrSize \times \embDim}$ which
+%consists of $\mrSize$ key vectors. For each query vector, multi-head attention
+%computes 
+%$\numHeads$ attentative reads of $\Key$ and concatenates them together,
+%%which is defined
+%%%  as\\
+%\noindent $\MultiAttn(\Query, \Key; \weight{a_1}, \weight{a_2}) =$
+%\[ \Bigg(\Attn\left(\Query\weight{a_1}_{1,1}, \Key\weight{a_1}_{2,1}, \Key \weight{a_1}_{3,1} \right) \oplus 
+%      \ldots \oplus
+%  \Attn\left(\Query\weight{a_1}_{1,\numHeads}, \Key\weight{a_1}_{2,\numHeads}, \Key \weight{a_1}_{3,\numHeads} \right)\Bigg) \weight{a_2}
+%  \]
+%  where $\oplus$ indicates column-wise concatenation,  $\weight{a_1} \in \reals^{3 \times \numHeads \times \embDim\times \embDim / \numHeads}$
+%  and $\weight{a_2} \in \reals^{\embDim\times \embDim}$ are learned parameters,
+%  and  
+%$\Attn$ is defined,
+%  
+%  \[\Attn\left(\Query, \Key, \Value\right) = \softmax\left(\frac{\Query \Key^T}{\sqrt{\embDim}} \right)\Value. \]
+%
+%
+%  Additionally, there is a masked variant of attention, $\MaskedMultiAttn$
+%  where the attention is computed 
+%  \[\Attn\left(\Query, \Key, \Value\right) = \softmax\left(\frac{\Query \Key^T \odot \Mask }{\sqrt{\embDim}} \right)\Value \]
+%where $\Mask \in \reals^{\uttSize \times \mrSize}$ 
+% is a lower triangular matrix, i.e. values on or below the diagonal are 1
+%  and all other values are $-\infty$.  The masked multi-head attention
+%  is used for the decoder self-attention and prevents the $i$-th decoder
+%  step from attending to future steps.
+%
+%
+
+\subsubsection{Transformer Processing Blocks}
+Each encoder and decoder transformer layer consists of several
+``processing blocks'' which we define now. Each processing block 
+uses some of the basic components defined in the previous subsection.
+%while the decoder transformer layers consists of three processing blocks.
+%The components of each transformer layer rely on basic elements which we define
+%first. %%  Each Transformer layer is divided into blocks which each have three
+%%  parts, (i) layer norm, (ii) feed-forward/attention, and  (iii) skip-connection.
+%%  We first define the components used in the transformer blocks before
+%%  describing the overall S2S transformer. 
+%%  Starting with layer norm \cite{ba2016}, %%  
+%  
+ % Each transformer layer is built using two or three ``blocks.''
+  There are fourt distinct block types, a \feedforwardblock, a \selfattentionblock, a \maskedselfattentionblock, and an \encoderattentionblock. 
+  Each block consists of three layers
+    \begin{enumerate}
+        \item Layer Normalization
+        \item Processing Layer
+        \item Skip-Connections
+    \end{enumerate}
+    where the processing layer is determined by the block type. For instance,
+    let $\tfEncInput \in \reals^{\mrSize \times \embDim}$ be a
+    matrix with its rows representing a sequence of $\mrSize$ vectors; the \feedforwardblock~is defined as \\
+    \purplebox{\centering \begin{minipage}{0.9\textwidth}
+   \begin{align*}
+      \textbf{Feed-Forward Block} & \\
+       \textit{(Layer Normalization)} & & 
+            \boldsymbol{\check{\tfEncInput}} &
+            =  \layerNorm\left(\tfEncInput \right) \\
+            \textit{(Processing Layer)} &  & \boldsymbol{\bar{\tfEncInput}} &= \ff\left(\boldsymbol{\check{\tfEncInput}}\right)\\
+    \textit{(Skip-Connection)} & & \boldsymbol{\hat{\tfEncInput}} &= \tfEncInput + \boldsymbol{\bar{\tfEncInput}}\end{align*}
+    \begin{center}$\feedforwardblock(\tfEncInput)  =   \boldsymbol{\hat{\tfEncInput}}.$ \end{center}
+\end{minipage}}
+
+\noindent   The \selfattentionblock~and \maskedselfattentionblock s are similarly defined as,\\
+    \cyanbox{\centering \begin{minipage}{0.9\textwidth}
+   \begin{align*}
+       \textbf{Self-Attention Block} & \\
+       \textit{(Layer Normalization)} & & 
+            \boldsymbol{\check{\tfEncInput}} &
+            =  \layerNorm\left(\tfEncInput\right) \\
+            \textit{(Processing Layer)} &  & \boldsymbol{\bar{\tfEncInput}} &=  \MultiAttn\left(\boldsymbol{\check{\tfEncInput}}, \boldsymbol{\check{\tfEncInput}}\right)  \\
+        \textit{(Skip-Connection)} & & \boldsymbol{\hat{\tfEncInput}} &= \tfEncInput + \boldsymbol{\bar{\tfEncInput}}\end{align*}
+       \begin{center}  {$\selfattentionblock(\tfEncInput) =  {\boldsymbol{\hat{\tfEncInput}}}$}\end{center}
+\end{minipage}}
+
+~\\
+
+         \noindent  and \\
+    \limebox{\centering \begin{minipage}{0.9\textwidth}
+         \begin{align*}
+       \textbf{Masked Self-Attention Block} & \\
+       \textit{(Layer Normalization)} & & 
+            \boldsymbol{\check{\tfEncInput}} &
+            =  \layerNorm\left(\tfEncInput\right) \\
+            \textit{(Processing Layer)} &  & \boldsymbol{\bar{\tfEncInput}} &=  \MaskedMultiAttn\left(\boldsymbol{\check{\tfEncInput}}, \boldsymbol{\check{\tfEncInput}}\right)  \\
+        \textit{(Skip-Connection)} & & \boldsymbol{\hat{\tfEncInput}} &= \tfEncInput + \boldsymbol{\bar{\tfEncInput}}\end{align*}
+       \begin{center}  {$\maskedselfattentionblock(\tfEncInput) =  {\boldsymbol{\hat{\tfEncInput}}}$.}\end{center}
+\end{minipage}}
+
+~\\
+
+           \noindent Finally, let $\tfDecInput \in \reals^{\uttSize \times \embDim}$ be a sequence of $\uttSize$ embeddings. The \encoderattentionblock~is
+           defined as,\\
+    \tealbox{\centering \begin{minipage}{0.9\textwidth}
+   \begin{align*}
+       \textbf{Encoder Attention Block} & \\
+       \textit{(Layer Normalization)} & & 
+            \boldsymbol{\check{\tfDecInput}} &
+            =  \layerNorm\left(\tfDecInput\right) \\
+            \textit{(Processing Layer)} &  & \boldsymbol{\bar{\tfDecInput}} &=  \MultiAttn\left(\boldsymbol{\check{\tfDecInput}}, \tfEncInput\right)  \\
+        \textit{(Skip-Connection)} & & \boldsymbol{\hat{\tfDecInput}} &= \tfDecInput + \boldsymbol{\bar{\tfDecInput}}\end{align*}
+       \begin{center}  {$\encoderattentionblock(\tfDecInput, \tfEncInput) =  {\boldsymbol{\hat{\tfDecInput}}}$.}\end{center}
+\end{minipage}}
+
+
+
+\subsubsection{The Transformer Encoder and Decoder Layers}
+
+We now describe the actual transformer-based \sequencetosequence~model
+using the blocks defined previously. We start first with the encoder 
+and decoder input layers.
+
+
+\paragraph{\redbox{Encoder Embedding Layer} and \orangebox{Decoder Embedding Layer}}
+           Let $\mrtoks = \left[ \mrtok_1,\ldots,\mrtok_\mrSize\right]$ and 
+           $\utttoks = \left[\utttok_1,\ldots,\utttok_{\uttSize-1}\right]$ be 
+           input and output sequences, with elements $\mrtok_i$ and $\utttok_i$
+           drawn from vocabularies $\mrvocab$ and $\uttvocab$ respectively.
+           With each vocabulary we associate an embedding matrix,
+          %Let $\mrvocab$ be the \meaningrepresentation~token vocabulary, and 
+          $\encEmbs \in \reals^{\setsize{\mrvocab} \times \embDim}$ 
+          and 
+          $\decEmbs \in \reals^{\setsize{\uttvocab} \times \embDim}$ 
+          respectively. Let $\encEmbs_\mrtok \in \reals^{\embDim}$ denote the $\embDim$-dimensional  embedding for each $\mrtok \in \mrvocab$; similarly,  
+let $\decEmbs_\utttok \in \reals^{\embDim}$ denote the $\embDim$-dimensional  embedding for each $\utttok \in \uttvocab$.
+
+  Additionally let $\posEmb \in \reals^{\mrSizeMax \times \embDim}$ be a sinusoidal position embedding matrix
+  defined elementwise with 
+ \begin{align*}
+     \posEmb_{i,j} & = \sin\left(\frac{i}{10,000^{ \frac{2(j-1)}{\embDim} }}\right) & \forall i,j : i \in \{1,\ldots,\mrSizeMax\}, j \in \{1,3,\ldots, \embDim - 1\} \\
+     \posEmb_{i,j} & = \cos\left(\frac{i}{10,000^{ \frac{2(j-1)}{\embDim} }}\right) & \forall i,j : i \in \{1,\ldots, \mrSizeMax\}, j \in \{2,4,\ldots,\embDim\}. 
+  \end{align*} $\posEmb$ is not updated during training and its rows
+  function as an encoding of the relative position of token in the encoder/decoder inputs. The number of total positions $\mrSizeMax$ is a hyperparameter
+  and represented the longest sequence the encoder/decoder can take as input.
+
+Before being fed into the transformer encoder/decoder, each sequence is 
+embedded in its respective embedding space and the corresponding
+position embeddings are added,
+\[\tfEncInput^{(0)} = \left[ \begin{array}{c}\encEmbs_{\mrtok_1} + \posEmb_1\\
+\vdots \\ \encEmbs_{\mrtok_\mrSize} + \posEmb_\mrSize \end{array}\right] 
+\quad \textrm{and} \quad 
+\tfDecInput^{(0)} = \left[ \begin{array}{c}\decEmbs_{\utttok_1} + \posEmb_1\\
+\vdots \\ \decEmbs_{\utttok_{\uttSize-1}} + \posEmb_{\uttSize-1} \end{array}\right].
+\]
+
+\paragraph{\greenbox{Transformer Encoder}}
+A transformer encoder layer consists of a \selfattentionblock~followed
+    by a \feedforwardblock.
+%?  Unlike 
+%?\recurrentneuralnetwork~architectures like the GRU, the representation 
+%?of each encoder input $\mrtok_i$ can incorporate information to its left
+%?and right, regardless of how far away it is in the sequence.
+ A transformer encoder with $\numLayer$ layers
+    then computes
+\begin{align*} 
+    {\boldsymbol{\bar{\tfEncInput}}^{(l)}} & = \selfattentionblock^{(l)}
+\left(\tfEncInput^{(l-1)}\right) \\
+    \tfEncInput^{(l)} & = \feedforwardblock^{(l)}\left({\boldsymbol{\bar{\tfEncInput}}^{(l)}}\right)
+\end{align*} for $l \in \{1,\ldots,\numLayer\}$.
+We indicate the final encoder output as $\tfEncInput =  \tfEncInput^{(\numLayer)}$.
+ 
+
+%?of $\numLayer$ 
+%?distinct transformer encoder
+%?layers and decoder layers which are applied to $\mrtoks$ and $\utttoks_{1:i}$
+%?respectively in order to compute $\gen\left(\utttok_{i+1}|\utttoks_{1:i},\mrtoks;\params\right)$. 
+%?
+%?Each encoder transformer layer repeatedly apply ``self-attention'' to the encoder
+%?input to obtain a representation of the input. 
+%?
+%?
+%?When predicting the next utteratnce token $\utttok_{i+1}$ 
+%?the decoder performs self-attention on the previously generated tokens
+%?$\utttoks_{1:i}$ while also attending to the encoder output. Again
+%?the use of attention rather than a recurrence allows for the propagation
+%?of information from any part of the input sequence or previously generate output sequence to influence the next word prediction. 
+%?
+
+
+   
+\paragraph{\bluebox{Transformer Decoder}}
+    A transformer deccoder layer consists of a \maskedselfattentionblock~followed
+    by an \encoderattentionblock~and a \feedforwardblock. Note that the \maskedselfattentionblock~means that though we can compute all decoder states
+    in parallel during training, it is equivalent to computing each decoder state sequentially (which we must do at test time). 
+    A transformer deccoder with $\numLayer$ layers
+    is computed as
+\begin{align*} 
+    {\boldsymbol{\check{\tfDecInput}}}^{(l)} & = \maskedselfattentionblock^{(l)}\left(\tfDecInput^{(l-1)}\right) \\
+    {\boldsymbol{\bar{\tfDecInput}}}^{(l)} & = \encoderattentionblock^{(l)}\left(\boldsymbol{\check{\tfDecInput}}^{(l)}, \tfEncInput\right) \\
+    \tfDecInput^{(l)} & = \feedforwardblock^{(l)}\left({\boldsymbol{\bar{\tfDecInput}}^{(l)}}\right)
+\end{align*} for $l \in \{1,\ldots,\numLayer\}$.
+We indicate the final decoder output as $\tfDecInput =  \tfDecInput^{(\numLayer)}$.
+
+\paragraph{\violetbox{Prediction Layer}}
+    Let $\tfDecInputRow_i$ be the $i$-th row of $\tfDecInput$ corresponding
+to the decoder representation of the $i$-th decoder state. The probability of 
+  the next word is
+   \[ \gen\left(\utttok_{i+1}|\utttoks_{1:i},\mrtoks\right) 
+   = \softmax\left( \weight{o}\tfDecInputRow_i + \bias{o} \right)_{\utttok_{i+1}} \quad \forall i : i \in \{1,\ldots, \uttSize-1\}\]
+  where $\weight{o} \in \reals^{\setsize{\uttvocab} \times \embDim}$ 
+  and $\bias{o} \in \reals^{\embDim}$ are learned parameters. 
+Each block from each encoder and decoder layer has separate learned parameters.
+Because each operation in the transformer is built around matrix 
+multiplication, its computation can be parallelized more heavily than
+\recurrentneuralnetwork~models like the GRU architecture.
+ 
+  
+  
+%
+
+
+
+%%  
+
+          
+
+%%  Given a linearized MR $\lin(\mr) = \inseq= \left[ \da, \attr_1, \attr_2, \ldots,
+%%  \attr_{\size{\mr}}\right] \in \Attrs^{\inSize}$ where the length
+%%  of the sequence is $\inSize = \size{\mr} + 1$,
+%%  let $\encWordEmb_i = \encEmbs_{\inseq_i}$ for $i \in \{1, \ldots \inSize\}$.
+%%  
+%%  Additionally let $\posEmb \in \reals^{\inSize_{max} \times \embDim}$ be a sinusoidal position embedding matrix
+%%  defined elementwise with 
+%%  \begin{align*}
+%%      \posEmb_{i,2j} & = \sin\left(\frac{i}{10,000^{ \frac{2j}{\embDim} }}\right) \\
+%%      \posEmb_{i,2j+1} & = \cos\left(\frac{i}{10,000^{ \frac{2j}{\embDim} }}\right). 
+%%  \end{align*}
+%%  The encoder input sequence $\encInput^{(0)} \in \reals^{\inSize \times \embDim}$ is then defined by
+%%  \[\encInput^{(0)} = \left[\begin{array}{c} 
+%%              \encWordEmb_1 + \posEmb_1,\\
+%%              \encWordEmb_2 + \posEmb_2,\\
+%%              \vdots \\
+%%          \encWordEmb_\inSize + \posEmb_\inSize
+%%      \end{array}
+%%                          \right] \]
+%
+ 
+
+%%  
+%
+
+
+    %%  Each encoder transformer layer computes the following, \\
+%%  
+%%  \noindent \textit{(Self-Attention Block)}\\
+%%  \[\tfeA = \layerNorm\left(\encInput^{(i)}; \lnweightv^{(i,1)}, \lnbias^{(i,1)}\right)\]
+%%  \[\tfeB = \MultiAttn\left(\tfeA, \tfeA; \weight{i,a_1},  \weight{i,a_2}\right)\]
+%%  \[\tfeC = \encInput^{(i)} + \tfeB\]
+%%  
+
+ %Given these layers ($\layerNorm, \ff, \MultiAttn$, and $\MaskedMultiAttn$) we now define the transformer encoder and decoder layers.
+%%  Let $\Attrs$ be the encoder input vocabulary, and  $\encEmbs \in
+%%  \reals^{\size{\Attrs} \times \embDim}$ an associated word embedding matrix
+%%  where $\encEmbs_\attr \in \reals^{\embDim}$ denotes the $\embDim$-dimensional
+%%  embedding for each $\attr \in \Attrs$. 
+%%  Given a linearized MR $\lin(\mr) = \inseq= \left[ \da, \attr_1, \attr_2, \ldots,
+%%  \attr_{\size{\mr}}\right] \in \Attrs^{\inSize}$ where the length
+%%  of the sequence is $\inSize = \size{\mr} + 1$,
+%%  let $\encWordEmb_i = \encEmbs_{\inseq_i}$ for $i \in \{1, \ldots \inSize\}$.
+%%  
+%%  Additionally let $\posEmb \in \reals^{\inSize_{max} \times \embDim}$ be a sinusoidal position embedding matrix
+%%  defined elementwise with 
+%%  \begin{align*}
+%%      \posEmb_{i,2j} & = \sin\left(\frac{i}{10,000^{ \frac{2j}{\embDim} }}\right) \\
+%%      \posEmb_{i,2j+1} & = \cos\left(\frac{i}{10,000^{ \frac{2j}{\embDim} }}\right). 
+%%  \end{align*}
+%%  The encoder input sequence $\encInput^{(0)} \in \reals^{\inSize \times \embDim}$ is then defined by
+%%  \[\encInput^{(0)} = \left[\begin{array}{c} 
+%%              \encWordEmb_1 + \posEmb_1,\\
+%%              \encWordEmb_2 + \posEmb_2,\\
+%%              \vdots \\
+%%          \encWordEmb_\inSize + \posEmb_\inSize
+%%      \end{array}
+%%                          \right] \]
+%%  
+%%   A sequence of $l$ transformer encoder layers are then applied to the encoder
+%%   input, i.e. $\encInput^{(i+1)} = \operatorname{TF}^{(i)}_{enc}\left(\encInput^{(i)}\right)$.
+%%  Each encoder transformer layer computes the following, \\
+%%  
+%%  \noindent \textit{(Self-Attention Block)}\\
+%%  \[\tfeA = \layerNorm\left(\encInput^{(i)}; \lnweightv^{(i,1)}, \lnbias^{(i,1)}\right)\]
+%%  \[\tfeB = \MultiAttn\left(\tfeA, \tfeA; \weight{i,a_1},  \weight{i,a_2}\right)\]
+%%  \[\tfeC = \encInput^{(i)} + \tfeB\]
+%%  
+%%  \noindent \textit{(Feed-Forward Block)}\\
+%%  \[\tfeD = \layerNorm\left(\tfeC; \lnweightv^{(i,2)}, \lnbias^{(i,2)}\right)\]
+%%  \[\tfeE = \feedforward\left(\tfeD;\weight{i,1},\weight{i,2},\bias{i,1},\bias{i,2}\right)\]
+%%  \[ \encInput^{(i+1)} = \tfeC + \tfeE \]
+%%  
+%%  
+%%  We denote the final encoder output for $l$ layers as $\encInput = \encInput^{(l)}$.  
+%%  
+%%  Let $\uttVocab$ be the vocabulary of utterance tokens, and 
+%%  $\decEmbs \in \reals^{\size{\uttVocab} \times \embDim}$
+%%  an associated embedding matrix, where
+%%  $\decEmbs_\utttok \in \reals^{\embDim}$ denotes a  $\embDim$-dimensional embedding for
+%%  each $\utttok \in \uttVocab$.
+%%  
+%%  %\placeholder{TODO: Make this true for all layers}
+%%  Given the decoder input sequence $\utt = \utttok_1, \utttok_2, \ldots, 
+%%  \utttok_\size{\utt}$, 
+%%  let $\decWordEmb_i = \decEmbs_{\utttok_i}$ for $i \in \{1, \ldots \outSize\}$.
+%%  where $\outSize = \size{\utt} - 1$
+%%  
+%%  \[\decInput^{(0)} = \left[\begin{array}{c} 
+%%              \decWordEmb_1 + \posEmb_1,\\
+%%              \decWordEmb_2 + \posEmb_2,\\
+%%              \vdots \\
+%%          \decWordEmb_\outSize + \posEmb_\outSize
+%%      \end{array}
+%%                          \right]. \]
+%%  
+%%  
+%%  A sequence of $l$ transformer decoder layers are then applied to the decoder
+%%   input, i.e. $\decInput^{(i+1)} = \operatorname{TF}^{(i)}_{dec}\left(\decInput^{(i)}\right)$.
+%%  Each decoder transformer layer computes the following, \\
+%%  
+%%  ~\\~\\ ~\\
+%%  
+%%  \noindent \textit{(Masked Self-Attention Block)}\\
+%%  \[\tfdA = \layerNorm\left(\decInput^{(i)}; \lnweightv^{(i,1)}, \lnbias^{(i,1)}\right)\]
+%%  \[\tfdB = \MultiAttn_M\left(\tfdA, \tfdA; \weight{i,a_1}, \weight{i,a_2} \right)\]
+%%  \[\tfdC = \decInput^{(i)} + \tfdB\]
+%%  
+%%  \noindent \textit{(Encoder-Attention Block)}\\
+%%  \[\tfdD = \layerNorm\left(\tfdC; \lnweightv^{(i,2)}, \lnbias^{(i,2)}\right)\]
+%%  \[\tfdE = \MultiAttn\left(\tfdD, \encInput; \weight{i,a_3}, \weight{i,a_4}\right)\]
+%%  \[\tfdF = \tfdC + \tfdE\]
+%%  
+%%  \noindent \textit{(Feed-Forward Block)}\\
+%%  \[\tfdG = \layerNorm\left(\tfdF; \lnweightv^{(i,3)}, \lnbias^{(i,3)}\right)\]
+%%  \[\tfdH = \feedforward\left(\tfdG;\weight{i,1},\weight{i,2},\bias{i,1},\bias{i,2}\right)\]
+%%  \[ \decInput^{(i+1)} = \tfdF + \tfdH \]
+%%  
+%%  Let the $\decInput = \decInput^{(l)}$ denote the final decoder output,
+%%  and let $\decInputi$ be the $i$-th row of $\decInput$ corresponding
+%%  to the decoder representation of the $i$-th decoder state. The probability of 
+%%  the next word is\\
+%%  
+%%  \noindent $\model\left(\utttok_{i+1}|\utttok_{\le i},\lin(\mr)\right)$
+%%  \[  = \softmax\left( \weight{o}\decInputi + \bias{o} \right)_{\utttok_{i+1}} \]
+%%  where $\weight{o} \in \reals^{\size{\uttVocab} \times \embDim}$ 
+%%  and $\bias{o} \in \reals^{\embDim}$ are learned parameters. 
+%%  
+%%  
+%%  %We used the Transformer S2S as implemented in 
+%%  %\href{https://pytorch.org/}{PyTorch}.
+%%  The input embedding dimension is $\embDim= 512$ and inner hidden layer size 
+%%  is $\hidDim=2048$. The encoder and decoder have separate parameters.
+%%  We used $H=8$ heads in all multi-head attention layers. 
+%%   We used Adam with the learning
+%%  rate schedule provided in  \citet{rush2018} (factor=1, warmup=8000).
+%%  Dropout was set to 0.1 was applied to input embeddings and each skip 
+%%  connection (i.e. the third line in each block definition). As a 
+%%  hyperparameter, we optionally tie the decoder input and output embeddings,
+%%  i.e. $\decEmbs = \weight{o}$.
+
+
+
+
+
+
+
