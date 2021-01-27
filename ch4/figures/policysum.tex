@@ -1,0 +1,25 @@
+\begin{algorithm}[t]
+  \RestyleAlgo{boxruled}
+  \LinesNumbered
+  \KwIn{
+    query string $\query$, 
+    query category $\category$, 
+    stream $\sentstream$, 
+    period of interest ($\poestart$, $\poestop$), 
+    summarization policy $\policy$}
+  \KwOut{update summary $\updateSummary$}
+  $\updateSummary \gets \{\}$
+
+\For{$\ssent_t \in \sentstream_{\poestart:\poestop}$}{
+    $\state_t \gets (\ssent_1,\ldots,\ssent_t, \bsal_1,\ldots,\bsal_{t-1},
+                     \query,\category)$\\
+    $\bsal_t \gets \policy(\state_t)$\\
+    \If{$\bsal_t = 1$}{
+        $\updateSummary \gets \updateSummary \cup \left\{\left(\ssent_t, \sentts_t \right) \right\} $
+        }
+    }
+  \caption{Policy-based Stream Summarization} 
+  \label{alg:policysum}
+\end{algorithm}
+
+

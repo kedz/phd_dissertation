@@ -1,0 +1,602 @@
+\section{Learning-to-Search (L2S) Summarizer}
+
+While our previous summarization model proved reasonably capable of summarizing
+events over time, by processing the stream in hourly batches it was limited in
+its ability to respond quickly to unfolding events. One reason for this
+limitation is an implicit assumption in that model, and most multi-document
+summarization models, that frequency of a unit of text is a proxy for its
+salience. In retrospective summarization of static document collections, this
+is a reasonable assumption, and has been exploited successfully in various
+ways: TF-IDF term weightings, document language models derived from frequency,
+and random-walks on sentence-graphs  whose edges are determined by frequently
+co-occurrring terms
+\citep{lin2000,radev2000,erkan2004,mihalcea2004,nenkova2005,daume2006}. 
+
+In the streaming setting these proxy features are constantly evolving. There
+may be fallow periods in an event where nothing happens and then sudden bursts
+of activity. The behavior of SAP is unsuited for this, in that it is run every
+hour regardless.  In the SAP model, by collecting an hour's worth of documents
+and performing a salience-biased clustering, we try to walk the line between
+using clustering, where the frequency of like text units are effectively votes
+for the most salient unit, and predictions about salience from our regression
+model, which makes more use of the semantics of the query event and text unit
+under analysis.  However, as we showed in the feature ablation, incorporating
+time-based frequency features made the model worse. While we are able to
+incorporate salience estimate successfully into the summarization model with
+SAP, we have yet to successfully provide a learning-based of model the entire
+summarization process.
+
+In this section, we attempt to overcome these limitations, removing the
+clustering component from the update selection, and develop a fully online
+streaming summarization model, one that learns to make extraction decisions
+immediately upon seeing the next sentence from $\sentstream$, using features
+derived from the entire observed document stream, the state of the current
+update summary, and the model's prior extraction decisions.  To that end, we
+present a novel streaming-document summarization system based on sequential
+decision making.  Specifically, we adopt the ``learning to search'' approach, a
+technique which adapts methods from reinforcement learning for structured
+prediction problems \citep{daume2009,ross2010}.  In this framework, we cast
+streaming summarization as a form of greedy search and train our system to
+imitate the behavior of an oracle summarization system.  Effectively, we train
+a linear classifier to predict when to extract a sentence $\ssent \in
+\sentstream$ using features of the sentence, query, previous summary updates,
+and other aggregate statistics collected from the stream up to the current time
+$\systs_t$. 
+
+As in the previous section,  we report both the TREC 2015 Temporal
+Summarization shared-task manual evaluation as well as our own independent
+automatic evaluation.  In our evaluation we demonstrate a 28.3\% improvement in
+summary $\harm_\latency(\updateSummary)$ and a 43.8\% improvement in
+time-sensitive $\harm_\latency(\updateSummary)$ metrics against several
+state-of-the-art baselines.  In shared-task evaluation of our system at TREC
+2015, where we were the second-best performing team in the main evaluation, and
+top system for a secondary evaluation run on a pre-filtered, highly relevant
+document stream.
+
+\subsection{Stream Summarization as Sequential Decision Making}
+
+We could na{\"i}vely treat the stream summarization problem as classification
+and predict which sentences to extract or skip. However, this would make it
+difficult to take advantage of many features (e.g. sentence novelty with regard
+to previous updates).  What is more concerning, however, is that the
+classification objective for this task is somewhat ill-defined: successfully
+predicting extract on one sentence changes the true label (from extract to
+skip) for sentences that contain the same information but occur later in the
+stream.
+ 
+In this work, we pose stream summarization as a greedy search over a binary
+branching tree where each level corresponds to a position in the stream (see
+\autoref{fig:search}).  The height of the tree corresponds to the length of
+stream.  A path through the tree is determined by the system extract and skip
+decisions.
+ 
+\input{ch4/figures/search.tex}
+
+When treated as a sequential decision making problem, our task reduces to
+defining a policy for selecting a sentence based on its features as well as the
+features of its ancestors (i.e., all of the observed sentences and previous
+extraction decisions).  The union of these features represents the current
+state in the decision making process. 
+
+The feature representation provides state abstraction both within a given
+query's search tree as well as to states in other queries' search trees, and
+also allows for complex interactions between the current update summary,
+candidate sentences, and stream dynamics unlike the classification approach.
+
+In order to learn an effective policy for a query $\query$, we can take one of
+several approaches.  We could use a simulator to provide feedback to a
+reinforcement learning algorithm.  Alternatively, if provided access to an
+evaluation algorithm at training time, we can simulate (approximately) optimal
+decisions. That is, using the training data, we can define an \emph{oracle
+policy} that is able to omnisciently determine which sentences to extract and
+which to skip.  Moreover, it can make these determinations by starting at the
+root or at an arbitrary node in the tree, allowing us to observe optimal
+performance in states unlikely to be reached by the oracle.  We adopt
+\textit{locally optimal learning to search} to learn our model from the oracle
+policy \citep{chang2015}.  
+
+\subsection{Policy-based Stream Summarization}
+
+In the induced search problem, each search state $\state_t \in \states$
+corresponds to observing the first $t$ sentences in the stream $\left[
+\ssent_1,\ldots, \ssent_t \right] \subset \sentstream$ and a sequence of $t-1$
+actions $\bsal_1, \ldots, \bsal_{t-1}$.  For each state $\state_t \in \states$,
+the set of actions is $\bsal_t \in \{0,1\}$ with $\bsal_t =1$ indicating we
+extract the $t$-th sentence and add it to our update summary, and $\bsal_t = 0$
+indicating we skip it. For simplicity of exposition, we assume a fixed length
+stream of size $T$ but this is not strictly necessary. 
+
+\input{ch4/figures/policysum.tex}
+
+A policy, $\policy : \states \rightarrow \{0,1\}$, is a mapping from states to
+an extraction decision. Given a policy, the policy-based stream summarization
+algorithm (\autoref{alg:policysum}) is trivial, iterating sequentially over
+sentences in the stream, and adding each sentence to the update summary if it
+is the current action determined by $\policy$.  In practice, we use a linear
+cost-sensitive classifier to implement $\policy_\params$, with \[ \bsal_t =
+\policy_\params(\state_t) = \argmin_{\bsal \in \{0,1\}} \Feat(\state_t,
+\bsal)\cdot \params_\bsal\] where we encode each state-potential action pair
+$(\state_t,\bsal)$ as a $d$-dimensional feature vector  $\Feat(\state_t, \bsal)
+\in \mathbb{R}^d$ and $\params_0, \params_1 \in \reals^{d}$ are learned
+parameters.  Note that $\Feat(\state_t,\bsal)\cdot \params_\bsal$ is a linear
+regression to predict the cost, which we define shortly, associated with taking
+action $\bsal$ in state $\state_t$. Given estimates of our two available
+actions, extracting a sentence or ignoring it, our policy $\policy_\policy$
+selects the action with minimum cost.
+
+Before we can define cost more concretely, we must first introduce some
+additional notation and concepts.  For a given sequence of states
+$\state_1,\ldots,\state_T$ explored by a policy $\policy$, let $\bsals=
+\left[\bsal_1,\ldots,\bsal_T\right]$ be the associated sequence of actions
+taken by $\policy$, i.e. $\bsal_t = \policy(\state_t)$.  A loss function,
+$\lossfunc : \{0,1\}^T \rightarrow \reals$, measures the quality of an action
+sequence $\bsals$. In our present case this might be the negative
+\textsc{Rouge} score of the update summary that results from $\bsals$ or some
+other relevant measure of performance. 
+
+Let $\policy$ be a policy, $\state_1,\ldots,\state_T$ a sequence of states
+explored by $\policy$, and the corresponding action sequence $\bsals$. We also
+define a second policy, $\rolloutpolicy$, which we call the roll-out policy and
+which may or may not be distinct from $\policy$.  For any state $\state_t$ we
+can then define two additional action sequences,
+\[
+    \roaseqt = \left[
+        \bsal_1, 
+        \ldots, 
+        \bsal_{t-1},
+        \hat{\bsal}_t,
+        \roat_{t+1}, 
+        \ldots, 
+        \roat_{T}, 
+    \right] \quad \forall \predbsal_t \in \{0,1\} 
+\] 
+where $\roaseqt$ is the sequence of actions that result from following
+$\policy$ on the first $t-1$ states, taking action $\predbsal_t$ at state
+$\state_t$ and then following $\rolloutpolicy$ on the remaining $T - t$ states.
+That is, for $k > t$, $\roa_{k} = \rolloutpolicy(\state^\prime_k)$, where
+$\state^\prime_k$ is the state that results from taking action $\predbsal_t$ in
+$\state_t$ and following $\rolloutpolicy$ on a sequence of states
+$\state^\prime_{t+1}, \ldots, \state^\prime_k$. The loss, $\lossfunc\left(
+\roaseq{t}{0} \right)$, then reflects the evaluation measure for an update
+summary where sentence $\ssent_t$ was not extracted, and $\rolloutpolicy$
+completed the summary of the stream. Similarly, $\lossfunc\left( \roaseq{t}{1}
+\right)$ reflects the evaluation measure for an update summary where sentence
+$\ssent_t$ was extracted, and $\rolloutpolicy$ completed the summary of the
+stream. 
+ 
+We can now define the cost of an action $\bsal$ in state $\state_t$ as 
+\[ 
+    \cost(\state_t, \bsal) = 
+        \lossfunc\left(\roaseq{t}{\bsal}   \right) 
+            - \min_{\bsal^\prime \in \{0,1\} }
+                \lossfunc\left( \roaseq{t}{\bsal^\prime} \right).
+\]
+Note that the cost is also a function of $\rolloutpolicy$, which determines how
+the action sequence is completed after $\state_t$.  The costs connect the
+overall summary loss $\lossfunc\left(\roaseqt\right)$ to a particular action in
+$\state_t$ that builds the summary.  We depict an example of the cost
+computation in \autoref{fig:rollouts}.  We discuss how to collect costs and
+learn $\params_0$ and $\params_1$ such that they are good estimators of cost in
+the next section.
+
+\input{ch4/figures/rollouts.tex}
+
+\subsection{The Locally-Optimal Learning-to-Search Algorithm}
+\label{sec:algorithm}
+
+In a perfect world, we would have a training set of state-action pairs,
+$(\state_t,\bsal_t)$, and their associated costs $\cost(\state_t, \bsal_t)$,
+drawn from a distribution of states similar to the one our final learned policy
+would produce.  With these states, actions, and costs in hand we could fit two
+linear regressions, one for estimating the cost of extract actions and one for
+skip actions from a given state's feature representation; we would immediately
+have a suitable stream summarization policy. Unfortunately, we do not have a
+reasonable distribution of state-action pairs let alone the associated costs.
+Instead we turn to the locally-optimal learning-to-search (LOLS) algorithm
+\citep{chang2015}, presented in \autoref{fig:lols}, to iteratively refine our
+learned policy as it attempts to follow an oracle policy. 
+
+At a high level, we begin with an initially random learned policy.  We leverage
+a heuristic oracle stream summarizer and our learned policy to collect
+state-action pairs and their costs from the training set query-streams, with
+our learned policy gradually learning to imitate the heuristic oracle. Using
+both the oracle and learned policy to sample state-action-cost triples is
+beneficial as it exposes the learned policy to a mix of states it is likely to
+encounter when following its own actions, but also state-actions of the better
+performing reference summarizer. Exploring with the learned policy alone may be
+less optimal because it may overestimate the costs of good decisions since its
+roll-outs at the beginning of training are likely to be quite bad.  Exploring
+with only the oracle would also be harmful as the distribution of states it
+produces will reflect an optimistic level of performance from learned policy
+that it will not be able to match in practice.
+
+\subsubsection{Oracle Policy}
+
+For a given policy $\policy$, training query $\query$, stream $\sentstream$,
+and reference summary $\snuggets$, we construct a greedy heuristic oracle
+policy $\oracle_\query$.  Let $\updateSummary_t$ be the update summary at state
+$\state_t$ reached by $\policy$. Additionally, let
+\[
+\snuggets_{\denotes{\updateSummary_t}} = 
+\left\{\snugget_i \Bigg\vert
+        \left(\snugget_i,\nts_i\right) \in \snuggets,
+         \exists \left(\supdate_j, \uts_j\right) \in \updateSummary_t : \denotes{\snugget_i} \in
+        \denotes{\supdate_j}
+       \right\}
+\]
+be the set of nuggets covered by the updates in the update summary at
+$\state_t$, and let
+\[
+\snuggets_{\denotes{\ssent_t}} = 
+\left\{\snugget_i \Bigg\vert
+        \left(\snugget_i,\nts_i\right) \in \snuggets,
+        \denotes{\snugget_i} \in
+        \denotes{\ssent_t}
+       \right\}
+\]
+be the set of nuggets covered by $\ssent_t$.  The oracle $\oracle_\query$,
+which has clairvoyant knowledge of these sets, performs the following actions
+given a state $\state_t$,
+\[
+    \oracle_\query(\state_t) = \begin{cases} 
+        1 & \textrm{if }  
+        \exists \snugget : \snugget \in \snuggets_{\denotes{\ssent_t}} \wedge 
+   \snugget \not\in \snuggets_{\denotes{\updateSummary_t} }
+     \\
+     0 & \textrm{otherwise.} \end{cases}
+\]
+In other words, the oracle policy will extract $\ssent_t$ at state $\state_t$
+if $\ssent_t$ covers any nuggets not yet covered by updates in the update
+summary $\updateSummary_t$. We describe how we obtain comprehensive
+nugget/sentence covers, i.e. the sets $\snuggets_{\denotes{\ssent_t}}$ in
+\autoref{sec:reljudge}.
+
+\subsubsection{Loss Function}
+We design our loss function to penalize policies that  over- or under-generate.
+Let $\state_1, \ldots, \state_T$ be the sequence of states associated with the
+action sequence $\bsals$.  We define the loss of a sequence as 
+\begin{align*}
+  \lossfunc(\bsals) = 1 - 2 \times 
+    \frac{ \bsals^\T \bsals^* }{ \sum^T_{i=1} \bsal_i + \sum^T_{j=1}\bsal_j^* }
+\end{align*}
+where $\bsals^* = \left[\bsal_1^*,\ldots, \bsal_T^* \right]$ is a reference
+sequence of consisting of the one-step optimal deviations under the oracle
+policy, i.e. $\bsal_t^* = \oracle_\query(\state_t)$.
+
+Note that $\lossfunc$ is the complement of the Dice coefficient.  This
+encourages not only local agreement between policies (the numerator of the
+second term) but that the learned and oracle policy should generate roughly the
+same number of updates (the denominator in the second term).
+
+\input{ch4/figures/lolsalg.tex}
+
+\subsubsection{Learning with LOLS}
+
+We now step through the LOLS algorithm in detail.  Our initial policy
+parameters $\params_0$ and $\params_1$ are randomly initialized
+(\hyperref[fig:lols]{Algorithm~\ref{fig:lols} line \ref{alg:lolsinit}}).  The
+LOLS algorithm works by iteratively using the current learned policy
+$\policy_\params$ to explore state sequences from a training stream
+$\sentstream^{(\query)}$ (\hyperref[fig:lols]{Algorithm~\ref{fig:lols} line
+\ref{alg:lolsrollin}}).  At each state $\state_t$, a roll-out policy
+$\rolloutpolicy$ is selected at random from $\policy_\params$ and the oracle
+$\oracle_\query$ (\hyperref[fig:lols]{Algorithm~\ref{fig:lols} line
+\ref{alg:lolsrollout}}).  Losses are then computed for each continuation
+sequence $\roaseq{t}{0}$ and $\roaseq{t}{1}$
+(\hyperref[fig:lols]{Algorithm~\ref{fig:lols} line \ref{alg:lolsaction}}).
+Costs for each action are then computed and state features and costs are cached
+in $\Train$ (\hyperref[fig:lols]{Algorithm~\ref{fig:lols} lines
+\ref{alg:lolscoststart}--\ref{alg:lolscoststop}}).  After the roll-in has
+explored all $T$ states, we update the policy parameters $\params$ by
+performing gradient descent on the squared error of the linear regressor on the
+cached feature-cost pairs in $\Train$
+(\hyperref[fig:lols]{Algorithm~\ref{fig:lols} lines
+\ref{alg:lolsmsestart}--\ref{alg:lolsmsestop}}).
+
+\subsection{Features}
+
+As mentioned in the previous section, we represent each state as a feature
+vector.  In general, at state $\state_t$, these features are functions of the
+current sentence $\ssent_t$, the  stream history $\ssent_1, \ldots,
+\ssent_{t-1}$, the query string $\query$ and category $\category$, and/or the
+decision history $\bsal_1,\ldots,\bsal_{t-1}$.  We refer to features only
+determined by $\ssent_t$,  $\query$, and $\category$ as static features and all
+others as dynamic features. 
+
+\subsubsection{Static Features}
+
+\textbf{Basic Features } Our most basic features look at the length in words of
+a sentence, its position in the document, and the ratio of specific named
+entity tags to non-named entity tokens.  We also compute the average number of
+sentence tokens that match the event query words and synonyms using WordNet.
+
+\textbf{Language Model Features } Similar to \autoref{sec:sap}, we compute the
+average token log probability of the sentence on two language models: i) an
+event category specific language model and ii) a general newswire language
+model.  The first language model is built from Wikipedia articles relevant to
+the event-type domain. The second model is built from the New York Times and
+Associate Press sections of the Gigaword-5 corpus \citep{graff2003english}.
+
+\textbf{Single Document Summarization Features } These features are computed
+using the current sentence's document as a context and are also commonly used
+as ranking features in other document summarization systems. Where a sentence
+representation is needed, we use both TF-IDF bag-of-words representation as
+well as the latent vector representation under the WMF method described in
+\autoref{sec:salpred}.
+
+We compute SumBasic features \citep{nenkova2005}: the average and sum of
+unigram probabilities in a sentence.  We compute the arithmetic and geometric
+means of the sentence's cosine distance to the other sentences of the document
+\citep{guo2013}. We refer to this quantity as novelty and compute it with both
+vector representations. We also compute the centroid rank \citep{radev2000} and
+LexRank of each sentence \citep{erkan2004}, again using both vector
+representations.
+
+\textbf{Summary Content Probability} For a subset of the stream sentences, we
+have manual judgements as to whether they match to reference summary nuggets or
+not. We use this data (restricted to sentences from the training query
+streams), to train a decision tree classifier, using the sentences' term ngrams
+as the classifier features. As this data is aggregated across the training
+queries, the purpose of this classifier is to capture the importance of general
+ngrams predictive of summary worthy content.  Using this classifier, we obtain
+the probability that the current sentence $\strmSent_t$ contains summary
+content and use this as a model feature.
+
+\subsubsection{Dynamic Features}
+
+\textbf{Stream Language Models} We maintain several unigram language models
+that are updated with each new document in the stream. Using these counts, we
+compute the sum, average, and maximum token probability of the non-stop words
+in the sentence. We compute similar quantities restricted to \textit{person},
+\textit{location}, and \textit{organization} named entities as well.
+
+\textbf{Update Similarity} The average and maximum cosine similarity of the
+current sentence to all previous updates is computed under both the TF-IDF
+bag-of-words and latent vector representation. We also include indicator
+features for when the set of updates is empty (i.e. at the beginning of a run)
+and when either similarity is 0.
+
+\textbf{Document Frequency} We also compute the hour-to-hour percent change in
+document frequency of the stream. This feature helps gauge breaking
+developments in an unfolding event. As this feature is also heavily affected by
+the daily news cycle (larger average document frequencies in the morning and
+evening) we compute the 0-mean/unit-variance of this feature using the training
+streams to find the mean and variance for each hour of the day.
+
+\textbf{Feature Interactions} Many of our features are helpful for determining
+the importance of a sentence with respect to its document.  However, they are
+more ambiguous for determining importance to the event as a whole. For example,
+it is not clear how to compare the document level PageRank of sentences from
+different documents. To compensate for this, we leverage two features which we
+believe to be good global indicators of update selection: the summary content
+probability and the document frequency.  These two features are proxies for
+detecting (1) a good summary sentences (regardless of novelty with respect to
+other previous decisions) and (2) when an event is likely to be producing novel
+content. We compute the conjunctions of all previously mentioned features with
+the summary content probability and document frequency separately and together.
+
+\subsection{Expanding Relevance Judgments}
+ \label{sec:reljudge}
+
+Because of the large size of the corpus, less than 1\% of the sentences
+received manual review by NIST assessors during the 2013-15 shared-task
+evaluations.  In order to increase the amount of data for training and
+evaluation of our system, we augmented the manual sentence-nugget match
+judgements with automatic matches.  Sentence-nugget matches are critical for
+our experiments because they enable us to compute evaluation metrics, but also
+the oracle summarization policy used in the LOLS algorithm.
+
+In order to automatically tag sentences in the corpus with additional nugget
+matches, we trained a separate decision-tree classifier for each nugget with
+more than 10 manual sentence matches.  Manually matched sentences were used as
+positive training data and an equal number of manually judged non-matching
+sentences were used as negative examples.  Sentence n-grams (1-5), percentage
+of nugget terms covered by the sentence, semantic similarity of the sentence to
+nugget were used as features, along with an interaction term between the
+semantic similarity and coverage.  After training the classifiers we used them
+to automatically tag corpus sentences with nugget matches.  When augmenting the
+relevance judgments with these nugget match labels, we only include those that
+have a probability greater than 90\% under the classifier.  For evaluation, the
+summarization system only has access to the query and the document stream,
+without knowledge of any nugget matches (manual or automatic).
+
+\subsection{TREC 2015 Experiments and Results}
+
+There were three tasks at the TREC 2015 Temporal Summarization shared-task
+evaluation \citep{aslam2015}:
+\begin{enumerate}
+\item  \textbf{Full Filtering and Summarization} Participants must summarize
+a \textbf{very} high volume stream of documents where very few documents are 
+likely to be similar to the query.
+\item  \textbf{Partial Filtering and Summarization} Participants must summarize
+a high volume stream of documents that has been pre-filtered for query
+relevance
+by an IR component developed by the task organizers.
+\item \textbf{Summarization Only} Participants must summarize a low-volume
+stream of on-topic documents.
+\end{enumerate}
+
+We participated in tasks 1 and 2, submitting, with Team ID \textit{cunlp},
+the following Run IDs:
+
+\begin{itemize}
+\item \textbf{Task 1. Full Filtering and Summarization}
+\begin{itemize}
+    \item  2LtoSnofltr20 -- The L2S summarizer, where documents were
+truncated to there first 20 sentences.
+\end{itemize}
+\item \textbf{Task 2. Partial Filtering and Summarization}
+\begin{itemize}
+\item  1LtoSfltr20 -- The L2S summarizer, where documents were
+truncated to the first 20 sentences.
+\item  3LtoSfltr5 -- The L2S summarizer, where documents were truncated to 
+their first 5 sentences.
+\item  4APSAL -- Our SAP summarizer that was the overall best system 
+    at TREC 2014. We updated the salience predictions with additional training
+data from the TREC 2014 Temporal Summarization query events.
+\end{itemize}
+\end{itemize}
+
+To train the L2S summarizer we randomly selected 3 events to be a development
+set and used the remaining 21 events from the 2013-2014 Temporal Summarization
+query events as our training set. The document streams for the events are
+unfortunately too large to be used directly with \autoref{fig:lols}.  In order
+to make training time reasonable yet representative, we downsample each stream
+to a length of 100 sentences. The downsampling is done uniformly over the
+entire stream. This is repeated 10 times for each training event to create a
+total of 210 training streams. In the event that a downsample contains no
+nuggets (either human or automatically labeled) we resample until at least one
+exists in the sample.  We select the best model iteration based on the
+automatically computed $\mathcal{H}(\updateSummary)$ on the development set.
+We show an example summary produced by the L2S system in
+\autoref{fig:l2ssystem-summary}.
+
+\input{ch4/figures/l2sexamplesum.tex}
+
+\input{ch4/tables/trec15t1.tex}
+
+\autoref{tab:trec15t1} shows the official results for task 1, the full
+filtering and summarization task. Our L2S run, 2LtoSnofltr20, was the top run
+in this track, although only one other team submitted runs due to the high
+computational cost of running on the large document stream.  2LtoSnofltr20 had
+the lowest precision (i.e., $n\mathbb{E}[\gain](\updateSummary)$) of the
+submitted runs, and only achieved average recall (i.e.,
+$\comp(\updateSummary)$).  However, it had lower latency, yielding the highest
+latency weighted comprehensiveness, $\comp_L(\updateSummary)$; on the task's
+overall summary measure $\harm_\latency(\updateSummary)$, 2LtoSnofltr20 is
+ranked first, largely due to its low latency.  Here we can see that fully
+online/greedy nature of L2S summarizer pays off in terms of latency, as salient
+content is identified relativey quickly once it has entered the stream.
+
+\input{ch4/tables/trec15t2.tex}
+
+\autoref{tab:trec15t2} shows the official results for Task 2, the partial
+filtering and summarization task. The top runs by WaterlooClarke examined only
+the titles or first sentences of the documents, while our systems did not use
+titles, and used the first five or twenty sentences of documents (3LtoSfltr5
+and 3LtoSfltr20 respectively). The WaterlooClarke runs had significantly higher
+$n\mathbb{E}[\gain](\updateSummary)$ than the other systems but lower than
+average $\comp(\updateSummary)$. Our L2S runs, 3LtoSfltr5 and 3LtoSfltr20, had
+higher $\comp(\updateSummary)$, although not the highest overall. The fourth
+and five place overall performance (i.e., $\mathcal{H}_L(\updateSummary)$) by
+3LtoSfltr5 and 3LtoSfltr20 are due both to the high $\comp(\updateSummary)$ but
+also low-latency at which it added important information to the summary.
+
+The SAP run, 4APSAL, was also above the track average for all evaluation
+measures. It is, however, dominated by both L2S runs on all measures.  This
+suggests that our L2S is an overall improvement over the SAP model in both
+precision, recall, and latency. 
+
+\subsection{Automatic Experiments} We evaluate our method on the publicly
+available TREC Temporal Summarization Track data using the data from the 2013,
+2014, and 2015 years of the shared task. This collection contains  44 unique
+query events.  To evaluate our model, we randomly select five events to use as
+a development set and then perform a leave-one-out style evaluation on the
+remaining 39 events.
+
+As we did in the official Temporal Summarization submission,  we  downsample
+each training stream to a length of 100 sentences. The downsampling is done
+uniformly over the entire stream. This is repeated 10 times for each training
+event to create a total of 380 training streams. In the event that a downsample
+contains no nuggets (either human or automatically labeled) we resample until
+at least one exists in the sample.  We select the best model iteration for each
+training fold based on the automatically computed $\mathcal{H}(\updateSummary)$
+on the development set.
+
+\subsubsection{Baselines and Model Variants}
+
+We refer to our ``learning to search'' model in the results as \textsc{L2S}.
+We compare our proposed model against several baselines and extensions. 
+
+\textbf{Cosine Similarity Threshold} WaterlooClarke, the top performing team at
+TREC 2015 used a heuristic method that only examined article first sentences,
+selecting those that were below a cosine similarity threshold to any of the
+previously selected updates. We implemented a variant of that approach using
+the latent-vector representation used throughout this work. The development set
+was used to set the threshold. We refer to this model as \textsc{Cos}.
+  
+\textbf{SAP} We also compare to the SAP model described in \autoref{sec:sap}.
+In this evaluation.
+
+\textbf{Learning2Search+Cosine Similarity Threshold} In this model, which we
+refer to as \textsc{L2S-Cos}, we run \textsc{L2S} as before, but filter the
+resulting updates using the same cosine similarity threshold method as in
+\textsc{Cos}. The threshold was also tuned on the development set. 
+
+\subsection{Results} \label{sec:results}
+
+Results for system runs are shown in \autoref{fig:tr15autoresults}.  On
+average, \textsc{L2S} and \textsc{L2S-Cos} achieve higher
+$\mathcal{H}(\updateSummary)$ scores than the baseline systems in both latency
+penalized and unpenalized evaluations. For \textsc{L2S-Cos}, the difference in
+mean $\mathcal{H}(\updateSummary)$ score was significant compared to all other
+systems (for both latency settings). Intuitively, L2S has higher
+comprehensiveness than \textsc{L2S-Cos}; adding the the cosine similairt filter
+to L2S reduces the comprehensiveness, but increases the average gain of the
+updates by a larger amount, yielding an improved harmonic mean of the two
+metrics ($\mathcal{H}(\updateSummary)$).
+ 
+\textsc{SAP} achieved the overall highest expected gain, partially because it
+was the tersest system we evaluated (at 8 updates per query on average).
+However, only \textsc{Cos} was statistically significantly worse than it on
+this measure. We also see that SAP suffers from the latency-weighted
+evaluation, receiving latency penalties for retrieving updates after that
+information had been added to Wikipedia. By comparison, all other systems are
+actually rewarded in the latency-weighted evaluation, as they consistently
+retrieve information before it is published in Wikipedia. While SAP had
+previously beaten Wikiepdia in previous evaluations, the added events for the
+2015 Temporal Summarization had less media coverage, suggesting the clustering
+based approach is less suited for lower-volume news streams.
+
+\input{ch4/tables/lolsautoeval.tex}
+ 
+In comprehensiveness, \textsc{L2S} recalls on average a fifth of the nuggets
+for each event. This is even more impressive when  compared to the average
+number of updates produced by each system; while \textsc{Cos} achieves similar
+comprehensiveness, it takes on average about 1.6 times more updates than
+\textsc{L2S} and almost 5 times more updates than \textsc{L2S-Cos}. The output
+size of \textsc{Cos} stretches the limit of the term ``summary,'' which is
+typically far shorter than 145 sentences in length.  This is especially
+important if the intended application is negatively affected by verbosity (e.g.
+crisis monitoring).
+
+\input{ch4/tables/fseval.tex}
+
+\subsection{Discussion} \label{sec:discussion}
+
+Since \textsc{Cos} only considers the first sentence of each document, it may
+miss relevant sentences below the article's lead. In order to confirm the
+importance of modeling the oracle, we also trained and evaluated the
+\textsc{L2S} based approaches on first sentence only streams.
+\autoref{tab:results-trunc} shows the latency penalized results of the first
+sentence only runs.  The \textsc{L2S} approaches still dominate \textsc{Cos}
+and receive larger positive effects from the latency penalty despite also being
+restricted to the first sentence. Clearly having a model (beyond similarity) of
+what to select is helpful. Ultimately we do much better when we can look at the
+whole document.
+
+\input{ch4/tables/errors.tex}
+ 
+We also performed an error analysis to further understand how each system
+operates.  \autoref{tab:errors} shows the errors made by each system on the
+test streams.  Errors were broken down into four categories. \emph{Miss lead}
+and \emph{miss body} errors occur when a system skips a sentence containing a
+novel nugget in the lead or article body respectively. An \emph{empty} error
+indicates an update was selected that contained no nugget.  \emph{Duplicate}
+errors occur when an update contains nuggets but none are novel. 
+ 
+Overall, errors of the miss type are most common and suggest future development
+effort should focus on summary content identification.  About a fifth to a
+third of all system error comes from missing content in the lead sentence
+alone.
+ 
+After misses, empty errors (false positives) are the next largest source of
+error. \textsc{Cos} was especially prone to empty errors (41\% of its total
+errors). \textsc{L2S} is also vulnerable to empties (19.9\%) but after applying
+the similarity filter and restriting to first sentences, these errors can be
+reduced dramatically (to 1\%).
+  
+Surprisingly, duplicate errors are a minor issue in our evaluation. This is not
+to suggest we should ignore this component, however, as efforts to increase
+recall (reduce miss errors) are likely to require more robust redundancy
+detection. 

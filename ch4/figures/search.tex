@@ -1,0 +1,89 @@
+\begin{figure}
+  \center
+\fbox{\begin{tikzpicture}[
+    state/.style={fill,draw,circle,minimum height=1mm,inner sep=0.0mm},
+    policy/.style={line width=0.5mm,circle,minimum height=2.25mm,
+                   inner sep=0.0mm},
+    rollin/.style={policy,draw=green},
+    rolloutA/.style={policy,draw=purple},
+    rolloutB/.style={policy,draw=orange},
+    action/.style={line width=0.75mm},
+    rolloutAline/.style={action,draw=purple},
+    rolloutBline/.style={action,draw=orange},
+    rollinline/.style={action,draw=green},
+]
+
+\def\WIDTH{0.32};
+\def\TH{6}
+
+\node at (5,\TH + 1.6) {\large \textbf{Search Space}};
+\node at (-0.1,\TH + 1.6) {\large \textbf{Sentence Stream}};
+\node at (-0.1,\TH + 1) 
+    {$\sentstream_{\poestart:\poestop}$};
+\node at (-0.1,\TH + 0.9) 
+    {\uline{$\phantom{\sentstream^{(\query)}_{\timestamp_\starttok:\timestamp_\stoptok}}$}};
+
+\foreach \n [
+    % compute the number of nodes \numnodes from the line \n
+    evaluate=\n as \numnodes using int(2^(\TH-1)/(2^(\n-1)), 
+    % compute the (\n-1)th line.
+    evaluate=\n as \nmo using int(\n-1)
+] in {1,...,\TH} {
+
+    
+    \ifthenelse{\n=6}{}{
+        \node at (-0.1,\TH - \n + 1) {$\ssent_\n$};
+    }
+    
+    \foreach \x [
+        evaluate=\x as \xcoord using \x*\WIDTH*2^(\n-1)-\WIDTH*2^(\n-1)/2,
+        evaluate=\x as \lc using int(2*\x - 1),
+        evaluate=\x as \rc using int(2*\x)
+    ] in {1,...,\numnodes} {
+
+        \node[state] (a\n\x) at (\xcoord,\n) {};
+        \ifthenelse{\nmo=0}{}{
+                \draw (a\n\x.south west) -- (a\nmo\lc.north);
+                \draw (a\n\x.south east) -- (a\nmo\rc.north);
+        }
+    }
+
+}
+\node[rollin] (ri1) at (a61) {};
+\node[rollin] (ri2) at (a52) {};
+\node[rollin] (ri3) at (a43) {};
+\node[rollin] (ri4) at (a35) {};
+\node[rollin] (ri5) at (a29) {};
+\node[rollin] (ri6) at (a118) {};
+
+\foreach \n [
+    % compute the (\n-1)th line.
+    evaluate=\n as \nmo using int(\n-1)
+] in {2,...,6} {
+    \draw[rollinline] (ri\nmo.south) -- (ri\n.north);
+};
+
+\node[rotate=-20] at ($(ri1)!0.5!(ri2)+(0,0.25)$) {\tiny extract};
+\node[rotate=32] at ($(ri2)!0.5!(ri3)+(0,0.25)$) {\tiny skip};
+\node[rotate=45] at ($(ri3)!0.5!(ri4)+(-0.25,0.25)$) {\tiny skip};
+\node[rotate=58] at ($(ri4)!0.5!(ri5)+(-0.25,0.25)$) {\tiny skip};
+\node[rotate=-76] at ($(ri5)!0.5!(ri6)+(+0.25,0.0)$) {\tiny extract};
+
+\node at ($(ri1)+(0.25,0.25)$) {$\state_1$}; 
+\node at ($(ri2)+(0.25,0.25)$) {$\state_2$}; 
+\node at ($(ri3)+(-0.25,0.25)$) {$\state_3$}; 
+\node at ($(ri4)+(-0.25,0.25)$) {$\state_4$}; 
+\node at ($(ri5)+(+0.25,0.25)$) {$\state_5$}; 
+\node at ($(ri6)+(-0.25,-.25)$) {$\state_6$}; 
+%\draw[rollinline] (ri2.west) -- (ri3.north);
+\end{tikzpicture}}
+
+
+\caption{Search space for a stream of 5 sentences.  Left branches skip the
+current sentence.  Right branches indicate extracting the current sentence as
+an update.  The path in green corresponds to one trajectory through this space
+consisting of extracting sentence $\ssent_1$, then skipping sentences
+$\ssent_2,\ldots,\ssent_4$ and extracting sentence $\ssent_5$.}
+  \label{fig:search}
+\end{figure}
+
