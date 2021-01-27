@@ -212,26 +212,28 @@
 %%%%  %%%%%%%%%%%%%%%%%
 %%%%  %
 %%%%  %%Readjust Title format for Appendicies
-%%%%  \titleformat{\chapter}[display]
-%%%%  {\normalfont\bfseries\filcenter}{}{0pt}{\large Appendix\ \large\thechapter : \large\bfseries\filcenter{#1}}  
-%%%%  %\titlespacing*{\chapter}
-%%%%  %  {0pt}{0pt}{30pt}	%controls vertical margins on title
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries\filcenter}{}{0pt}{\large Appendix\ \large\thechapter : \large\bfseries\filcenter{#1}}  
+  \titlespacing*{\chapter}
+    {0pt}{0pt}{30pt}	%controls vertical margins on title
 %%%%  %  
 %%%%  %% Adjust section title formatting
-%%%%  %\titleformat{\section}{\normalfont\bfseries}{\thesection}{1em}{#1}
+  \titleformat{\section}{\normalfont\bfseries}{\thesection}{1em}{#1}
 %%%%  %
 %%%%  %% Adjust subsection title formatting
-%%%%  %\titleformat{\subsection}{\normalfont}{\thesubsection}{0em}{\hspace{1em}#1}
-%%%%  %\renewcommand{\appendixtocon}{BLORT}
-%%%%  %\renewcommand{\appendixname}{Appendix}
-%%%%  %\renewcommand{\appendixtocname}{BBLORT}
+\titleformat{\subsection}{\normalfont}{\thesubsection}{0em}{\hspace{1em}#1}
+\renewcommand{\appendixtocon}{BLORT}
+\renewcommand{\appendixname}{Appendix}
+\renewcommand{\appendixtocname}{BBLORT}
 %%%%  
 %\addcontentsline{toc}{chapter}{Appendices}
 
-\renewcommand\chaptername{Appendix}
+%\addtocontents{toc}{\protect\renewcommand\protect\thechapter{\Alph{chapter}}}
+%\renewcommand\chaptername{Appendix}
 % insert the change into the toc file
 
 \addtocontents{toc}{\protect\renewcommand\protect\cftchapnumwidth{5.7em}}
+%\addtocontents{toc}{\protect\renewcommand\protect\cftchappresnum{}}
 \addtocontents{toc}{\protect\renewcommand\protect\cftchappresnum{Appendix\ }}
 
 \begin{appendices}
