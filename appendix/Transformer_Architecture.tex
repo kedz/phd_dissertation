@@ -26,7 +26,7 @@ layer normalization. Before describing the encoder and decoder layers
 in detail, we first describe these basic components and how they form 
 the various ``block'' structures which are employed throughout the model.
 
-\subsubsection{Transformer Components}
+\section{Transformer Components}
 
 \paragraph{Multi-Head Attention} The first basic layer to be defined is the 
 multi-head attention layer. We begin by describing ``single-head'' attention
@@ -183,7 +183,7 @@ each row,
 %
 %
 
-\subsubsection{Transformer Processing Blocks}
+\section{Transformer Processing Blocks}
 Each encoder and decoder transformer layer consists of several
 ``processing blocks'' which we define now. Each processing block 
 uses some of the basic components defined in the previous subsection.
@@ -260,7 +260,7 @@ uses some of the basic components defined in the previous subsection.
 
 
 
-\subsubsection{The Transformer Encoder and Decoder Layers}
+\section{The Transformer Encoder and Decoder Layers}
 
 We now describe the actual transformer-based \sequencetosequence~model
 using the blocks defined previously. We start first with the encoder 
