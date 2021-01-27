@@ -1,10 +1,4 @@
-\begin{center}
-    \pagebreak
-    \vspace*{5\baselineskip}
-    \textbf{\large Conclusion}
-\end{center}
-
-\addcontentsline{toc}{chapter}{Conclusion}
+\chapter{Conclusion}
 \label{ch:conclusion}
 
 \startglyph In this thesis we presented a variety of contributions to two open
@@ -29,8 +23,8 @@ architectures are small and that the averaging encoder is frequently the best
 performing encoder when keeping the extractor fixed. That averaging works well
 implies that the mere presence of a word is more important than its long range
 context (detectable by the recurrent encoder) or its local context (detectable
-by the convolutional encoder) and for the summarization models studied, 
-it is sufficient to represent a sentence as a bag of embeddings. 
+by the convolutional encoder) and for the summarization models studied, it is
+sufficient to represent a sentence as a bag of embeddings. 
 
 At the sentence extractor level we find limited evidence that the models are
 able to make use of document level context or prior actions effectively.  We
@@ -38,38 +32,37 @@ compared two extractors that made sequential predictions of sentence salience
 where previous extractive decisions were fed as inputs back into the model to
 make subsequent predictions, i.e., two autoregressive extractors, against two
 extractors that made independent predictions, i.e., two non-autoregressive
-models. What we saw was that previous extraction decisions were not decisive
-in \rouge~performance, with both autoregressive and non-autoregressive models
+models. What we saw was that previous extraction decisions were not decisive in
+\rouge~performance, with both autoregressive and non-autoregressive models
 achieving similar \rouge~scores. This suggests that representing what has been
 previously selected for the summary does not affect subsequent decisions much,
 and that the models struggle to exploit long range context effectively.
 
 Finally, when we ablate different word types, we see very small differences in
 \rouge~scores on news data, suggesting that the model is not overly dependent
-on entities or events (i.e., nouns or verbs) being available in the sentence
-to make predictions. When removing position as a viable feature by shuffling
-sentence order, we finally see large decreases in \rouge. At least for news
-and to slightly less degree medical documents, we see that position is
-implicitly detectable by the models and that it is driving much of the
-\rouge~performance.
+on entities or events (i.e., nouns or verbs) being available in the sentence to
+make predictions. When removing position as a viable feature by shuffling
+sentence order, we finally see large decreases in \rouge. At least for news and
+to slightly less degree medical documents, we see that position is implicitly
+detectable by the models and that it is driving much of the \rouge~performance.
 
 On datasets where position is less reliable, we see that the order shuffling
-experiments have less of an effect. On the Reddit personal narratives, there
-is no significant difference between the shuffled and non-shuffled model and
-on the AMI work place meeting corpus, we see that performance actually
-improves significantly. On these datasets, removing different content types
-yields slightly larger differences in performance, also giving credence to the
-idea that these models are focusing more content.
+experiments have less of an effect. On the Reddit personal narratives, there is
+no significant difference between the shuffled and non-shuffled model and on
+the AMI work place meeting corpus, we see that performance actually improves
+significantly. On these datasets, removing different content types yields
+slightly larger differences in performance, also giving credence to the idea
+that these models are focusing more content.
 
-In our second chapter, which introduces a more complex news summarization
-task, we see that modeling content as well as prior extraction decisions
-becomes more important as position becomes unreliable, especially if you can
-exploit event specific prior knowledge.  Our SAP summarization model, which
-estimates salience using a mix of general purpose and domain specific features
-improves over clustering or predicting salience alone.  Through feature
-ablation we see that newswire and domain language model scores are the most
-important feature group for predicting salience.  The basic features which
-make use of sentence position are least important.
+In our second chapter, which introduces a more complex news summarization task,
+we see that modeling content as well as prior extraction decisions becomes more
+important as position becomes unreliable, especially if you can exploit event
+specific prior knowledge.  Our SAP summarization model, which estimates
+salience using a mix of general purpose and domain specific features improves
+over clustering or predicting salience alone.  Through feature ablation we see
+that newswire and domain language model scores are the most important feature
+group for predicting salience.  The basic features which make use of sentence
+position are least important.
 
 We find in both our own evaluation as well as the TREC Temporal Summarization
 official evaluation that the SAP model leads to higher expected gain (i.e.,
@@ -90,43 +83,38 @@ account previous actions and other dynamic features of the summarization
 system, while optimizing an overall measure of summary quality. We again find
 in both TREC Temporal Summarization evaluations and our own independent
 evaluations that the L2S summarizer is able to identify salience content more
-quickly than other models while maintaining sufficient recall to be
-competitive with other models. Being able to identify information in a timely
-manner is a key aspect of stream summarization as information becomes less
-useful to users as time goes on \citep{yomtov2011}.
+quickly than other models while maintaining sufficient recall to be competitive
+with other models. Being able to identify information in a timely manner is a
+key aspect of stream summarization as information becomes less useful to users
+as time goes on \citep{yomtov2011}.
 
 We next turn our attention to text generation. Rather than pursue an end-to-end
-neural strategy, we instead focus on NLG from discrete meaning representations, which
-we consider to be an idealized form of the content selection
-stage of an extractive summarization system. Having an explicit representation
-of semantics allows us to more easily study issues of faithfulness and 
-control in neural NLG models.
-%allows us to more easily study issues of faithfulness and control. %In the next chapter we turned our attention to neural NLG models for
-%generating natural language utterances from meaning representations, i.e.,
-%generating natural language utterances from an idealized representation of the
-%content selection stage. 
-To that end, we show that na{\"i}ve sequence-to-sequence
-models produce fluent but semantically incorrect utterances and that this is
-possibly due to spurious correlations and artifacts of the training data.  We
-then propose a noise-injection and self-training scheme for data
-augmentation. Using the initial na{\"ive} sequence-to-sequence model (and a
-meaning representation parser) we create synthetic training examples which do
-not possess these artifacts, or do so to a lesser degree. A subsequent
-sequence-to-sequence model trained on the union of the original and synthetic
-data produces a more faithful NLG model. Additionally, we observe that greedy
-decoding converges on beam decoding in terms of semantic correctness
-suggesting the resulting model would be more efficient to run in practice.
+neural strategy, we instead focus on NLG from discrete meaning representations,
+which we consider to be an idealized form of the content selection stage of an
+extractive summarization system. Having an explicit representation of semantics
+allows us to more easily study issues of faithfulness and control in neural NLG
+models.  To that end, we show that na{\"i}ve sequence-to-sequence models
+produce fluent but semantically incorrect utterances and that this is possibly
+due to spurious correlations and artifacts of the training data.  We then
+propose a noise-injection and self-training scheme for data augmentation. Using
+the initial na{\"ive} sequence-to-sequence model (and a meaning representation
+parser) we create synthetic training examples which do not possess these
+artifacts, or do so to a lesser degree. A subsequent sequence-to-sequence model
+trained on the union of the original and synthetic data produces a more
+faithful NLG model. Additionally, we observe that greedy decoding converges on
+beam decoding in terms of semantic correctness suggesting the resulting model
+would be more efficient to run in practice.
 
 We also introduce the alignment training procedure for making a neural NLG
 model controllable at the level of shallow phrase/discourse entity ordering.
 We find controllable neural NLG models are able to follow discourse plans
 produced by discourse ordering models, and to a slightly lesser degree, human
-discourse ordering plans. Additionally, we find that BART, a large,
-pre-trained sequence-to-sequence language model, when fine-tuned with
-alignment training, produces highly controllable NLG models on both large and
-small data settings. We also find that alignment training has positive
-benefits in terms of model faithfulness with alignment trained models more
-frequently producing fewest semantic errors.
+discourse ordering plans. Additionally, we find that BART, a large, pre-trained
+sequence-to-sequence language model, when fine-tuned with alignment training,
+produces highly controllable NLG models on both large and small data settings.
+We also find that alignment training has positive benefits in terms of model
+faithfulness with alignment trained models more frequently producing fewest
+semantic errors.
 
 We further stress test our models on difficult, random permutation plans to
 test how models follow a truly arbitrary plan absent of English language

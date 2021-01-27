@@ -3,39 +3,38 @@
 One glaring omission from this thesis is that we never develop a fully
 abstractive summarization system.  That is, we have not presented a bipartite
 model such that the first component takes as input a set of text units and
-selects the contents for a summary, and the second component then generates
-the summary from the selected contents. We have consciously avoided bridging
-this gap as it is a difficult one.  Instead we have focused on the content
-selection and faithful generation problems in isolation, which are areas where
-we could make immediate contributions. We prefer pursuing these sub-problems
-directly where errors can be isolated and the effects of interventions
-accurately measured.  
+selects the contents for a summary, and the second component then generates the
+summary from the selected contents. We have consciously avoided bridging this
+gap as it is a difficult one.  Instead we have focused on the content selection
+and faithful generation problems in isolation, which are areas where we could
+make immediate contributions. We prefer pursuing these sub-problems directly
+where errors can be isolated and the effects of interventions accurately
+measured.  
 
 We do believe that pursuing a summarization system that works by first mapping
 input text units to a logical meaning representation, and then uses a separate
 NLG model to convert that meaning representation to a natural language summary
 is a worthwhile goal. What's more, all of the components exist to build this
 system with the caveat that they currently have relatively high error rates.
-We now describe some of these components and what their current limitations
-are.
+We now describe some of these components and their current limitations, some of
+which we highlight again in future works as promising avenues to explore.
 
 \paragraph{Semantic Parsing} We will need a reliable way of mapping text units
 to a semantic representation, like abstract meaning representation (AMR)
 \citep{banarescu2013}, discourse representation theory (DRT)
-\citep{basile2012}, or concept maps \citep{yang2020}.  Work on semantic
-parsing is an active area which continues to improve, however, the current
-state-of-the-art of such systems is still currently lacking. At the current
-levels of accuracy, errors in semantic parsing would dominate any downstream
-results \citep{zhang2019b}. 
+\citep{basile2012}, or concept maps \citep{yang2020}.  Work on semantic parsing
+is an active area which continues to improve, but the current state-of-the-art
+of such systems is still currently lacking. At the current levels of accuracy,
+errors in semantic parsing would dominate any downstream results
+\citep{zhang2019b}. 
 
 \paragraph{Summaries of Meaning Representations} Even with high accuracy
 semantic parsing, we would still need a method of mapping an input meaning
-representation to a summary meaning representation. While there is some
-initial work on this task \citep{falke2017,liao2018,falke2019},  it is far
-from a solved problem.  Existing collections of summary meaning
-representations are relatively small, and it remains difficult to plausibly
-use such collections to build models for generic news summarization let alone
-other domains.
+representation to a summary meaning representation. While there is some initial
+work on this task \citep{falke2017,liao2018,falke2019},  it is far from a
+solved problem.  Existing collections of summary meaning representations are
+relatively small, and it remains difficult to plausibly use such collections to
+build models for generic news summarization let alone other domains.
 
 \paragraph{Faithful Generation of Complex Meaning Representations} There has
 been a growing number of works that focus on generating text from more
@@ -49,13 +48,13 @@ work looking generating summaries from their AMR graphs with neural models
 \citep{hardy2018}. 
 
 However, with increased complexity of the meaning representation, it becomes
-difficult to evaluate the faithfulness of generated outputs. In the works
+difficult to evaluate the faithfulness of generated outputs. In the datasets
 studied in this thesis, most of the realizations of any individual
 attribute-values were relatively independent of other attribute-values.
 Presumably, accurate meaning representations of real summaries would be much
-more complex.  Validating the faithfulness of complex news events or
-rhetorical arguments might require representing contingency, uncertainty, or
+more complex.  Validating the faithfulness of complex news events or rhetorical
+arguments might require representing contingency, uncertainty, or
 counter-factual conditions, as well as the plausibility of arguments. To solve
 these issues we might benefit from borrowing ideas from argumentation mining
-(e.g., \citep{chakrabarty2019}) to better understand how multiple pieces of
+(e.g., \cite{chakrabarty2019}) to better understand how multiple pieces of
 evidence are used to bolster claims and make larger points.
