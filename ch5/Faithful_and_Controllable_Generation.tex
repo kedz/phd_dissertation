@@ -1,0 +1,167 @@
+\chapter{Faithful and Controllable Generation}
+\label{ch:nlg}
+
+\startglyph Up to this point, we have  focused on content selection in a
+\texttotext~generation system while relying on a trivial text generation
+algorithm, copying or extracting text units verbatim from the input, to perform
+the actual generation task.  In this chapter, we move to modeling the actual
+language generation process after the content selection stages (i.e.
+\hyperref[ch:dlsum]{Chapters 3} and \hyperref[ch:mlsum]{4}) have been
+performed.  We focus in particular on the \sequencetosequence~model as a means
+of mapping a representation of selected content to an appropriate natural
+language utterance. \Sequencetosequence~models are a family of deep learning
+models with bi-partite structure, possessing an encoder network which
+represents the input and a decoder which generates output from encoder's state
+\citep{sutskever2014}.  We tackle two issues, faithfulness and control, which
+are necessary prerequisites for any practically useful
+\sequencetosequence-based model of \naturallanguagegeneration.  These concepts,
+which we define in more detail later in this chapter, can be broadly construed
+as ensuring the decoder (i.e., the language model) in a
+\sequencetosequence~model is constrained to generate utterances that respect
+the semantics of the input (i.e. ensuring model faithfulness) while following a
+proscribed discourse structure for the selected content (i.e. ensuring model
+control).
+
+When data is plentiful, the \sequencetosequence~paradigm has proven to be
+incredibly adaptable to a variety of problem domains, and in the research
+literature it has become the standard method for a host of language generation
+tasks \citep{xu2015,dusek2016,vaswani2017,fan2018}.  Recent evaluations of
+end-to-end trained \sequencetosequence~models for dialogue generation have
+shown that they are capable of learning very natural text realizations of
+formal \meaningrepresentation. In many cases, they  beat rule and template
+based systems on human and automatic measures of quality and naturalness
+\citep{dusek2020}.
+ 
+\input{ch5/figures/examples.tex}
+
+However, this powerful generation capability comes with a cost;
+\deeplearning-based language models are notoriously difficult to control, often
+producing quite fluent but  semantically misleading outputs. For instance,
+\citet{dusek2020} note that in the E2E Generation Challenge shared-task,
+\sequencetosequence~models were both some of the best and worst performers. One
+submission, a vanilla \sequencetosequence~model, scored first in human
+evaluations of naturalness but last in quality (which they define as semantic
+completeness and grammaticality).  In order for such models to truly be useful,
+they must be capable of correctly generating utterances for novel
+\meaningrepresentation s at test time.  In practice, even with delexicalization
+\citep{dusek2016,juraska2018}, copy and coverage mechanisms \citep{elder2018},
+and over-generation plus reranking \citep{dusek2016,juraska2018},
+\deeplearning-based language generation models still produce errors
+\citep{dusek2020}.
+
+We study \sequencetosequence~model faithfulness on the \textit{task-oriented
+dialog generation} problem \citep{mairesse2010,wen2015,dusek2018}, where a
+\naturallanguagegeneration~model must map a \meaningrepresentation~(i.e., a
+dialogue act with an associated set of attribute-value pairs\footnote{In the
+literature and in industry, dialogue acts are sometimes called ``intents,'' and
+attribute-value pairs as ``slots'' and ``slot-fillers'' or ``entities.''}) to
+an appropriate natural language utterance (see \autoref{fig:nlgexamples} for
+examples).  In the context of our broader work on \texttotext~generation, we
+think of the \meaningrepresentation~input as an idealized representation of the
+content selection stage in a \texttotext~generation model.  Studying
+faithfulness and control in the closed-world domains of task-oriented dialog
+generation allows us to make meaningful progress while minimizing unnecessary
+complexity.
+
+For instance, natural language summaries often contain information not
+explicitly represented in the input. The source of this content is either from
+common sense knowledge, generic or domain specific knowledge, or new facts
+deduced from any combination of the input and prior knowledge
+\citep{wiseman2017,wang2019}.  Evaluating the faithfulness of a neural language
+generation model in this context is extremely difficult because it is not clear
+if a generated utterance is due to the decoder language model or the encoder's
+representation of the input.
+
+Instead, the task-oriented dialogue generation problems we study are developed
+to be closed-world, narrow domain settings, where the totality of the
+information needed to generate an utterance is represented by the
+\meaningrepresentation. Additionally, the semantics of the
+\meaningrepresentation~are explicit; there is no information that needs to be
+realized by the language generation component that requires additional
+inferences from the input.
+
+We call a \naturallanguagegeneration~model that generates utterances that are
+semantically correct with respect to the input \meaningrepresentation, a
+\faithfulgeneration~model.  We posit that \sequencetosequence~models do not
+learn representations of the input \meaningrepresentation~that correspond to
+basic features of the nature of utterance data, chiefly that phrases denote
+fragments of \meaningrepresentation~which can be recombined with other
+fragments to systematically create new meanings/utterances. Instead, the
+learned representations are highly idiosyncratic, and often reflect spurious
+correlations and artifacts of the dataset that do not generalize well outside
+the training data.  This issue is symptomatic of neural models' lack of
+systematicity, which in turn  leads to unfaithful language generation models
+\citep{lake18}.
+
+To overcome these issues, we propose a novel data augmentation scheme, called
+\textit{noise-injection sampling and self-training}, to create synthetic
+\meaningrepresentation/utterance pairs which break spurious correlations in the
+training dataset.
+%(see \autoref{fig:noiseyexample} for an illustrative example). 
+Our method makes use of a vanilla
+\sequencetosequence~\naturallanguagegeneration~model, i.e. the kind described
+by \citet{dusek2020} that produces natural but semantically incorrect
+utterances, and a \meaningrepresentation~parser, both of which can be trained
+on the same parallel data.  We then use a noise-injection sampling method
+\citep{cho2016} that allows us to generate semantically diverse yet
+syntactically well formed utterances from the \naturallanguagegeneration~model.
+We obtain corrected \meaningrepresentation s for these sampled utterances using
+the \meaningrepresentation~parser.  Using this procedure we can generate a
+large collection of synthetic data points which show a reduction in spurious
+correlations between the size of a meaning representation and its content or
+between different pairs of attribute-values. Training a new
+\sequencetosequence~model on the union of the original training and novel
+synthetic data yields a more \faithful~generation model with substantially
+reduced semantic errors.
+
+\input{ch5/figures/examplecontrol.tex}
+
+While a faithful \sequencetosequence~model produces semantically correct
+output, in general it is free to let the surface realization order of the
+\attributevalues~be determined by its language model. We show that we can
+actually control the realization order by properly ``linearizing'' the
+\meaningrepresentation, that is, converting the \meaningrepresentation~into a
+linear sequence of discrete tokens, before feeding it into the encoder. Our
+proposed \textit{alignment training} linearization strategy for converting a
+\meaningrepresentation~to an encoder input sequence yields a highly
+controllable generation model, effectively moving implicit utterance planning
+from the decoder to the encoder.  We consider \controllablegeneration~models to
+be a subset of \faithfulgeneration~models that can follow an externally
+provided discourse ordering plan.  See \autoref{fig:examplecontrol} for
+examples of such plans in the context of  task-oriented dialogue generation.
+We find that alignment training endows both recurrent and transformer-based
+\sequencetosequence~architectures with the controllable generation property as
+well as when fine tuning a large, pretrained \sequencetosequence~model.
+
+While most contemporary research practice prefers end-to-end solutions that
+leave planning implicit, we argue that such fine grained control in a
+\sequencetosequence~model  is highly desirable.  Not only would it enable
+drawing deeper connections between \sequencetosequence~models and the extensive
+literature on sentence or utterance level planning for language generation
+\citep{reiter2000,walker2001,stone2003}, it would also allow for neural
+implementations of various psycho-linguistic theories of discourse (e.g.,
+Centering Theory \citep{grosz1995}, or Accessibility Theory \citep{ariel2001}).
+This could, in turn, encourage the validation and/or refinement of additional
+psychologically plausible models of language production. 
+
+Ensuring robustness of the control behavior is also necessary to reliably
+incorporate neural language generation models into larger language generation
+pipelines \citep{moryossef2019a,moryossef2019b,castroferreira2019}.  However,
+as previously mentioned, neural models do not learn systematic representations
+of the input, which can lead to errors in faithfulness or plan following when
+generating from ordering plans not well represented in the training data. To
+mitigate this, we propose a phrase-based data augmentation scheme to collect
+additional examples that give explicit supervision of how constituent phrases
+compose, and how that composition can systematically change the meaning (e.g.
+prepending ``not'' to a phrase systematically negates its meaning). We show
+under extensive stress testing with randomly generated plans that this
+data-augmentation improves the robustness of control.
+
+In what follows, we introduce the \meaningrepresentation s used for
+task-oriented dialogue generation in more detail (\autoref{sec:mr4tod}) and
+provide some background on \sequencetosequence~modeling for
+\meaningrepresentation-to-text generation (\autoref{mrtproblemdef}). We then
+turn to our main contributions, our noise-injection sampling and self-training
+data-augmentation method for \faithfulgeneration~(\autoref{sec:nlgfg}), and
+alignment training linearization~for
+\controllablegeneration~(\autoref{sec:nlgcg}), before concluding.

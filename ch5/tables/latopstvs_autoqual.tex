@@ -1,0 +1,21 @@
+\begin{table}
+\centering
+    \begin{tabular}{llrrrr}
+        \toprule
+       & & \multicolumn{2}{c}{Laptops} & \multicolumn{2}{c}{TVs} \\
+        Model& & \textsc{Bleu} & Err. & \textsc{Bleu} & Err.  \\
+        \midrule
+        SCLSTM&    & 51.16 &   0.79\% & \textbf{52.65} &   2.31\%\\
+        Slug && \textbf{52.38}  &  1.55\% & 52.26  &  1.67\% \\
+      Base Gen. (\basegen) ~~~~ & beam  &37.13  &0.72\% & 32.63 & 0.72\% \\
+      Aug. Gen. (\auggen)~ Rule Parser (\ruledmodel) &greedy & 37.21 &  \textbf{0.13\%} & 32.43 & 0.28\%\\
+          &beam   & 37.19 & 0.14\% & 32.59 &  \textbf{0.20\%} \\
+\bottomrule
+    \end{tabular}
+
+    \caption{\textsc{Bleu} and automatic attribute error on the Laptops and TVs
+    datasets.}
+    \label{table:laptoptvautoqual}
+\end{table}
+
+

@@ -1,0 +1,165 @@
+\section{Meaning Representations for Task-Oriented Dialogue Generation}
+\label{sec:mr4tod}
+
+\subsection{\MeaningRepresentation~Structure}
+
+In this chapter, we use several domain specific \meaningrepresentation s to
+formally represent the input to the \surfacerealization~model.  While specifics
+of the \meaningrepresentation~can vary from domain to domain, the overall
+structure of the \meaningrepresentation~is fairly straightforward, borrowing
+from a common format used frequently in  the
+\naturallanguagegeneration~literature
+\citep{mairesse2010,gasic2014,wen2015,novikova2017,juraska2019}. Each
+\meaningrepresentation~has a \dialogueact, which expresses the communicative
+goal or intent, and zero or more \attributevalue~pairs which further define the
+semantics of the desired utterance. 
+
+See \autoref{fig:informexample} for an example \meaningrepresentation~from the
+restaurant domain. The dialogue act, in this case to inform a user, is the
+first item and is written in \textsc{SmallCaps} style.  The attributes are
+``name,'' ``eat\_type,'' ``customer\_rating,'' ``food,'' ``area,'' and
+``family\_friendly.'' Their associated values are ``Aromi,'' ``coffee shop,''
+``5 out of 5,'' ``English,'' ``city centre,'' and ``yes'' respectively. In this
+case the attributes are referring to the restaurant about which a hypothetical
+dialogue agent is trying to inform a user.
+
+In our setting, \dialogueact s are predominantly declarative (e.g.,
+\autoref{fig:informexample} or \autoref{fig:giveopinionexample}), but also
+include interrogatives  (e.g., \autoref{fig:confirmexample}), and some that may
+be a mix of both (e.g., \autoref{fig:compareexample} where the second reference
+ends in a question about user preference).  Additionally, we also have
+semantically vacuous ``chit-chat'' dialogue acts like \textsc{Greeting} and
+\textsc{Goodbye} which are expected to begin and end, respectively, a series of
+exchanges with the dialogue agent. 
+
+\input{ch5/figures/valtypes.tex}
+
+The kinds of values that can fill an attribute are typically categorical
+variables. For example, in the restaurant domain, the attribute ``food'' may
+take values from a closed list of food types such as the set
+\[\{\textrm{``Chinese''}, \textrm{``English''}, \textrm{``French''},
+\textrm{``Fast food''}, \textrm{``Indian''}, \textrm{``Italian''},
+\textrm{``Japanese''}\}.\] Other value types include list-valued attributes,
+numerical values, or free text (see \autoref{fig:valtypes} for examples of
+each). For list-valued attributes, the value is a list of items drawn from a
+closed set.  For example, in the video game domain, a video game can belong to
+several genres simultaneously.  For our purposes, we treat each value in the
+list as a distinct \attributevalue~pair. So in the case of
+\hyperref[fig:valtypes]{Figure \ref{fig:valtypes}a}, we treat it is if it had
+the following \meaningrepresentation,
+\begin{center} \MR{\textsc{Inform}}{\AV{name}{Portal 2}}{\AV{esrb}{E 10+ (for Everyone 10 and Older)}}
+    {\AV{genres}{platformer}} 
+    {\AV{genres}{puzzle}} 
+    {\AV{genres}{shooter}} 
+    {\AV{player\_perspective}{first person}} 
+    {\AV{has\_multiplayer}{yes}}
+\end{center} 
+Additionally, not all attributes need to be specified. In which case, the
+utterance should not mention them.
+
+The term ``\meaningrepresentation''~is somewhat of a misnomer as the
+representations might better be characterized as a pragmatic construct (i.e. a
+representation of the dialogue agent's intentional state).  The
+\attributevalues, on the other hand, are a semantic construct, representing the
+semantic value or propositional content of the sentences in the utterance.  In
+other words, from the perspective of formal semantics, 
+\begin{itemize} 
+    \item \textit{The Aromi is a coffee shop in the city centre.}  
+    \item \textit{Just to confirm, the coffee shop in the city centre is called Aromi?}  
+    \item \textit{What
+about Aromi, the coffee shop in the city centre?}  
+\end{itemize} 
+\noindent all share the same semantic value. The ``meaning'' of the above
+utterances as a statement of first-order logic might look something like,
+\[\exists x : \operatorname{isCoffeeShop}(x) \wedge
+\operatorname{namedAromi}(x) \wedge \operatorname{inCityCentre}(x).\] We could
+represent this statement in our present setting as a
+``\meaningrepresentation~without a dialogue act,'' i.e.,
+\begin{center} \MR{\textrm{---}}{\AV{name}{Aromi}}{\AV{eat\_type}{coffee
+    shop}}{\AV{area}{city centre}} \end{center} ~\\
+    
+\noindent which, when combined with one of the dialogue acts \textsc{Inform},
+\textsc{Confirm}, or \textsc{Recommend}, yields the pragmatic sense of the
+respective utterances above.
+
+\subsection{Relating Between \MeaningRepresentations~and \Utterances}
+
+Let $\mr \in \mrspace$ be a \meaningrepresentation, and let $\utttoks =
+\left[\utttok_1,\ldots, \utttok_\uttSize \right] \in \outSpace$ be an
+utterance, i.e. sequence of $\uttSize$ tokens from a vocabulary $\uttvocab$ and
+$\outSpace = \uttvocab^*$. We say that an utterance $\utttoks$ \textit{denotes}
+a meaning representation $\mr$, which we write $\denotes{\utttoks} = \mr$ if
+the propositional content of the utterance and the meaning representation are
+the same, i.e. the \attributevalues~implied by $\utttoks$ and explicitly listed
+by $\mr$ are the same.  We can make similar statements about a sub-sequence of
+an utterance. Let $\utttoks_{i:i+j} = \left[\utttok_i, \utttok_{i+1},\ldots,
+\utttok_{i+j} \right]$ be a sub-sequence of $j+1$ tokens starting at token $i$.
+We then have $\denotes{\utttoks_{i:i+j}} = \mr^\prime$ for some $\mr^\prime \in
+\mrspace \cup \emptyset$.  When an utterance or sub-sequence $\utttoks$
+contains no propositional content or is otherwise not a meaningful statement,
+we have $\denotes{\utttoks} = \emptyset$.
+
+As an example, consider the following \meaningrepresentation,
+\begin{singlespace}
+\[
+    \mr = \left[\!\!\left[ \begin{array}{l}
+        \textsc{Inform} \\
+        \AV{name}{The Vaults}\\
+        \AV{eat\_type}{pub}\\
+        \AV{near}{Caf{\'e} Adriatic}\\
+        \AV{family\_friendly}{no}\\
+\end{array}\right]\!\!\right] 
+\]
+\end{singlespace}
+and the utterance,
+\[
+    \utttoks = \left[ \textit{The},\,\textit{Vaults},\,\textit{pub},\,\textit{is},\,\textit{near},\,\textit{Caf{\'e}},\,\textit{Adriatic},\,\textit{.},\,\textit{It},\,\textit{is},\,\textit{not},\,\textit{a},\,\textit{good},\,\textit{place},\,\textit{for},\,\textit{families},\,\textit{.}\right]. 
+\]
+\noindent Clearly, $\denotes{\utttoks} = \mr$. But we can also look at the
+meanings of individual phrases,
+\begin{singlespace}
+    \begin{align*}
+        \denotes{\utttoks_{1:2}} = \left[\!\!\left[ \left[\textit{The}, \textit{Vaults}  \right] \right]\!\!\right] & = \left[\!\!\left[
+\begin{array}{l} \textrm{---} \\ \AV{name}{The Vaults}\end{array} \right]\!\!\right] \\
+    \denotes{\utttoks_{3:3}} = \left[\!\!\left[ \left[\textit{pub}  \right] \right]\!\!\right] &= \left[\!\!\left[
+\begin{array}{l} \textrm{---} \\ \AV{eat\_type}{pub}\end{array} \right]\!\!\right] \\
+    \denotes{\utttoks_{5:7}} = \left[\!\!\left[ \left[\textit{near}, \textit{Caf{\'e}}, \textit{Adriatic}  \right] \right]\!\!\right] & = \left[\!\!\left[
+\begin{array}{l} \textrm{---} \\ \AV{near}{Caf{\'e} Adriatic}\end{array} \right]\!\!\right] \\
+    \denotes{\utttoks_{11:16}} = \left[\!\!\left[ \left[\textit{not}, \textit{a}, \textit{good}, \textit{place}, \textit{for}, \textit{families}  \right] \right]\!\!\right] & = \left[\!\!\left[
+\begin{array}{l} \textrm{---} \\ \AV{family\_friendly}{no}\end{array} \right]\!\!\right]. 
+\end{align*}
+\end{singlespace}
+Note that it is not the case that $\denotes{\utttoks} = \mr \Rightarrow \denotes{\utttoks_{i:i+j}} \subseteq \mr$. Consider in the example above $\utttoks_{11:16}$ its sub-sequence $\utttoks_{12:16} = \left[\textit{a},\,\textit{good},\,\textit{place},\,\textit{for},\,\textit{families}\right]$ which have
+the following denotations,
+\begin{singlespace}
+   \[
+   \denotes{\utttoks_{11:16}} = \left[\!\!\left[\begin{array}{l}\textrm{---}\\ \AV{family\_friendly}{yes} \end{array}\right]\!\!\right] \ne \denotes{\utttoks_{12:16}}= \left[\!\!\left[\begin{array}{l}\textrm{---}\\ \AV{family\_friendly}{no} \end{array}\right]\!\!\right] 
+       \]
+   \end{singlespace}
+\noindent It is also important to note that the \attributevalues~are unordered
+and do not necessarily reflect the realization order of the utterance. 
+
+In the datasets used for this chapter, $\mr$ are provided with one or more
+reference utterances, $\utttoks^{(1)}, \ldots \utttoks^{(k)}$ and that for each
+reference $\utttoks^{(i)}$, we have that each \attributevalue~in $\mr$ can be
+mapped to an utterance sub-sequence that denotes it.  Occasionally this is not
+the case in the available training data. For example, some \attributevalues~may
+have several possible groundings (see
+\hyperref[fig:nlgerrors]{\autoref{fig:nlgerrors}a}) or be realized using
+inferential knowledge not explicitly represented in the
+\meaningrepresentation~(see
+\hyperref[fig:nlgerrors]{\autoref{fig:nlgerrors}b}). 
+
+\input{ch5/figures/badann.tex}
+
+While such examples may exist in the training data, we consider model
+generation of such phenomena to constitute a failure to faithfully generate an
+utterance.  In the overwhelming majority of cases, each \attributevalue~is
+explicitly and uniquely grounded in the target utterances, this makes
+\surfacerealization~from \meaningrepresentations~a useful task to study
+faithful generation. The baseline task of correctly generating all
+\attributevalues~appropriately for the \dialogueact~is hard enough, and it in
+this setting we do not have to worry about ungrounded information or
+information that is not explicitly represented in the
+\meaningrepresentations~but is deducible from the
+\meaningrepresentation~\citep{wiseman2017}.  

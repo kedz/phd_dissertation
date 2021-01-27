@@ -1,0 +1,621 @@
+\section{Alignment Training for Controllable Generation}
+\label{sec:nlgcg}
+
+In the previous section, we showed how to make an arbitrary
+\sequencetosequence~model more likely to generate semantically correct
+utterances using data-augmentation. While the resultant generation model is
+more faithful, it still lacks even coarse-grained control over the organization
+of the generated utterance.  What's more, there's no guarantee that small
+changes to the input don't lead to dramatically different outputs.  For
+example, changing a boolean attribute, e.g. changing
+\AV{\textit{family\_friendly}}{\textit{yes}} to
+\AV{\textit{family\_friendly}}{\textit{no}}, may lead to dramatically different
+syntactic structure in the output.  This is because the structure or plan of
+the utterance is only determined implicitly by the
+\sequencetosequence~decoder's language model.
+
+In this section, we show how to make a \sequencetosequence~controllable, which
+we achieve through a particular linearization of the input
+\meaningrepresentation, a linearization strategy we call \textit{alignment
+training}. That is, we can specify the order in which the \attributevalues~of
+an input \meaningrepresentation~are to be realized in the utterance.  See
+\autoref{fig:examplecontrol} for example realizations from a controllable
+generation model that follow three different permutations of \Atr{name},
+\Atr{eat\_type}, and \Atr{area} attributes.  Through evaluation on two dialogue
+generation benchmarks we show that alignment training yields high levels of
+control in both GRU and Transformer models. This holds when models follow
+either a separate planning model or a human provided plan.
+
+We also propose using a phrase-based data augmentation method to further
+improve the robustness of control. We further evaluate the control mechanism on
+randomly generated plans which are much harder to follow than human or model
+provided plans. We find that phrase-based data augmentation helps
+\sequencetosequence~models follow these more difficult plans.
+
+\subsection{Alignment Training Linearization}
+
+Unlike the arbitrary linearization used in \autoref{sec:fgtgm},
+\alignmenttraining~linearization~is not solely a function of $\mr$, but is
+determined by both $\mr$ and a reference utterance $\utttoks$. Given a
+$\left(\mr, \utttoks\right)$ pair, the \alignmenttraining~linearization finds a
+linearization $\ls$ such that the order of the \attributevalues~in $\ls(\mr)$
+corresponds to the order in which they are realized in $\utttoks$. 
+
+\input{ch5/figures/atlexamples.tex}
+
+\autoref{fig:atlexamples} shows some examples of the
+\alignmenttraining~linearization, including some special cases. When
+linearizing list-valued attributes, for instance, we treat them as distinct
+\attributevalue~pairs
+(\hyperref[fig:atlexamples]{\autoref{fig:atlexamples}.a}). Occasionally, we
+encounter repeated \attributevalues~in the training set, and in that case we
+include extra \attributevalue~pairs in the corresponding location in the
+linearization (\hyperref[fig:atlexamples]{\autoref{fig:atlexamples}.b}). We
+also ignore any instances of  ungrounded information, as in example
+\hyperref[fig:atlexamples]{\autoref{fig:atlexamples}.c} where
+\textit{food=Japanese} is not mentioned in the reference utterance.  has no
+explicit representation.  
+
+In \autoref{fig:at} we show the steps of our procedure for obtaining the
+alignment training linearization, given a reference utterance $\utttoks$.  The
+first step is to tag the utterance tokens $\utttoks =
+\left[\utttok_1,\ldots,\utttok_\uttSize\right]$ with a corresponding tag
+sequence $\mrtags=\left[\mrtag_1,\ldots, \mrtag_\uttSize\right]$ where each tag
+$\mrtag_i$ is equal to an \attributevalue~$\mrtok_j \in \mr$ or the null tag
+$\nulltag$. We assume that we have access to such a tagger $\tagger : \outSpace
+\rightarrow \inSpace$ (see \autoref{sec:align} for implementation details).
+After producing the tag sequence $\mrtags^{(1)} = \tagger\left(\utttoks\right)$
+(\hyperref[fig:at]{\autoref{fig:at}b}), we then group contiguous sequences of
+tags sharing the same tag value, discarding any null tag sequences to obtain
+the sequence of subsequences $\mrtags^{(2)} =
+\left[\mrtags^{(1)}_{i_1:j_1},\ldots,\mrtags^{(1)}_{i_\mrSize:j_\mrSize},
+\right]$ (\hyperref[fig:at]{\autoref{fig:at}c}).  Finally, $\mrtoks$ is
+constructed by by prepending the \dialogueact~$\mrtok_0$ of $\mr$ to the
+ordered sequence of \attributevalue~pairs $\mrtok_1,\ldots,\mrtok_\mrSize$
+implied by $\mrtags^{(1)}_{i_1},\ldots,\mrtags^{(1)}_{i_\mrSize}$
+(\hyperref[fig:at]{\autoref{fig:at}d}). 
+
+\input{ch4/figures/atouts.tex}
+
+At test time, the generation model is only presented with a
+\meaningrepresentation~$\mr$ and we don't have a reference utterance $\utttoks$
+with which to apply the alignment training linearization. In this case, we can
+use an utterance planning model $\planner : \mrspace \rightarrow \inSpace$ to
+map a \meaningrepresentation~$\mr$ to a linear sequence $\mrtoks$.
+Alternatively, we can use the test set reference to obtain the alignment
+training linearization; this represents an unrealistically optimistic case
+where the model has clairvoyant known of the discourse ordering preferred by a
+human.  In either case, we refer to a linearization $\mrtoks$ obtained either
+from $\planner$ or a human reference as an \utteranceplan~since a generation
+model trained with \alignmenttraining~linearizations will attempt to follow it
+during the generation of the utterance.
+
+\subsubsection{Alternative Linearization Strategies}
+
+In our experiments, we compare alignment training to three other linearization
+strategies, which we describe below.  These linearizations, while sensible
+methods of mapping a \meaningrepresentation~to a linear sequence of tokens,
+have no correspondence between the \meaningrepresentation~linearization and
+surface realization order. Because of this, \sequencetosequence~models trained
+using these linearization strategies are not controllable. These linearization
+strategies may have some effect on the faithfulness when compared to each other
+and alignemnt training, so evaluation of this modelling choice has additional
+benefits beyond benchmarking alignment training.  See \autoref{fig:linstrats}
+for examples of the different linearization strategies on the same
+\meaningrepresentation/utterance pair.
+
+\paragraph{Random (\textsc{Rnd})} In the \textsc{Random} linearization
+(\textsc{Rnd}), we randomly order the attribute-value pairs for a given
+\meaningrepresentation. This strategy serves as a baseline for determining if
+linearization ordering matters at all for faithfulness. \textsc{Rnd} is similar
+to token level noise used in sequential denoising autoencoders
+\citep{wang2019denoising} and might even improve faithfulness.  During
+training, we resample the ordering for each example at every epoch so as not to
+over fit to a particular random ordering.  We do not resample the validation
+set in order to obtain stable results from which to pick the best model.
+
+\input{ch5/figures/inputordering.tex}
+
+\paragraph{Increasing Frequency (\textsc{If})} In the \textsc{Increasing
+Frequency} linearization (\textsc{If}), we order the attribute-value pairs by
+increasing frequency of occurrence in the training data i.e.
+$\acount(\attr_i=\aval_i) \le \acount(\attr_{i+1}=\aval_{i+1})$.  We
+hypothesize that placing frequently occurring items in a consistent location
+may make it easier for the generation model to realize those items correctly,
+possibly at the expense of rarer items.
+
+\paragraph{Fixed Position (\textsc{Fp})} We take  consistency one step further
+and create a fixed ordering of all attributes, \textit{n.b.} not
+attribute-values, ordering them in increasing frequency of occurrence on the
+training set (i.e. every instance has the same order of attributes in the
+encoder input). In this \textsc{Fixed Position} linearization (\textsc{Fp}),
+attributes that are not present in an \meaningrepresentation~are explicitly
+represented with an \textit{N/A} value.  For list-valued slots, we determine
+the maximum length list in the training data and create that many repeated
+slots in the input sequence.  This linearization is feasible for datasets with
+a modest number of unique attributes (in our case ViGGO has 14 attributes and
+the E2E Challenge corpus has eight) but would not easily scale to 10s, 100s, or
+larger attribute vocabularies. 
+
+\subsection{Phrase-based Data Augmentation}
+\label{sec:pbda}
+
+\input{ch5/figures/pbda.tex}
+
+While the alignment training linearization induces control in a
+\sequencetosequence~model, the resulting model will still likely have trouble
+following utterance plans that are not well represented in the training data.
+As we discussed in \autoref{sec:nlgfg}, \sequencetosequence~models do not seem
+understand the compositional nature of phrase structure in language data. With
+this problem in mind, we propose a phrase-based data-augmentation method for
+creating additional training examples from constituent phrases of the training
+data. In doing so, we directly expose the model to instances of syntactic
+composition, and how that composition systematically changes the semantics of
+the utterance.
+
+We parse all training utterances and create additional training utterances from
+constituent phrases governed by NP, VP, ADJP, ADVP, PP, S, Sbar
+non-terminals.\footnote{We used the
+\href{https://stanfordnlp.github.io/CoreNLP/}{Stanford CoreNLP parser v3.9.2}.}
+Because a phrase may mean something different than the larger utterance it is
+embedded in, we apply the utterance tagger used for alignment training (see
+\autoref{sec:align}) to obtain the correct attribute-values denoted by the
+phrase. Since the tagger does not predict the dialogue act, we assign the
+dialogue act of the original training utterance to the new phrase's meaning
+representation.  If a new phrase example obtained by this process does not have
+any attribute predicted by the tagger, we discard it.
+
+Because we reclassify the \meaningrepresentation~of phrases using the utterance
+tagger, the augmented  data includes examples of how to negate binary
+attributes.  See for example in \autoref{fig:pbdaexample} where we extract the
+noun phrase ``a family-friendly establishment'' which implies
+\textit{family\_friendly=yes} and its composition with a verb phrase ``is
+not'', which changes the meaning to \textit{family\_friendly=no}.
+
+When presenting the linearized \meaningrepresentation of phrase examples to the
+model encoder we prepend and append phrase specific start and stop tokens
+respectively (e.g., \textit{<<s-NP>>} and \textit{<<e-NP>>}) to prevent the
+model from ever producing an incomplete sentence when generating for a complete
+\meaningrepresentation.
+
+\subsection{Datasets}
+
+We run our alignment training experiments on the E2E Challenge dataset as well
+as the more recently released ViGGO corpus \citep{juraska2019} another English
+language, task-oriented dialogue
+dataset.\footnote{\url{https://nlds.soe.ucsc.edu/viggo}} The ViGGO corpus comes
+from the video game domain (i.e., conversations with a video game
+recommendation agent)  and  contains 14 attribute types and nine dialogue acts.
+In addition to binary and categorical valued attributes, the corpus also
+features list-valued attributes which can have a variable number of values, and
+an open-class \Atr{specifier} attribute. 
+
+\subsubsection{Meaning Representation/Utterance Alignments} \label{sec:align}
+
+The original datasets do not have alignments between individual attribute-value
+pairs and the subsequences of the utterances they occur in, which we need for
+the alignment training linearization strategy.  We manually developed a list of
+heuristic pattern matching rules (e.g., ``not kid-friendly'' $\rightarrow$
+\textit{family\_friendly=no}) which we use to tag the utterance tokens.  For
+ViGGO, we started from scratch, but for the E2E Challenge dataset we greatly
+expanded the rule-set created by \citet{dusek2019}.  To ensure the correctness
+of the rules, we iteratively added new matching rules, ran them on the training
+and validation sets, and verified that they produced the same
+\meaningrepresentation~as was provided in the dataset. This process took the
+author roughly two weeks to produce approximately 25,000 and 1,500 rules for
+the E2E and ViGGO datasets respectively. Note that the large number of rules is
+obtained programmatically, i.e. creating template rules and inserting matching
+keywords or phrases (e.g., enumerating variants such as \textit{not
+kid-friendly}, \textit{not child-friendly}, \textit{not family-friendly},
+etc.).
+
+\input{ch5/tables/cgdata.tex}
+
+In cases where the matching rules produced different
+\meaningrepresentations~than provided in the original dataset, we manually
+checked them. If the rule was incorrect, we added a new rule to account for the
+exception.  In many cases in the E2E Challenge dataset and several times in the
+ViGGO corpus, we found the rule to be correct and the \meaningrepresentation~to
+be incorrect for the given utterance. In those cases, we used the corrected
+\meaningrepresentations~for training and validation.  We do not modify the test
+sets in any way. We follow \citet{dusek2019} and remove from the training and
+validation sets any modified examples that share a \meaningrepresentation~also
+found in the test set. This creates slightly different training and validation
+set numbers for the E2E Challenge dataset than in the faithful generation
+experiments. See \autoref{tab:cgdata} for statistics.  We use the matching
+rules to develop  a rule-based utterance tagger to implement the alignment
+training linearization, phrase-based data augmentation protocol, and as a
+reranker when generating utterances in our experiments.
+
+For most cases, the attribute-values uniquely correspond to a non-overlapping
+subsequences of the utterance. The \Atr{\textit{rating}} attribute in the ViGGO
+dataset, however, could have multiple reasonable mappings to the utterance, so
+we treat it in practice like an addendum to the dialogue act, occurring
+directly after the dialogue act as part of a ``header'' section in any
+\meaningrepresentation~linearization strategy (see \autoref{fig:linstrats}
+where \textit{rating=N/A} occurs after the dialogue act regardless of choice of
+linearization strategy).
+
+\paragraph{Delexicalization} The ViGGO corpus is relatively small and the
+attributes \Atr{name}, \Atr{developer}, \Atr{release\_year},
+\Atr{expected\_release\_date}, and \Atr{specifier}~can have values that are
+only seen several times during training. Neural models often struggle to learn
+good representations for infrequent inputs, which can, in turn, lead to poor
+test-set generalization. To alleviate this, we delexicalize these values in the
+utterance. That is, we replace them with an attribute specific placeholder
+token.
+
+\label{app:specifier} Additionally, for \Atr{specifier} whose values come from
+the open class of adjectives, we represent the specified adjective with a
+placeholder which marks two features, whether it is consonant (C) or vowel
+initial (V) (e.g.  ``\uline{d}ull'' vs. ``\uline{o}ld'') and whether it is in
+regular (R) or superlative (S) form (e.g. ``dull'' vs. ``dullest'') since these
+features can effect the surrounding context in which the adjective is realized.
+See the following lexicalized/delexicalized examples:
+\begin{itemize}
+        \item \AV{specifier}{oldest}~-- vowel initial, superlative
+\begin{itemize}
+    \item \textit{What is the oldest game you've played?}
+    \item \textit{What is the SPECIFIER\_V\_S game you've played?}
+\end{itemize}
+        \item \AV{specifier}{old}~-- vowel initial, regular
+
+\begin{itemize}
+    \item \textit{What is an old game you've played?}
+    \item \textit{What is an SPECIFIER\_V\_R game you've played?}
+\end{itemize}
+
+        \item \AV{specifier}{new}~-- consonant initial, regular
+
+\begin{itemize}
+    \item \textit{What is a new game you've played?}
+    \item \textit{What is a SPECIFIER\_C\_R game you've played?}
+\end{itemize}
+\end{itemize}
+Under this delexicalization scheme, models can learn the appropriate articles
+(if any) to use before realizing a particular specifier value.
+
+All generated delexicalized utterances are post-processed with the
+corresponding attribute-values before computing evaluation metrics (i.e., they
+are re-lexicalized with the appropriate value strings from the input
+\meaningrepresentation). Unlike in the faithful generation experiments, we do
+not perform any delexicalization of the E2E Challenge corpus.
+
+\subsection{Generation Models}
+
+We examine the effects of linearization strategy and data augmentation on biGRU
+(see \autoref{sec:nlggru}) and transformer (see \autoref{sec:nlgtf}) based
+\sequencetosequence~models.  See \autoref{tab:nlghpsspace} for the set of
+hyper-parameters that we explored for each model and \autoref{tab:gruparams}
+and \autoref{tab:tfparams} for the winning hyper-parameter settings for the
+biGRU and transformer models respectively.  Hyper-parameters were found using
+grid-search, selecting the model with best validation \textsc{Bleu} score. We
+performed a separate grid-search for each architecture-linearization strategy
+pairing in case there was no one best hyper-parameter setting.  We used a batch
+size of 128 for all biGRU and Transformer models and trained for at most 700
+epochs.
+
+\input{ch5/tables/hpsspace.tex}
+
+\input{ch5/tables/gruhps.tex}
+\input{ch5/tables/hps.tex}
+
+\newcommand{\utt}{\ensuremath{\mathbf{y}}}
+\newcommand{\uttVocab}{\ensuremath{\mathcal{W}}}
+\newcommand{\da}{\ensuremath{a}}
+\newcommand{\inseq}{\mathbf{x}}
+\newcommand{\Attrs}{\ensuremath{\mathcal{V}}}
+\newcommand{\inSize}{m}
+\newcommand{\outSize}{n}
+
+\newcommand{\mmhAttn}{\operatorname{maskedMHAttn}}
+\newcommand{\mhAttn}{\operatorname{MHAttn}}
+
+\newcommand{\mrEmb}{\mathbf{W}}
+\newcommand{\uttEmb}{\mathbf{V}}
+\newcommand{\decInput}{\mathbf{G}}
+\newcommand{\decInputi}{\mathbf{g}_i}
+
+
+\newcommand{\tfeA}{\boldsymbol{\check{\encInput}}^{(i)}}
+\newcommand{\tfeB}{\boldsymbol{\bar{\encInput}}^{(i)}}
+\newcommand{\tfeC}{\boldsymbol{\hat{\encInput}}^{(i)}}
+\newcommand{\tfeD}{\boldsymbol{\dot{\encInput}}^{(i)}}
+\newcommand{\tfeE}{\boldsymbol{\ddot{\encInput}}^{(i)}}
+
+\newcommand{\tfdA}{\boldsymbol{\check{\decInput}}^{(i)}}
+\newcommand{\tfdB}{\boldsymbol{\bar{\decInput}}^{(i)}}
+\newcommand{\tfdC}{\boldsymbol{\hat{\decInput}}^{(i)}}
+\newcommand{\tfdD}{\boldsymbol{\grave{\decInput}}^{(i)}}
+\newcommand{\tfdE}{\boldsymbol{\tilde{\decInput}}^{(i)}}
+\newcommand{\tfdF}{\boldsymbol{\acute{\decInput}}^{(i)}}
+\newcommand{\tfdG}{\boldsymbol{\dot{\decInput}}^{(i)}}
+\newcommand{\tfdH}{\boldsymbol{\ddot{\decInput}}^{(i)}}
+
+Additionally, we fine-tune BART \cite{lewis2020}, a large, pretrained
+transformer-based \sequencetosequence~model. We stop fine-tuning after
+validation set cross-entropy stops decreasing.  We use the same settings as the
+fine-tuning for the CNN-DailyMail summarization task, although we modify the
+maximum number of updates to be roughly to be equivalent to 10 epochs on the
+training set when using a 500 token batch size, since the number of updates
+effects the learning rate scheduler. We selected the model iterate with lowest
+validation set cross-entropy.
+
+While BART is unlikely to have seen any linearized MR in its pretraining data,
+its use of sub-word encoding  allows it to encode arbitrary strings. Rather
+than extending it's encoder input vocabulary to add the MR tokens, we simply
+format the input MR as a string (in the corresponding linearization order),
+e.g. ``inform rating=good name=NAME platforms=PC platforms=Xbox''.
+
+\subsection{Utterance Planner Model} We experiment with three approaches to
+creating a test-time utterance plan for the alignment training models. The
+first is a bigram language model (\BgUP) over attribute-value sequences.
+Attribute-value bigram counts are estimated from the training data (using
+Lidstone smoothing \citep{chen1996} with $\lidstone=10^{-6}$)  according to the
+ordering determined by the matching rules (i.e. the alignment-training
+ordering). 
+
+\input{ch5/tables/plannerhps.tex}
+
+\input{ch5/tables/plannerhp.tex}
+
+The second model is a recurrent neural network based \sequencetosequence~model,
+which we refer to as the neural utterance planner (\NUP). We train the \NUP~to
+map \textsc{If} ordered attribute-values to the alignment training ordering. We
+grid-search model hyperparameters, selecting the model with highest average
+Kendall's $\tau$ \citep{kendall1938} on the validation set alignment training
+orderings. See \autoref{tab:nuphps} for the hyperparameter search space and
+\autoref{tab:nuphp} to see the chosen hyperparameter setting. We used a batch
+size of 128, the Adam optimizer, and trained for at most 50 epochs.   Unlike
+the \BgUP~model, the \NUP~model also conditions on the dialogue act, so it can
+learn ordering preferences that differ across dialogue acts.
+
+For both \BgUP~and \NUP, we use beam search (with beam size 32) to generate
+candidate utterance plans. The beam search is constrained to only generate
+attribute-value pairs that are given in the supplied \meaningrepresentation,
+and to avoid generating repeated attributes. The search is not allowed to
+terminate until all attribute-values in the \meaningrepresentation~are
+generated.  Beam candidates are ranked by log likelihood. We show validation
+and test set Kendall's $\tau$ to the reference utterance for both planning
+models in \autoref{tab:uptau}.  A Kendall's $\tau$ of 1.0 indicates that the
+planner exactly follows the human reference order while 0.0 indicates a random
+order relative to the human reference. $\tau=-1$ indicates the model produces
+the reverse order of the human reference plan. We see that the NUP produces
+utterance plans that are closer in order to the human reference on both the E2E
+Challenge and ViGGO datasets.
+
+\input{ch5/tables/uptau.tex}
+
+The final ordering we propose is the \Oracle~ordering, i.e. the utterance plan
+implied by the human-authored test-set reference utterances. This plan
+represents the model performance if it had a priori knowledge of the reference
+utterance plan. When a test example has multiple references, we select the most
+frequent ordering in the references, breaking ties according to
+\BgUP~log-likelihood.
+
+\subsection{Experiments}
+
+\subsubsection{Test-Set Evaluation}
+
+In our first experiment, we compare performance of the proposed models and
+linearization strategies on the E2E Challenge and ViGGO test sets.  We refer to
+models using the alignment training linearization strategy as \textsc{At+BgUP},
+\textsc{At+NUP}, or \textsc{At+Oracle} depending on whether the model is
+following the bigram planner, neural planner, or human reference plan
+respectively.  For the \textsc{If} and \textsc{At+NUP} models we also include
+variants trained on the union of original training data and phrase-augmented
+data (see \autoref{sec:pbda}), which we denote \textsc{+p}.
+
+\paragraph{Evaluation Measures} For automatic quality measures, we report
+\bleu~and \rougel  scores using the official E2E Challenge evaluation
+script.\footnote{\url{https://github.com/tuetschek/e2e-metrics}} Additionally,
+we use the rule-based utterance tagger to automatically annotate the
+attribute-value spans of the model generated utterances, and then manually
+verify/correct them. With the attribute-value annotations in hand we compute
+the number of missing, wrong, or added attribute-values for each model. From
+these counts, we compute the semantic error rate (SER) \citep{dusek2020} where
+\[ \textrm{SER} = \frac{\#missing + \#wrong + \#added}{\#attributes}.\]  On
+ViGGO, we do not include the \Atr{rating} attribute in this evaluation since we
+consider it part of the dialogue act.  Additionally, for \textsc{At} variants,
+we report the order accuracy (OA) as the percentage of generated utterances
+that correctly follow the provided utterance plan. Utterances with wrong or
+added attribute values are counted as not following the utterance plan. 
+
+All models are trained five times with different random seeds; we report the
+mean of all five runs. We report statistical significance using Welch's
+$t$-test \citep{welch1947}, comparing the score distribution of the five runs
+from the best linearization strategy against all other strategies at the $0.05$
+level.
+
+\paragraph{Baselines} On the ViGGO dataset we compare to the transformer
+baseline of \citet{juraska2019}, which used a beam search of size 10 and
+heuristic attribute reranker (similar to our attribute-value matching rules).
+On the E2E Challenge dataset, we report the results of TGen+ \citep{dusek2019},
+an LSTM-based \sequencetosequence~model, which also uses beam search with a
+matching rule based reranker to select the most semantically correct utterance
+and is trained on a cleaned version of the corpus (similar to our approach).
+ 
+\subsubsection{Random Permutation Stress Test}
+
+Differences between an \textsc{At} model following an utterance planner model
+and the human oracle are often small so we do not learn much about the limits
+of controllability of such models, or how they behave in extreme conditions
+(i.e. on an arbitrary, random utterance plan, not drawn from the training data
+distribution). In order to perform such an experiment we generate random
+utterance plans (i.e. permutations of attribute-values) and have the
+\textsc{At} models generate utterances for them, which we evaluate with respect
+to SER and OA (we lack ground truth references with which to evaluate \bleu~or
+\rougel).  We generate random permutations of size $3,4,\ldots, 8$ on the E2E
+dataset, since there are 8 unique attributes on the E2E dataset. For ViGGO we
+generate permutations of size $3,4,\ldots,10$ (96\% of the ViGGO training
+examples fall within this range). For each size we generated 100 random
+permutations and all generated plans were given the \textsc{Inform} dialogue
+act. In addition to running the \textsc{At} models on these random
+permutations, we also compare them to the same model after using the NUP  to
+reorder them into an easier\footnote{Easier in the sense that the
+\NUP~re-ordering is closer to the training set distribution of \textsc{At}
+utterance plans.} ordering.
+
+\subsubsection{Human Evaluation} In our final experiment, we had human
+evaluators rank the 100 outputs of the size 5 random permutations for three
+\BART~models on both datasets: (i) \textsc{At+p} model with \NUP,  (ii)
+\textsc{At+p} model, and (iii) \textsc{At} model.  The first model, which uses
+an utterance planner, is likely to be more natural since it doesn't have to
+follow the random order, so it serves as a ceiling.  The second and third
+models will try to follow the random permutation ordering, and are more likely
+to produce unnatural transitions between awkward sequences of attribute-values.
+Differences between these models will allow us to understand how the
+phrase-augmented data affects the fluency of the models.  The annotators were
+asked to rank outputs by their naturalness/fluency.  Each set was annotated
+twice by different annotators so we can compute agreement. 
+
+\newcommand{\lsname}[1]{\textsc{#1}}
+\newcommand{\lsshort}[1]{\textsc{#1}}
+\newcommand{\size}[1]{|#1|}
+\newcommand{\lin}{\pi}
+\newcommand{\valstr}[1]{\textit{#1}}
+\newcommand{\uttstr}[1]{\textit{#1}}
+\newcommand{\alignshort}{AT}
+\newcommand{\enc}{Enc}
+\newcommand{\rep}{h}
+\newcommand{\attrval}[2]{#1=#2}
+\newcommand{\phraseAug}{+p}
+\newcommand{\DA}[1]{\textsc{#1}}
+
+\subsection{Results}
+
+\paragraph{\lsshort{At} models accurately follow utterance plans.} See
+\autoref{tab:main.e2e.test} and \autoref{tab:main.viggo.test} for results on
+E2E Challenge and ViGGO test sets respectively.  The best non-\Oracle~results
+are show in bold for each model and results that are not different with
+statistical significance to the best results are underlined.  We see that the
+\lsshort{At+NUP} strategy consistently receives the lowest semantic error rate
+and highest order accuracy, regardless of architecture or dataset, suggesting
+that alleviating the model's decoder of content planning is highly beneficial
+to avoiding errors. The Transformer \lsshort{At} model is able to consistently
+achieve virtually zero semantic error on the E2E Challenge dataset using either
+the bigram or neural planner model.
+
+We also see that fine-tuned BART is able to learn to follow an utterance plan
+as well. When following the neural utterance planner, BART is highly
+competitive with the trained from scratch Transformer on the E2E Challenge
+dataset and surpassing it on the ViGGO dataset in terms of semantic error rate.
+
+\input{ch5/tables/main_e2e_test.tex}
+
+Generally, the \lsshort{At} models had a smaller variance in test-set
+evaluation measures over the five random initializations as compared to the
+other strategies. This is reflected in some unusual equivalency classes by
+statistical significance. For example, on the E2E Challenge dataset biGRU
+models, the \lsshort{At+NUP+p} strategy achieves 0\% semantic error and is
+significantly different than all other linearization strategies \textbf{except}
+the \lsshort{Fp} strategy even though the absolute difference in score is
+6.54\%. This is unusual because the \lsshort{At+NUP+p} strategy \textbf{is}
+significantly different from \lsshort{At+NUP} but the absolute difference is
+only 0.26\%. This happens because the variance in test-set results is higher
+for \lsshort{Fp} making it harder to show significance with only five samples.
+
+\paragraph{Transformer-based models are more faithful than biGRU on
+\textsc{Rnd, Fp}, and \textsc{If} linearizations.} On the ViGGO dataset, BART
+and Transformer \lsshort{If} achieve 1.86\% and 7.50\% semantic error rate
+respectively, while the biGRU \lsshort{If} model has 19.20\% semantic error
+rate. These trends hold for \lsshort{Fp} and \lsshort{Rnd}, and on the E2E
+dataset as well. Because there is no sequential correspondence in the input, it
+is possible that the recurrence in the biGRU makes it difficult to ignore
+spurious input ordering effects.  Additionally, we see that \lsshort{Rnd} does
+offer some benefits of denoising; \lsshort{Rnd} models have lower semantic
+error rate than \lsshort{If} models in 3 of 6 cases and \lsshort{Fp} models in
+5 out of 6 cases.
+
+\paragraph{Model based plans are easier to follow than human reference plans.
+} On E2E, there is very little difference in semantic error rate when following
+either the bigram-based utterance planner, \BgUP, or neural utterance planner,
+\NUP. This is also true of the ViGGO \BART~models as well.  In the small data
+(i.e. ViGGO) setting, \biGRU~and \Transformer~models achieve better semantic
+error rate when following the neural utterance planner.  In most cases, neural
+utterance planner models have slightly higher \bleu~and \rougel~than the bigram
+utterance planner, suggesting the neural planner produces utterance plans
+closer to the reference orderings. The neural and bigram planner models have
+slightly lower semantic error rate than when following the \Oracle~utterance
+plans.  This suggests that the model-based planners are producing orders more
+commonly seen in the training data, similar to how neural language generators
+frequently learn the least interesting, lowest entropy responses
+\citep{serban2016}.  On the other hand, when given the \Oracle~orderings,
+models achieve much higher word overlap with the reference, e.g. achieving an
+E2E \textsc{Rouge-L} $\ge 77$.
+
+\input{ch4/tables/main_perm.tex}
+
+\paragraph{Phrase-training reduces SER.} We see that phrase data improves
+semantic error rate in 8 out of 12 cases, with the largest gains coming from
+the biGRU \lsshort{If} model.  Where the base semantic error rate was higher,
+phrase training has a more noticeable effect. After phrase training, all E2E
+models are operating at near zero semantic error rate and almost perfectly
+following the neural utterance planner. Model performance on ViGGO is more
+varied, with phrase training slighting hurting the biGRU \lsshort{At+NUP}
+model, but otherwise helping performance.
+
+\paragraph{Random Permutation Stress Test} Results of the random permutation
+experiment are shown in \autoref{tab:perm}.  Overall, all models have an easier
+time following the neural utterance planner's reordering of the random
+permutations. Phrase training also generally improved semantic error rate.  All
+models perform quite well on the E2E permutations.  With phrase-training, all
+E2E models achieve less than 0.6\% semantic error rate following random
+utterance plans.  Starker differences emerge on the ViGGO dataset.  The
+biGRU\textsc{+NUP+p} model achieves a 8.98\% semantic error rate and only
+correctly follows the given order 64.5\% of the time, which is a large decrease
+in performance compared to the ViGGO test set.
+
+\input{ch5/tables/main_human.tex}
+
+\paragraph{Human Evaluation} Results of the human evaluation are shown in
+\autoref{tab:human}. We show the number of times each system was ranked 1 (most
+natural), 2, or 3 (least natural) and the average rank overall.  Overall, we
+see that BART  with the neural utterance planner and phrase-augmentation
+training is preferred on both datasets, suggesting that the utterance planner
+is producing natural orderings of the attribute-values, and the model can
+generate reasonable output for it. On the E2E dataset, we also see small
+differences in between the \lsshort{At+p} and \lsshort{At} models suggesting
+that when following an arbitrary ordering, the phrase-augmented model is about
+as natural as the non-phrase trained model. This is encouraging as the phrase
+trained model has lower semantic error rates.  On the ViGGO dataset we do find
+that the phrase trained model is less natural, suggesting that in the small
+data setting, phrase-training may hurt fluency when trying to follow a
+difficult utterance plan.
+
+For agreement we compute average Kendall's $\tau$ between each pair of
+annotators for each dataset. On E2E, we have $\tau=.853$ and ViGGO we have
+$\tau=.932$ suggesting very strong agreement.
+
+\subsection{Discussion}
+
+One consistently worrying sign throughout the first two experiments is that the
+automatic metrics are not good indicators of semantic correctness.  For example
+the \rougel~score of the E2E \lsshort{At Oracle} models is about 8 points
+higher than the \lsshort{At+NUP} models, but the \lsshort{At+NUP} models make
+fewer semantic errors. Other similar examples can be found where the automatic
+metric would suggest picking the more error prone model over another. As
+generating fluent text becomes less of a difficult a problem, these shallow
+ngram overlap methods will cease to suffice as distinguishing criteria.
+
+The second experiments also reveal limitations in the controllable model's
+ability to follow arbitrary orderings. The biGRU and Transformer models in the
+small-data ViGGO setting are not able to generalize effectively on non-training
+distribution utterance plans. BART performance is much better here, but is
+still hovering around 2\% semantic error rate and only roughly 88\% of outputs
+conform to the intended utterance plan.  Thankfully, if an exact ordering is
+not required, using the neural utterance planner to propose an order leads to
+more semantically correct outputs.
+
+\subsection{Limitations}
+
+While we are able to achieve very low test-set SER for both corpora, we should
+caution that this required extensive manual development of matching rules to
+produce \meaningrepresentation/utterance alignments, which in turn resulted in
+significant cleaning of the training datasets. We chose to do this over
+pursuing a model based strategy of aligning utterance subspans to
+attribute-values because we wanted to better understand how systematically S2S
+models can represent arbitrary order permutations independent of alignment
+model error.  Also we should note that data cleaning can yield more substantial
+decreases in semantic errors \citep{dusek2019,wang2019} and is an important
+consideration in any practical neural NLG.

@@ -1,0 +1,260 @@
+\section{Modeling \MeaningRepresentation-to-Text Generation with \SequencetoSequence~Architectures}
+\label{mrtproblemdef}
+
+\subsection{\SequencetoSequence~Modeling}
+
+We approach the problem of mapping a \meaningrepresentation~to a natural
+language utterance with a variety of popular \sequencetosequence~architectures.
+A \sequencetosequence~model is a neural network with parameters $\params$ that
+implements a probabilistic mapping, $\gen(\cdot|\cdot;\params) : \inSpace
+\times \outSpace \rightarrow (0,1)$, from input sequences 
+\[
+    \mrtoks = \left[\mrtok_1,\ldots,\mrtok_\mrSize\right] \in \inSpace
+\]
+to output sequences 
+\[
+    \utttoks = \left[\utttok_1, \ldots, \utttok_\uttSize\right] \in \outSpace.
+\]
+Tokens from the input sequence are drawn from a finite vocabulary $\mrvocab$
+and input sequences its Kleene closure $\mrvocab^* = \inSpace$.  Analogously,
+tokens from the output sequence are drawn from a distinct, finite vocabulary
+$\uttvocab$ and output sequences its Kleene closure $\uttvocab^* = \outSpace$.
+For clarity we occasionally omit $\params$ in subsequent equations.
+
+Typically, \gen~is implemented as a bipartite network consisting of distinct
+encoder and decoder networks $\encMod$~and \decMod~respectively.  The encoder
+$\encMod : \inSpace \rightarrow \reals^{*\times\encDim}$ is a mapping of an
+input sequence $\mrtoks$ of $\mrSize$ tokens to $\mrSize$ corresponding vectors
+$\encState_1,\ldots\encState_\mrSize \in \reals^\encDim$ and
+\[ 
+    \gen(\utttoks|\mrtoks) = \gen(\utttoks|\encMod(\mrtoks)) = \gen(\utttoks|\encState_1,\ldots,\encState_\mrSize).
+\]
+The decoder $\decMod : \uttvocab^+ \times \reals^{*\times \encDim} \rightarrow
+(0,1)$ then is a mapping of previously generated tokens $\utttoks_{1:i-1} =
+\left[\utttok_1,\ldots,\utttok_{i-1}\right]$ and encoder states
+$\encState_1,\ldots,\encState_\mrSize$ to a probability distribution over the
+output vocabulary $\uttvocab$, where
+\[ 
+    \gen(\utttok_i|\utttoks_{1:i-1},\mrtoks) = \decMod\left(\utttoks_{1:i}, \encMod(\mrtoks)\right)   \quad \textrm{and} \quad \sum_{\utttok\in \uttvocab} \gen\left(\utttok| \utttoks_{1:i-1}, \encMod(\mrtoks)\right) = 1.  
+\]
+Hence, $\gen(\cdot|\mrtoks)$ is a conditional language model over utterance
+tokens that factorizes in a left-to-right fashion, i.e.,
+\[
+    \gen\left( \utttoks| \mrtoks \right) = \prod_{i=1}^\uttSize \gen\left(\utttok_i|\utttoks_{1:i-1},\mrtoks\right). 
+\]
+
+Notice that the ``inputs'' and ``outputs'' to the \sequencetosequence~model are
+sequences of tokens, $\mrtoks$ and $\utttoks$ respectively.  In order to use a
+\sequencetosequence~model for \naturallanguagegeneration~from a
+\meaningrepresentation~we need only map our desired inputs and outputs to
+sequences of discrete tokens. In English, the desired output is relatively
+straightforward to represent as a sequence as an English language utterance can
+naturally be represented as a sequence of word tokens. In practice, we also
+indicate full sentence stops with a special token \senttok\footnote{We add an
+explicit sentence stop symbol because occasionally utterances have non-sentence
+final periods and we want there to be no ambiguity about sentence stops
+produced by the model.} and prepend and append distinguished tokens
+\starttok~and \stoptok, respectively, to indicate the start and end of the
+utterance, as well as lower-case all tokens.  As an example, the utterance 
+\[
+    \textit{The Vaults pub is near Caf{\'e} Adriatic. It is not a good place for families.} 
+\]
+would be represented as 
+\[\small \utttoks = \left[\starttok, \textit{the},\,\textit{vaults},\,\textit{pub},\,\textit{is},\,\textit{near},\,\textit{caf{\'e}},\,\textit{adriatic},\,\textit{.},\,\textit{\senttok},\,\textit{it},\,\textit{is},\,\textit{not},\,\textit{a},\,\textit{good},\,\textit{place},\,\textit{for},\,\textit{families},\,\textit{.},\,\textit{\stoptok}\right]. \]
+
+The \meaningrepresentation~is not itself a sequence, however, so we cannot
+apply it to a \sequencetosequence~model directly.  Instead it must first be
+``linearized,'' or mapped to a linear sequence of tokens. We refer to a
+function $\ls : \mrspace \rightarrow \inSpace$, as a \linearizationstrategy.
+We experiment with several \linearizationstrategies~in this chapter, however,
+all of them operate over the same domain, $\mrvocab^+$, where $\mrvocab$
+consists of distinct tokens for each \dialogueact~and \attributevalue~pairs.
+As an example consider the following \meaningrepresentation,
+\begin{singlespace}
+  \[ 
+    \mr = \left[\!\!\left[\begin{array}{l} \textsc{Inform} \\ \AV{name}{Aromi}\\\AV{area}{city centre} \\ \AV{eat\_type}{coffee shop} \end{array}\right]\!\!\right] \]
+\end{singlespace}
+\noindent and some possible linearizations,
+\begin{align*}
+     \ls_1(\mr) & = \mrtoks= \left[\textit{inform},\,\textit{name=Aromi},\,\textit{eat\_type=coffee shop},\,\textit{area=city centre}\right] \\
+     \ls_2(\mr) & = \mrtoks= \left[\textit{inform},\,\textit{eat\_type=coffee shop},\,\textit{name=Aromi},\,\textit{area=city centre}\right] \\
+     \ls_3(\mr) & = \mrtoks= \left[\textit{inform},\,\textit{eat\_type=coffee shop},\,\textit{area=city centre},\,\textit{name=Aromi}\right].
+\end{align*}
+In practice, regardless of the choice of \linearizationstrategy, we prepend a
+start token, $\starttok$, and append and a stop token, $\stoptok$, to all
+input token sequences, e.g.
+\[ \mrtoks = \left[\starttok,\,\textit{inform},\,\textit{name=Aromi},\,\textit{eat\_type=coffee shop},\,\textit{area=city centre},\,\stoptok\right]. \]
+
+The encoder and decoder networks of the \sequencetosequence~model can be
+implemented with a variety of architectures. We use two such architectures, the
+gated recurrent unit (GRU) \citep{cho2014learning} and the transformer
+\citep{vaswani2017}. Since we use standard variants, we defer explicit model
+definitions to \hyperref[sec:nlggru]{Appendix \ref{sec:nlggru}} and
+\hyperref[sec:nlgtf]{Appendix \ref{sec:nlgtf}} for GRU- and transformer-based
+sequence-to-sequence architectures respectively. While the GRU must be given an
+explicit linearization to process any input, the transformer variant does not
+have to be sensitive to linearization order. However, when the transformer uses
+position embeddings, which is the standard configuration, it is sensitive to
+linearization order. We always use position embeddings in this work as
+\cite{vaswani2017} found the model did not work as well without them.
+
+\subsection{Learning}
+
+Given a dataset of \meaningrepresentation/utterance pairs, $\corpus =
+\left\{\left(\mr^{(1)}, \utttoks^{(1)}\right), \ldots,
+\left(\mr^{(\corpusSize)},\utttoks^{(\corpusSize)} \right)\right\}$, and a
+\linearizationstrategy, $\ls$, the parameters, $\params$, of $\gen$~can be
+learned by approximately minimizing the negative log-likelihood of the data,
+\[ \hat{\params} \approx \argmin_{\params \in \Params} -\frac{1}{\corpusSize}\sum_{\left(\mr, \utttoks \right) \in \corpus} 
+    \log \gen\left(\utttoks|\ls\left(\mr\right);\params\right).
+\]
+In practice, this is done with some variant of mini-batch stochastic gradient
+descent, e.g., Adam \citep{kingma2014adam}.  Additionaly, label smoothing
+\citep{szegedy2016} and non-linear learning rates are often necessary in
+practice for optimizing the transformer-based \sequencetosequence~model.
+Dropout is also typically applied to both the GRU and transformer models during
+training. 
+
+\input{ch5/figures/beamsearch.tex}
+
+\subsection{Inference}
+\label{sec:nlginference}
+
+As stated above, $\gen\left(\cdot|\ls\left(\mr\right)\right)$ is a conditional
+language model.  Given some \meaningrepresentation~$\mr$, a natural utterance
+one might want to infer is the maximum a posteriori (MAP) utterance 
+\[
+ \predutttoks = \argmax_{\utttoks\in\uttSize} \log\gen\left(\utttoks|\ls\left(\mr\right)\right) 
+\] 
+under the model.\footnote{Technically, we are only considering valid finite
+utterances $\utttoks = \left[\utttok_1,\ldots,\utttok_\uttSize\right] \in
+\outSpace$ with $\utttok_1 = \starttok$ and $\utttok_\uttSize = \stoptok$. }
+Unfortunately, the search implied by the $\argmax$ is intractable. Instead an
+approximate search is performed. The most commonly used search is called
+\textit{beam search} \citep{reddy1977} or beam decoding.  Under beam search, a
+set $\mathcal{H}$ of $\nbest$-best candidate utterances is maintained
+throughout the search. $\nbest$ is referred to as the beam size or beam width.
+At each step $i$ of the search, the next word continuations are computed for
+each candidate utterance prefix, yielding $\nbest \times \lvert\uttvocab\rvert$
+utterances, from which the top-$\nbest$ under some search criterion are
+selected, and $\mathcal{H}$ is updated the with the $\nbest$ utterances of
+length $i+1$.  When a completed utterance enters $\mathcal{H}$ (i.e.,
+$\utttok_{i+1} = \stoptok$), it is added to a set of completed utterances,
+$\mathcal{H}_{complete}$, and removed from $\mathcal{H}$.  After exploring the
+maximum number of steps $T$ (or some other heuristic stopping criterion),
+$\mathcal{H}_{complete}$ is reranked according some heuristic reranking
+criteria, and the top-ranked  utterance is returned.  When the beam size is 1,
+we refer to the algorithm as greedy search or greedy decoding.  See
+\autoref{alg:beamsearch} for a formal description of the algorithm.
+
+Common reranking criteria include the length-normalized log likelihood, \[
+\operatorname{rerank-score}(\utttoks,\mr) = \frac{\sum_{i=1}^\setsize{\utttoks}
+\log \gen(\utttok_i|\utttoks_{1:i-1},\ls(\mr))}{\setsize{\utttoks}}\] or a
+mixture of model likelihood and an auxiliary  language model, $\gen_{LM}$, \[
+\operatorname{rerank-score}(\utttoks,\mr) = \log\gen(\utttoks|\ls(\mr)) +
+\lambda \log \gen_{LM}(\utttoks).\] The latter method is popular in machine
+translation where it is easier to obtain a large monolingual corpus with which
+to train a language model than it is to obtain a large parallel corpus for
+training the translation model \citep{xie2017neural}. When using
+\sequencetosequence~models for the \meaningrepresentation-to-text generation
+problem, practitioners often incorporate a discriminative
+\meaningrepresentation~parser, $\dmodel(\cdot|\cdot) : \mrspace \times
+\outSpace \rightarrow (0,1)$, in the reranker, \[
+\operatorname{rerank-score}(\utttoks,\mr) = \log\dmodel(\mr|\utttoks),\] which
+can help to select the most semantically correct utterances from the beam
+candidates. Under this setting, for a candidate utterance $\predutttoks \in
+\mathcal{H}_\textrm{complete}$ obtained with $ \gen\left( \cdot | \ls (\mr)
+\right)$ using beam search, $\dmodel\left( \mr | \predutttoks \right)$ gives
+the probability that $\denotes{\predutttoks} = \mr$ under the model $\dmodel$.
+
+Despite its wide adoption and empirical success, however, there are many known
+issues with beam search.  The output may repeat phrases or words
+\citep{holtzman2019}, or may never even terminate
+\citep{welleck2020consistency}.  While these issues are often linked to
+differences in the maximum likelihood learning objective and test-time search
+procedure \citep{lafferty2001,andor2016}, the problems are possibly deeper as
+increasing the beam size often leads to worse empirical performance
+\citep{koehn2017}. In fact, the biases present in beam search are actually
+beneficial when compared to exact search \citep{stahlberg2019}.  Additionally,
+it is well known that the set of output beam candidates may lack diversity and
+only differ by a small number of words
+\citep{sordoni2015,galley2015,li2016,vinyals2015,serban2016}.
+
+\subsection{Sampling}
+
+As an alternative to deterministic decoding, one may sample from the
+conditional distribution, $\gen\left(\cdot|\ls(\mr)\right)$. The typical method
+for doing this is called \ancestralsampling. \Ancestralsampling~is very similar
+to greedy decoding, and works by sequentially sampling the next word
+$\utttok_{i+1} \sim \gen\left(\cdot|\utttoks_{1:i},\ls(\mr)\right)$, and
+terminating when $\utttok_{i+1} = \stoptok$. There are several modifications
+one might make to \ancestralsampling~in practice. To encourage more diversity
+in the sampled outputs, a temperature parameter $\temperature$ is sometimes
+added to the final $\softmax$ layer, \[ \gen\left(\utttok_{i+1}|
+\utttoks_{1:i},\ls(\mr); \temperature) \right) = \softmax\left(
+\frac{\weight{o}\tfDecInputRow_i + \bias{o}}{\temperature}
+\right)_{\utttok_{i+1}}.\] As $\temperature$ tends toward $+\infty$, the
+conditional distribution becomes less peaked and the differences in probability
+between any two words diminish, making it easier to sample an unusual
+continuation of the utterance sequence.  In the positive limit, each word
+becomes equally likely, \[ \lim_{\temperature\rightarrow +\infty}
+\gen\left(\utttok| \utttoks_{1:i},\ls(\mr); \temperature) \right) =
+\frac{1}{\setsize{\uttvocab}}.\] As $\temperature$ approaches zero, the
+distribution becomes a ``one-hot'' distribution, \[
+\lim_{\temperature\rightarrow +0} \gen\left(\utttok| \utttoks_{1:i},\ls(\mr);
+\temperature) \right) = \mathds{1}\{\utttok = \argmax_{\utttok^\prime}
+\gen\left(\utttok^\prime| \utttoks_{1:i},\ls(\mr)\right)  \}\] where the
+probability is zero for every word except the most likely next word in the
+original distribution, which now has probability one.
+
+While ancestral sampling can lead to more diverse outputs, the next word
+distributions are often quite peaked meaning most of the vocabulary accounts
+for less than 0.05 of the cumulative distribution function. For a 20 word
+sentence, this means that on average at least one word will be sampled from the
+long-tail, effectively choosing a word uniformly at random from the vocabulary.
+To avoid this issue, two heuristic modifications are often made to ancestral
+sampling, \textit{top-$k$} sampling \citep{fan2018,holtzman2018,radford2019}
+and \textit{nucleus} sampling \citep{holtzman2019}. 
+
+In top-$k$ sampling, $p(\utttok|\utttoks_{1:i},\ls(\mr))$ is restricted to the
+top $k$ most likely words. Let $\topkVocab{i}{k} \subset \uttvocab$ be the set
+of $k$ most likely next words at sampling step $i$, i.e.,
+\[\topkVocab{i}{k} = \argmax_{S \subset \uttvocab, \setsize{S} = k} \sum_{\utttok \in S} \log\gen(\utttok|\utttoks_{1:i},\ls(\mr)). \]
+The next word $\utttok_{i+1}$ is then sampled from the following distribution,
+\[
+    \gen\left(\utttok_{i+1}|\utttoks_{1:i},\ls(\mr);\topkVocab{i}{k}\right)
+    =
+    \begin{cases} 
+   \frac{
+   \gen(\utttok_{i+1}|\utttoks_{1:i},\ls(\mr))
+   }{ 
+       \sum_{\utttok^\prime \in \topkVocab{i}{k}  }
+   \gen(\utttok^\prime|\utttoks_{1:i},\ls(\mr))  
+   }  & \utttok_{i+1} \in \topkVocab{i}{k} \\ 
+0 & \textrm{otherwise}. \end{cases} 
+\]
+
+\citet{holtzman2019} show that picking the right $k$ for top-$k$ sampling is
+difficult because the next word distribution can alternate from very flat
+(which would suggest a large $k$) to very peaked (which would suggest a small
+$k$).  Instead they propose restricting the subset of vocabulary to sample from
+to the smallest set of words such that their cumulative probability is greater
+than a threshold $\nucleusthr$,
+\[ \nucleusVocab{i}{\nucleusthr} = \argmin_{\substack{S \subset \uttvocab \\
+\sum_{\utttok \in S} \gen(\utttok|\utttoks_{1:i},\ls(\mr)) \ge \nucleusthr  }}
+\setsize{S}. \] The sampling distribution for this method which they call
+nucleus sampling, is computed similarly to top-$k$ sampling,
+\[
+\gen\left(\utttok_{i+1}|\utttoks_{1:i},\ls(\mr); \nucleusVocab{i}{\nucleusthr} \right)
+    =
+    \begin{cases} 
+   \frac{
+   \gen(\utttok_{i+1}|\utttoks_{1:i},\ls(\mr))
+   }{ 
+       \sum_{\utttok^\prime \in \nucleusVocab{i}{\nucleusthr} }
+   \gen(\utttok^\prime|\utttoks_{1:i},\ls(\mr))  
+   }  & \utttok_{i+1} \in \nucleusVocab{i}{\nucleusthr} \\ 
+0 & \textrm{otherwise}. \end{cases} 
+\]
+Nucleus sampling helps avoid sampling from the long tail of the distribution
+while still producing diverse samples.

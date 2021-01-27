@@ -1,0 +1,129 @@
+\begin{figure}[p]
+    \fbox{\begin{minipage}{\textwidth}
+\center
+
+\begin{minipage}{0.98\textwidth}
+\begin{subfigure}{\textwidth}
+\caption{Example of an alignment training linearization for a \meaningrepresentation~with a list-valued attribute, \textit{genres}. Note also that the \textit{rating} attribute for ViGGO examples is not aligned but always appended after the dialogue act (see \autoref{sec:align} for details). }
+\center
+\begin{minipage}[t]{0.48\textwidth}
+\small
+$\mr = \left[\!\!\left[\begin{array}{l} 
+    \textsc{Give Opinion} \\ 
+    \textrm{name=Little Nightmares} \\
+    \textrm{rating=good} \\
+    \textrm{genres=[}\\
+    \textrm{~~~~adventure,} \\
+    \textrm{~~~~platformer,}\\
+    \textrm{~~~~puzzle} \\
+    \textrm{]} \\
+    \textrm{player\_perspective=side view}
+\end{array}\right]\!\!\right]$ 
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.48\textwidth}
+\small
+$\ls(\mr) = \left[ \begin{array}{l}
+\starttok, \\
+\textit{give\_opinion},\\
+\textit{rating=good},\\ 
+\textit{name=Little Nightmares},  \\
+\textit{genres=adventure},  \\
+\textit{player\_perspective=side view},\\
+\textit{genres=platformer},  \\
+\textit{genres=puzzle},  \\
+\stoptok\end{array} \right]
+$ 
+\end{minipage}\\
+\begin{minipage}[t]{\textwidth}
+~\\[0pt]
+$\utttoks = $ \textit{Little Nightmares is a pretty cool game that has kept me entertained. It's an adventure side-scrolling platformer with some puzzle elements to give me a bit of a challenge.}
+\end{minipage}
+\end{subfigure}
+
+~\\~\\
+
+
+\begin{subfigure}{\textwidth}
+\caption{Example of an alignment training linearization with repeated attribute-values. In this case, the \textit{name} attribute is realized twice and 
+so it appears twice in the linearization.}
+\center
+\begin{minipage}[t]{0.48\textwidth}
+\small
+$\mr = \left[\!\!\left[\begin{array}{l} 
+    \textsc{Inform}\\
+    {\AV{name}{Aromi}}\\
+    {\AV{eat\_type}{coffee shop}}\\
+    {\AV{customer\_rating}{5 out of 5}}\\
+    {\AV{food}{English}}\\
+    {\AV{area}{city centre}}\\
+    {\AV{family\_friendly}{yes}}\\
+\end{array} \right]\!\!\right]$
+\end{minipage}
+ \hfill
+\begin{minipage}[t]{0.48\textwidth}
+\small
+$\ls(\mr) = \left[ \begin{array}{l}
+\starttok, \\
+\textit{inform},\\
+\textit{name=Aromi},\\
+\textit{eat\_type=coffee shop},\\
+\textit{family\_friendly=yes},\\
+\textit{food=English},\\
+\textit{name=Aromi},\\
+\textit{customer\_rating=5 out of 5},\\
+\textit{area=city centre},\\
+\stoptok\end{array} \right]
+$ 
+\end{minipage}\\
+\begin{minipage}[t]{\textwidth}
+~\\[0pt]
+$\utttoks = $ \textit{The Aromi coffee shop is family-friendly and serves English food.  Aromi has a customer rating of 5 out of 5 and is located near the center of the city.}
+\end{minipage}
+\end{subfigure}
+
+~\\~\\
+
+
+\begin{subfigure}{\textwidth}
+\caption{Example alignment training linearization where an attribute-value 
+is not grounded in the reference utterance. In this case, \textit{food=Japanese}
+is not present in the linearization.}
+\center
+\begin{minipage}[t]{0.48\textwidth}
+\small
+$\mr = \left[\!\!\left[\begin{array}{l} 
+    \textsc{Inform}\\
+    {\AV{name}{The Waterman}}\\
+    {\AV{food}{Japanese}}\\
+    {\AV{price\_range}{high}}\\
+    {\AV{area}{riverside}}\\
+\end{array} \right]\!\!\right]$
+\end{minipage}
+ \hfill
+\begin{minipage}[t]{0.48\textwidth}
+\small
+$\ls(\mr) = \left[ \begin{array}{l}
+\starttok, \\
+\textit{inform},\\
+\textit{area=riverside},\\
+\textit{price\_range=high},\\
+\textit{name=The Waterman},\\
+\stoptok\end{array} \right]
+$ 
+\end{minipage}\\
+\begin{minipage}[t]{\textwidth}
+~\\[0pt]
+$\utttoks = $ \textit{Near the river there is an expensive sushi place
+called the Waterman.}
+\end{minipage}
+%\end{itemize}
+%\label{fig:mr1utt}
+\end{subfigure}
+\end{minipage}
+\end{minipage}}
+\caption{Example \meaningrepresentation/utterance pairs ($\mr, \utttoks$) and their alignment
+training linearization $\ls(\mr)$.}
+\label{fig:atlexamples}
+\end{figure}
+
