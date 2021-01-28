@@ -106,15 +106,15 @@ training corpus and then tried to generate an utterance for the following
 \noindent using beam search. Notice that in this case $\setsize{\mr}=4$,
 indicating that the occurrence of \textit{near=Burger King} is a relatively
 novel situation given the training set.  We generated some beam search
-candidates we show below, {\color{red}\uline{underlining in red}} the phrases
+candidates we show below, {\uline{underlining}} the phrases
 that are not semantically correct given the \meaningrepresentation,
 
 \begin{enumerate}
-    \item Alimentum is located in the city centre {\color{red}\uline{near the Express by Holiday Inn.}} It is not family-friendly.     
-    \item Alimentum is located in the city centre {\color{red}\uline{near the Yippee Noodle Bar.}} It is not family-friendly.
-    \item Alimentum is located in the city centre {\color{red}\uline{near the Raja Indian Cuisine.}} It is not family-friendly.
-    \item Alimentum is not family-friendly. It is located in the city centre {\color{red}\uline{near the Yippee Noodle Bar.}}
-    \item The Alimentum is located in the city centre {\color{red}\uline{near the Express by Holiday Inn.}} It is not family-friendly.
+    \item Alimentum is located in the city centre {\uline{near the Express by Holiday Inn.}} It is not family-friendly.     
+    \item Alimentum is located in the city centre {\uline{near the Yippee Noodle Bar.}} It is not family-friendly.
+    \item Alimentum is located in the city centre {\uline{near the Raja Indian Cuisine.}} It is not family-friendly.
+    \item Alimentum is not family-friendly. It is located in the city centre {\uline{near the Yippee Noodle Bar.}}
+    \item The Alimentum is located in the city centre {\uline{near the Express by Holiday Inn.}} It is not family-friendly.
         %Alimentum is not family-friendly. It is located in the city centre near the Raja Indian Cuisine.\\\vspace{-1em}\\
         %Alimentum is located in the city centre near the Clare Hall. It is not family-friendly.\\\vspace{-1em}\\
         %Alimentum is located in the city centre near the crowne plaza hotel. It is not family-friendly.\\\vspace{-1em}\\
@@ -373,8 +373,11 @@ of sampling utterances, $\daUttDist$, for data-augmentation. We show our actual
 data-augmentation scheme in \autoref{fig:practda} and now walk through some of
 the implementation details.
 
-\paragraph{\truttbox{Train base generator $\gen_0$ and
-\meaningrepresentation~parser $\dmodel$.}} The algorithm begins by training the
+%\paragraph{\truttbox{Train base generator $\gen_0$ and
+%\meaningrepresentation~parser $\dmodel$.}} 
+\paragraph{{Train base generator $\gen_0$ and
+\meaningrepresentation~parser $\dmodel$.}} 
+The algorithm begins by training the
 base generator (i.e., na{\"i}ve \sequencetosequence~model) and
 \meaningrepresentation~parser $\dmodel$.  Both models are trained on the same
 data, with the only real change to the $\operatorname{Train}$ sub-routine being
@@ -384,12 +387,16 @@ rules. We defer detailed explanation of $\dmodel$ until the experiments; it
 suffices to understand $\dmodel$ as a mapping from utterances to
 \meaningrepresentations.
 
-\paragraph{\mrdistbox{Sampling a \meaningrepresentation, $\samplmr$}}
+%\paragraph{\mrdistbox{Sampling a \meaningrepresentation, $\samplmr$}}
+\paragraph{{Sampling a \meaningrepresentation, $\samplmr$}}
 We use the meaning representation sampling scheme described in
 \autoref{sec:ideal} to implement the distribution $\corpus_\mr^{-1}$. 
 
-\paragraph{\ninjbox{Generating a novel utterance from $\basegen$ with
-noise-injection sampling.}} In \autoref{lst:pdacand} we take $200$
+%\paragraph{\ninjbox{Generating a novel utterance from $\basegen$ with
+%noise-injection sampling.}} 
+\paragraph{{Generating a novel utterance from $\basegen$ with
+noise-injection sampling.}} 
+In \autoref{lst:pdacand} we take $200$
 noise-injection samples from $\basegen$ to construct a candidate set of
 utterances, $\pdaCandUtts_{200}$.  We use $\sigma=2.0$ after manually
 experimenting with a range of values from 0.1-3.0 since it gave reasonably
@@ -401,15 +408,19 @@ $\frac{\log\gen(\pdaCandUtt|\ls(\samplmr),
 (\autoref{lst:pdacandselect}).  We do this selection step so as to be extra
 cautious and avoid adding any potentially disfluent utterances to $\augdata$.
     
-\paragraph{\correctbox{Predict \meaningrepresentation~$\pdaPredMr$ from
-$\predutttoks$.}} Because the noise-injection sampling produces highly
+%\paragraph{\correctbox{Predict \meaningrepresentation~$\pdaPredMr$ from
+%$\predutttoks$.}} 
+\paragraph{{Predict \meaningrepresentation~$\pdaPredMr$ from
+$\predutttoks$.}} 
+Because the noise-injection sampling produces highly
 semantically divergent utterances, it is unlikely that $\denotes{\predutttoks }
 = \samplmr$. Instead we use the \meaningrepresentation~parser, $\dmodel$, to
 recover the most likely \meaningrepresentation, $\pdaPredMr =
 \dmodel\left(\predutttoks\right)$.  More details about $\dmodel$ will be
 provided in \autoref{sec:mrparsermodels}.
 
-\paragraph{\filterbox{Check synthetic datapoint $(\pdaPredMr,\predutttoks)$.}}
+%\paragraph{\filterbox{Check synthetic datapoint $(\pdaPredMr,\predutttoks)$.}}
+\paragraph{{Check synthetic datapoint $(\pdaPredMr,\predutttoks)$.}}
 We do one last quality check on the synthetic example
 $(\pdaPredMr,\predutttoks)$ before adding it to the augmented dataset,
 $\augdata$. We make sure that the probability of $\pdaPredMr$ under $\dmodel$
@@ -422,8 +433,11 @@ that have been previously generated are also discarded. If the
 \meaningrepresentation/utterance pair passes these final quality checks, we add
 it to $\augdata$.
 
-\paragraph{\returnbox{Train an augmented generator $\auggen$ on $\corpus \cup
-\augdata$.}} After generating a synthetic dataset, $\augdata$, we train a new
+%\paragraph{\returnbox{Train an augmented generator $\auggen$ on $\corpus \cup
+%\augdata$.}} 
+\paragraph{{Train an augmented generator $\auggen$ on $\corpus \cup
+\augdata$.}} 
+After generating a synthetic dataset, $\augdata$, we train a new
 generation model, $\auggen$, on the union of the original training data and the
 newly generated synthetic data. We refer to this model as the augmented
 generator and, as we will show empirically, the augmented generator is more

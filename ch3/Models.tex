@@ -341,7 +341,8 @@ embedding, $\zeroEmb$, and each sentence embedding $\sentEmb_i$ is fed into the
 encoder, to obtain the final encoder hidden state $\xEncHid_\docSize \in
 \reals^\xhidSize$. That is,\\
 
-\noindent\fcolorbox{encemb}{encemb!20!}{\textit{(\hyperref[fig:clext]{Figure~\ref{fig:clext}.a}) Extractor -- Encoder}}\\[-40pt]
+%\noindent\fcolorbox{encemb}{encemb!20!}{\textit{(\hyperref[fig:clext]{Figure~\ref{fig:clext}.a}) Extractor -- Encoder}}\\[-40pt]
+\noindent{\textit{(\hyperref[fig:clext]{Figure~\ref{fig:clext}.a}) Extractor -- Encoder}}\\[-40pt]
 \begin{align}
     \xEncHid_0 & = \zeroEmb \\
     \xEncHid_i &= \fgru(\sentEmb_i, \xEncHid_{i-1};\clEncParams) & 
@@ -353,7 +354,8 @@ initialized with the last encoder hidden state, $\xEncHid_\docSize$.  The
 inputs to decoder step $i$, for $i >1$, are the salience gated
 $(i-1)^\textrm{th}$ sentence embeddings,\\
 
-\noindent\fcolorbox{salsentemb}{salsentemb!20!}{\textit{(\hyperref[fig:clext]{Figure~\ref{fig:clext}.b}) Salience Gated Sentence Embeddings}}\\[-40pt]
+%\noindent\fcolorbox{salsentemb}{salsentemb!20!}{\textit{(\hyperref[fig:clext]{Figure~\ref{fig:clext}.b}) Salience Gated Sentence Embeddings}}\\[-40pt]
+\noindent{\textit{(\hyperref[fig:clext]{Figure~\ref{fig:clext}.b}) Salience Gated Sentence Embeddings}}\\[-40pt]
 \begin{align}
     \salSentEmb_{i-1} & = \nnpsal_{i-1}\sentEmb_{i-1} &
     \forall i: i \in \{2,\dots,\docSize\},
@@ -366,7 +368,8 @@ since there is no $\nnpsal_0$, $\salSentEmb_0$ is a special learned parameter.
 
 The extractor decoder outputs are then computed as,\\
 
-\noindent\fcolorbox{decemb}{decemb!20!}{\textit{(\hyperref[fig:clext]{Figure~\ref{fig:clext}.c}) Extractor -- Decoder}}\\[-40pt]
+%\noindent\fcolorbox{decemb}{decemb!20!}{\textit{(\hyperref[fig:clext]{Figure~\ref{fig:clext}.c}) Extractor -- Decoder}}\\[-40pt]
+\noindent{\textit{(\hyperref[fig:clext]{Figure~\ref{fig:clext}.c}) Extractor -- Decoder}}\\[-40pt]
 \begin{align}
     \xDecHid_0  &= \xEncHid_\docSize  \\
    \xDecHid_i &= \fgru(\salSentEmb_{i-1}, \xDecHid_{i-1};\clDecParams)
@@ -383,7 +386,8 @@ The contextual sentence embeddings $\xPredHid_i$ are then computed by
 concatenating the encoder and decoder outputs $\xEncHid_i$ and $\xDecHid_i$ and
 running them through a \feedforward~layer with $\relu$ activation,\\
 
-\noindent\fcolorbox{ctxemb}{ctxemb!20!}{\textit{(\hyperref[fig:clext]{Figure~\ref{fig:clext}.d}) Contextual Sentence Embeddings}}\\[-30pt]
+%\noindent\fcolorbox{ctxemb}{ctxemb!20!}{\textit{(\hyperref[fig:clext]{Figure~\ref{fig:clext}.d}) Contextual Sentence Embeddings}}\\[-30pt]
+\noindent{\textit{(\hyperref[fig:clext]{Figure~\ref{fig:clext}.d}) Contextual Sentence Embeddings}}\\[-30pt]
 \begin{align}
 \xPredHid_i &= \relu\left(\xpWeight^{(1)} \left[\begin{array}{c}\xEncHid_i \\ \xDecHid_i \end{array}\right] + \xpBias^{(1)} \right) & 
     \forall i : i \in \{1,\ldots,\docSize\}.
@@ -393,7 +397,8 @@ The actual salience estimate for sentence $\sent_i$ is then computed by feeding
 $\xPredHid_i$ through another \feedforward~layer with logistic sigmoid
 activation,\\
 
-\noindent\fcolorbox{sal}{sal!20!}{\textit{(\hyperref[fig:clext]{Figure~\ref{fig:clext}.e}) Salience Estimates}}\\[-40pt]
+%\noindent\fcolorbox{sal}{sal!20!}{\textit{(\hyperref[fig:clext]{Figure~\ref{fig:clext}.e}) Salience Estimates}}\\[-40pt]
+\noindent{\textit{(\hyperref[fig:clext]{Figure~\ref{fig:clext}.e}) Salience Estimates}}\\[-40pt]
 \begin{align}
  p_i = \model(\bsal_i =1|\bsal_1,\ldots,\bsal_{i-1}, \sentEmb_1,\ldots,\sentEmb_\docSize; \xParams) &= \sigma\left(\xpWeight^{(2)}\xPredHid_i + \xpBias^{(2)}  \right) & 
     \forall i : i \in \{1,\ldots,\docSize\}. 
@@ -435,7 +440,8 @@ encoder (visually depicted in \autoref{fig:sr1}),\\
 
 \input{ch3/figures/models_sr1.tex}
 
-\noindent\fcolorbox{rencemb}{rencemb!20!}{\textit{(\hyperref[fig:sr1]{Figure~\ref{fig:sr1}.a}) Forward and Backward \gru~Outputs}}\\[-40pt]
+%\noindent\fcolorbox{rencemb}{rencemb!20!}{\textit{(\hyperref[fig:sr1]{Figure~\ref{fig:sr1}.a}) Forward and Backward \gru~Outputs}}\\[-40pt]
+\noindent{\textit{(\hyperref[fig:sr1]{Figure~\ref{fig:sr1}.a}) Forward and Backward \gru~Outputs}}\\[-40pt]
 \begin{align}
     \srrHid_0 &= \zeroEmb, \\
     \srrHid_i &= \fgru(\sentEmb_i, \srrHid_{i-1}; \srRRNNParams) &
@@ -451,7 +457,8 @@ The \gru~output is concatenated and run through a feed-forward layer to obtain
 a contextual sentence embedding representation $\srHid_i \in
 \reals^{\srRepDim}$,\\
 
-\noindent\fcolorbox{ctxemb}{ctxemb!20!}{\textit{(\hyperref[fig:sr1]{Figure~\ref{fig:sr1}.b}) Contextual Sentence Embeddings}} 
+%\noindent\fcolorbox{ctxemb}{ctxemb!20!}{\textit{(\hyperref[fig:sr1]{Figure~\ref{fig:sr1}.b}) Contextual Sentence Embeddings}} 
+\noindent{\textit{(\hyperref[fig:sr1]{Figure~\ref{fig:sr1}.b}) Contextual Sentence Embeddings}} 
 \begin{align}
 \srHid_i  & = \relu\left(\srSentBias + \srSentWeight \left[ \begin{array}{c} \srrHid_i \\ \srlHid_i  \end{array} \right]  \right) &
     \forall i : i \in \{1,\ldots,\docSize\},
@@ -463,7 +470,8 @@ To construct the document embedding $\srDocEmb$, the forward and backward
 \gru~outputs are concatenated and averaged before running through a different
 \feedforward~layer,\\
 
-\noindent\fcolorbox{doc}{doc!20!}{\textit{(\hyperref[fig:sr1]{Figure~\ref{fig:sr1}.c}) Document Embedding}}\\[-40pt]
+%\noindent\fcolorbox{doc}{doc!20!}{\textit{(\hyperref[fig:sr1]{Figure~\ref{fig:sr1}.c}) Document Embedding}}\\[-40pt]
+\noindent{\textit{(\hyperref[fig:sr1]{Figure~\ref{fig:sr1}.c}) Document Embedding}}\\[-40pt]
 \begin{align}
 \srDocEmb  & = \tanh\left(\srDocBias + \srDocWeight \left(\frac{1}{\docSize}\sum_{i=1}^{\docSize} \left[ \begin{array}{c} \srrHid_i \\ \srlHid_i  \end{array} \right] \right) \right)
 \end{align}
@@ -474,7 +482,8 @@ Additionally, an iterative representation of the extract summary at step $i$,
 $\srSum_i$, is constructed by summing the $i-1$ contextual sentence embeddings
 weighted by their salience estimates,\\
 
-\noindent\fcolorbox{sum}{sum!20!}{\textit{(\autoref{fig:sr2}) Summary Embeddings}}\\[-40pt]
+%\noindent\fcolorbox{sum}{sum!20!}{\textit{(\autoref{fig:sr2}) Summary Embeddings}}\\[-40pt]
+\noindent{\textit{(\autoref{fig:sr2}) Summary Embeddings}}\\[-40pt]
 \begin{align}
 \srSum_1 & = \zeroEmb, \\
 \srSum_i & = \tanh\left(\sum_{j=1}^{i-1} \nnpsal_j \cdot \srHid_j\right)
@@ -503,7 +512,8 @@ factor ($\srNoveltyFactor$), the fine grained position factor
 First, there is the content factor which is simply the dot product of the
 contextual sentence embedding with a learned parameter vector,\\
 
-\noindent\fcolorbox{factor}{factor!20!}{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.a}) Content Factor}}\\[-40pt]
+%\noindent\fcolorbox{factor}{factor!20!}{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.a}) Content Factor}}\\[-40pt]
+\noindent{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.a}) Content Factor}}\\[-40pt]
 \begin{align}
     \srContentFactor_i &={\srContentWeight}^\T \srHid_i & \forall i : i \in \{1,\ldots,\docSize\}, 
 \end{align}
@@ -513,7 +523,8 @@ represent contributions of the individual sentences to their salience.
 The centrality factor is intended to capture a sentence's similarity to the
 document embedding. This interaction computed as\\
 
-\noindent\fcolorbox{factor}{factor!20!}{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.b}) Centrality Factor}}\\[-40pt]
+%\noindent\fcolorbox{factor}{factor!20!}{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.b}) Centrality Factor}}\\[-40pt]
+\noindent{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.b}) Centrality Factor}}\\[-40pt]
 \begin{align}
     \srSalienceFactor_i & = \srHid_i^\T\srSalienceWeight \srDocEmb & \forall i : i \in \{1,\ldots,\docSize\}, 
 \end{align}
@@ -522,7 +533,8 @@ and is mediated by a learned parameter matrix, $\srSalienceWeight \in \reals^{\s
 The third factor, novelty, is similarly an interaction between the contextual
 sentence embedding and the $i$-th summary embedding,\\
 
-\noindent\fcolorbox{factor}{factor!20!}{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.c}) Novelty Factor}}\\[-40pt]
+%\noindent\fcolorbox{factor}{factor!20!}{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.c}) Novelty Factor}}\\[-40pt]
+\noindent{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.c}) Novelty Factor}}\\[-40pt]
 \begin{align}
     \srNoveltyFactor_i &= -\srHid_i^\T \srNoveltyWeight \srSum_i
     & \forall i : i \in \{1,\ldots,\docSize\},
@@ -537,12 +549,14 @@ discouraged.
 
 Finally, there are two factors for the fine- and coarse-grained position,\\
 
-\noindent\fcolorbox{factor}{factor!20!}{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.d}) Fine-grained Position Factor}}\\[-40pt]
+%\noindent\fcolorbox{factor}{factor!20!}{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.d}) Fine-grained Position Factor}}\\[-40pt]
+\noindent{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.d}) Fine-grained Position Factor}}\\[-40pt]
 \begin{align}
     \srFinePositionFactor& = {\srFinePositionWeight}^\T \srFinePositionEmb_i
 & \forall i : i \in \{1,\ldots,\docSize\}, 
 \end{align}
-\noindent\fcolorbox{factor}{factor!20!}{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.e}) Coarse-grained Position Factor}}\\[-40pt]
+%\noindent\fcolorbox{factor}{factor!20!}{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.e}) Coarse-grained Position Factor}}\\[-40pt]
+\noindent{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.e}) Coarse-grained Position Factor}}\\[-40pt]
 \begin{align}
     \srCoarsePositionFactor& = {\srCoarsePositionWeight}^\T \srCoarsePositionEmb_i & \forall i : i \in \{1,\ldots,\docSize\}, 
 \end{align}
@@ -562,7 +576,8 @@ $\docSizeMax$ are all mapped to $\srFinePositionEmb_\docSizeMax$).
 Each salience estimate $\psal_i$ is calculated as the sum of those five
 factors~run through a logistic sigmoid function,\\~\\
 
-\noindent\fcolorbox{sal}{sal!20!}{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.f}) Salience Estimates}}\\[-40pt]
+%\noindent\fcolorbox{sal}{sal!20!}{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.f}) Salience Estimates}}\\[-40pt]
+\noindent{\textit{(\hyperref[fig:sr3]{Figure~\ref{fig:sr3}.f}) Salience Estimates}}\\[-40pt]
 \begin{align}
   \nnpsal_i =  \nnmodel(\nnsal_i=1|\nnsal_1,\dots,\nnsal_{i-1},\sentEmb_1,\ldots,\sentEmb_\docSize;\xParams)
          & = 
@@ -606,7 +621,8 @@ Our first proposed non-autoregressive model is a very simple
 the sentence encoder layer, which produces left and right partial contextual
 embeddings $\rnnextRHid_i$ and $\rnnextLHid_i$ respectively,\\
 
-\noindent\fcolorbox{rencemb}{rencemb!20!}{\textit{(\hyperref[fig:rnnext]{Figure~\ref{fig:rnnext}.a}) Left and Right Partial Contexual Sentence Embeddings}}\\[-40pt]
+%\noindent\fcolorbox{rencemb}{rencemb!20!}{\textit{(\hyperref[fig:rnnext]{Figure~\ref{fig:rnnext}.a}) Left and Right Partial Contexual Sentence Embeddings}}\\[-40pt]
+\noindent{\textit{(\hyperref[fig:rnnext]{Figure~\ref{fig:rnnext}.a}) Left and Right Partial Contexual Sentence Embeddings}}\\[-40pt]
 \begin{align}
     \rnnextRHid_0 & = \zeroEmb,\\ 
  \rnnextRHid_i &= \fgru\left(\sentEmb_i, \rnnextRHid_{i-1}; \rnnextRParams\right) &
@@ -623,7 +639,8 @@ The left and right partial contextual embeddings of each sentence
 are then passed through a \feedforward~layer to produce contextual
 sentence embeddings $\rnnextHid_i$,\\
 
-\noindent\fcolorbox{ctxemb}{ctxemb!20!}{\textit{(\hyperref[fig:rnnext]{Figure~\ref{fig:rnnext}.b}) Contexual Sentence Embeddings}}\\[-35pt]
+%\noindent\fcolorbox{ctxemb}{ctxemb!20!}{\textit{(\hyperref[fig:rnnext]{Figure~\ref{fig:rnnext}.b}) Contexual Sentence Embeddings}}\\[-35pt]
+\noindent{\textit{(\hyperref[fig:rnnext]{Figure~\ref{fig:rnnext}.b}) Contexual Sentence Embeddings}}\\[-35pt]
 \begin{align}
    \rnnextHid_i &= \relu\left(
     \rnnextHidWeight
@@ -639,7 +656,8 @@ Another \feedforward~layer with a logistic sigmoid activation computes the
 actual salience estimates $\nnpsal_1,\ldots,\nnpsal_\docSize$ where $\nnpsal_i
 = \nnmodel(\nnsal_i=1|\sentEmb_1,\ldots,\sentEmb_\docSize;\xParams)$ and \\
 
-\noindent\fcolorbox{sal}{sal!20!}{\textit{(\hyperref[fig:rnnext]{Figure~\ref{fig:rnnext}.c}) Salience Estimates}}\\[-40pt]
+%\noindent\fcolorbox{sal}{sal!20!}{\textit{(\hyperref[fig:rnnext]{Figure~\ref{fig:rnnext}.c}) Salience Estimates}}\\[-40pt]
+\noindent{\textit{(\hyperref[fig:rnnext]{Figure~\ref{fig:rnnext}.c}) Salience Estimates}}\\[-40pt]
 \begin{align}
     \nnpsal_i &= \nnmodel(\nnsal_i=1|\sentEmb_i,\ldots,\sentEmb_\docSize; \xParams) = \sigma\left(\rnnextPredWeight\rnnextHid_i + \rnnextPredBias  \right) &
     \forall i :  i \in \{1,\ldots,\docSize\},
@@ -683,7 +701,8 @@ embeddings, \\
 
 \input{ch3/figures/models_stsext1.tex}
 
-\noindent\fcolorbox{rencemb}{rencemb!20!}{\textit{(\hyperref[fig:stsext1]{Figure~\ref{fig:stsext1}.a}) Encoder Left and Right Partial Contextual Sentence Embeddings}}\\[-40pt]
+%\noindent\fcolorbox{rencemb}{rencemb!20!}{\textit{(\hyperref[fig:stsext1]{Figure~\ref{fig:stsext1}.a}) Encoder Left and Right Partial Contextual Sentence Embeddings}}\\[-40pt]
+\noindent{\textit{(\hyperref[fig:stsext1]{Figure~\ref{fig:stsext1}.a}) Encoder Left and Right Partial Contextual Sentence Embeddings}}\\[-40pt]
 \begin{align}
         \stsextREncHid_0  &= \zeroEmb, \\
 \stsextREncHid_i & = \fgru\left(
@@ -702,7 +721,8 @@ encoder \gru~parameters respectively. The encoder contextual sentence
 embeddings are then formed by simply concatenating the encoder left and right
 partial contextual embeddings,\\
 
-\noindent\fcolorbox{encctxemb}{encctxemb!20!}{\textit{(\hyperref[fig:stsext1]{Figure~\ref{fig:stsext1}.b}) Encoder Contextual Sentence Embeddings}}\\[-20pt]
+%\noindent\fcolorbox{encctxemb}{encctxemb!20!}{\textit{(\hyperref[fig:stsext1]{Figure~\ref{fig:stsext1}.b}) Encoder Contextual Sentence Embeddings}}\\[-20pt]
+\noindent{\textit{(\hyperref[fig:stsext1]{Figure~\ref{fig:stsext1}.b}) Encoder Contextual Sentence Embeddings}}\\[-20pt]
 \begin{align}
         \stsextEncHid_i & = \left[\begin{array}{c}
             \stsextREncHid_i\\ 
@@ -717,7 +737,8 @@ The final output of each encoder \gru~initializes a separate decoder \gru~which
 is then run over the sentence embeddings a second time, \\
 
 
-\noindent\fcolorbox{rdecemb}{rdecemb!20!}{\textit{(\hyperref[fig:stsext2]{Figure~\ref{fig:stsext2}.a}) Decoder Left and Right Partial Contextual Sentence Embeddings}}\\[-40pt]
+%\noindent\fcolorbox{rdecemb}{rdecemb!20!}{\textit{(\hyperref[fig:stsext2]{Figure~\ref{fig:stsext2}.a}) Decoder Left and Right Partial Contextual Sentence Embeddings}}\\[-40pt]
+\noindent{\textit{(\hyperref[fig:stsext2]{Figure~\ref{fig:stsext2}.a}) Decoder Left and Right Partial Contextual Sentence Embeddings}}\\[-40pt]
 \begin{align}
 \stsextRDecHid_0 & = \fgru\left(\stsextSent_>,   \stsextREncHid_\docSize; \stsextRDecParams\right),\\ 
         \stsextRDecHid_i & = \fgru(
@@ -740,7 +761,8 @@ The decoder left and right partial contextual sentence embeddings
 ($\stsextRDecHid_i$ and $\stsextLDecHid_i$) are then concatenated to form the
 decoder contextual sentence embeddings,\\
 
-\noindent\fcolorbox{decctxemb}{decctxemb!20!}{\textit{(\hyperref[fig:stsext2]{Figure~\ref{fig:stsext2}.b}) Decoder Contextual Sentence Embeddings}}\\[-20pt]
+%\noindent\fcolorbox{decctxemb}{decctxemb!20!}{\textit{(\hyperref[fig:stsext2]{Figure~\ref{fig:stsext2}.b}) Decoder Contextual Sentence Embeddings}}\\[-20pt]
+\noindent{\textit{(\hyperref[fig:stsext2]{Figure~\ref{fig:stsext2}.b}) Decoder Contextual Sentence Embeddings}}\\[-20pt]
 \begin{align}
         \stsextDecHid_i & = \left[\begin{array}{c}
             \stsextRDecHid_i\\ 
@@ -758,7 +780,8 @@ the encoder contextual sentence embeddings $\stsextEncHid_1,\ldots,
 \stsextEncHid_\docSize$, to produce an attention-weighted encoder sentence
 embedding $\stsextAttnHid_i$,\\
     
-\noindent\fcolorbox{yellow}{yellow!20!}{\textit{(\hyperref[fig:stsext3]{Figure~\ref{fig:stsext3}.a}) Attention Weights}}\\[-20pt]
+%\noindent\fcolorbox{yellow}{yellow!20!}{\textit{(\hyperref[fig:stsext3]{Figure~\ref{fig:stsext3}.a}) Attention Weights}}\\[-20pt]
+\noindent{\textit{(\hyperref[fig:stsext3]{Figure~\ref{fig:stsext3}.a}) Attention Weights}}\\[-20pt]
 \begin{align}
     \stsextAttn_{i,j} & = 
         \frac{\exp \left(\stsextDecHid_i \cdot  \stsextEncHid_j \right)}{
@@ -766,7 +789,8 @@ embedding $\stsextAttnHid_i$,\\
                 \stsextDecHid_i \cdot  \stsextEncHid_{j^\prime} \right)} &
     \forall i : i \in \{1,\ldots,\docSize\}, 
 \end{align}
-\noindent\fcolorbox{yellow}{yellow!20!}{\textit{(\hyperref[fig:stsext3]{Figure~\ref{fig:stsext3}.b}) Attention-weighted Encoder Sentence Embeddings}}\\[-20pt]
+%\noindent\fcolorbox{yellow}{yellow!20!}{\textit{(\hyperref[fig:stsext3]{Figure~\ref{fig:stsext3}.b}) Attention-weighted Encoder Sentence Embeddings}}\\[-20pt]
+\noindent{\textit{(\hyperref[fig:stsext3]{Figure~\ref{fig:stsext3}.b}) Attention-weighted Encoder Sentence Embeddings}}\\[-20pt]
 \begin{align}
     \stsextAttnHid_i & = 
         \sum_{j=1}^{\docSize} \alpha_{i,j} \left[\begin{array}{c}
@@ -782,7 +806,8 @@ which is itself fed through a final \feedforward~layer to compute the
 $i^\textrm{th}$ salience estimate $\nnpsal_i =
 \nnmodel(\nnsal_i=1|\sentEmb_1,\ldots,\sentEmb_\docSize;\xParams)$,\\
 
-\noindent\fcolorbox{ctxemb}{ctxemb!20!}{\textit{(\hyperref[fig:stsext3]{Figure~\ref{fig:stsext3}.c}) Contextual Sentence Embeddings}}\\[-20pt]
+%\noindent\fcolorbox{ctxemb}{ctxemb!20!}{\textit{(\hyperref[fig:stsext3]{Figure~\ref{fig:stsext3}.c}) Contextual Sentence Embeddings}}\\[-20pt]
+\noindent{\textit{(\hyperref[fig:stsext3]{Figure~\ref{fig:stsext3}.c}) Contextual Sentence Embeddings}}\\[-20pt]
 \begin{align}
     \stsextHid_i &= \relu\left(\stsextHidWeight \left[\begin{array}{c}
         \stsextAttnHid_i \\ 
@@ -792,7 +817,8 @@ $i^\textrm{th}$ salience estimate $\nnpsal_i =
 \end{align}
 
 
-\noindent\fcolorbox{sal}{sal!20!}{\textit{(\hyperref[fig:stsext3]{Figure~\ref{fig:stsext3}.d}) Salience Estimates}}\\[-40pt]
+%\noindent\fcolorbox{sal}{sal!20!}{\textit{(\hyperref[fig:stsext3]{Figure~\ref{fig:stsext3}.d}) Salience Estimates}}\\[-40pt]
+\noindent{\textit{(\hyperref[fig:stsext3]{Figure~\ref{fig:stsext3}.d}) Salience Estimates}}\\[-40pt]
 \begin{align}
 \nnpsal_i =    \nnmodel(\nnsal_i=1|\sentEmb_1, \ldots,\sentEmb_\docSize;\xParams)& = 
             \sigma\left(\stsextPredWeight \stsextHid_i + \stsextPredBias  

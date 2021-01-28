@@ -30,7 +30,8 @@ See \autoref{fig:s2s} for a schematic example of the GRU-based
 \sequencetosequence~model. We now describe the individual components in
 detail.
 
-\paragraph{\redbox{Encoder Embedding Layer}}
+%\paragraph{\redbox{Encoder Embedding Layer}}
+\paragraph{{Encoder Embedding Layer}}
 Let $\mrtoks = \left[ \mrtok_1,\ldots,\mrtok_\mrSize\right]$ be a linearized
 \meaningrepresentation~token sequence. Before feeding $\mrtoks$ into the
 encoder GRU layer, we first embed each token. Let $\encEmbs \in
@@ -50,7 +51,8 @@ encoder GRU layer then is
 \]
 
 
-\paragraph{\greenbox{Encoder Uni-directional GRU Layers}}
+%\paragraph{\greenbox{Encoder Uni-directional GRU Layers}}
+\paragraph{{Encoder Uni-directional GRU Layers}}
 We then compute the GRU hidden states. The encoder can have an arbitray number of layers $\numLayer$.
 For each layer $l \in \{1,\ldots, \numLayer\}$ we compute,
 \begin{align*}
@@ -61,7 +63,8 @@ where $\gruEncParams^{(l)}$ are the GRU encoder parameters\footnote{See \autoref
 sequence of hidden states, $\encHidState_1,\ldots,\encHidState_\mrSize$, used by the decoder to represent the input; 
 in the uni-directional case, these are simply the last GRU layer outputs, i.e. $\encHidState_i = \encHidState_i^{(\numLayer)} \in \reals^{\encDim}$ (in the uni-directional case, $\hidDim = \encDim$).
 
-\paragraph{\greenbox{Encoder Bi-directional GRU Layers}}
+%\paragraph{\greenbox{Encoder Bi-directional GRU Layers}}
+\paragraph{{Encoder Bi-directional GRU Layers}}
 The uni-directional encoder may suffer from a recency bias when creating the initial state for the 
 decoder and for longer input sequences the encoder may ``forget'' information encoded in the 
 early hidden states. In practice to alleviate this another GRU is run in the opposite direction and
@@ -84,7 +87,8 @@ The subsequent layers are computed similarly, but the input to the GRUs are $2\h
 Like before, the encoder outputs are the hidden state outputs of the last layer, $\encHidState_i = \encHidState_i^{(\numLayer)} \in \reals^{\encDim}$ where $\encDim = 2\hidDim$.
 
 
-\paragraph{\orangebox{Decoder Embedding Layer}}
+%\paragraph{\orangebox{Decoder Embedding Layer}}
+\paragraph{{Decoder Embedding Layer}}
 We then embed the utterance token sequence, 
 $\utttoks = \left[ \utttok_1,\ldots,\utttok_\uttSize\right]$,
 before feeding it to the decoder GRU layers.. 
@@ -98,7 +102,8 @@ The input to the decoder then is
 \[\left[\decHidState^{(0)}_1,\ldots,\decHidState^{(0)}_{\uttSize-1}\right] = \left[\decEmbs_{\utttok_1},\ldots,
 \decEmbs_{\utttok_{\uttSize-1}}\right].\footnote{The decoder input sequences have length $\uttSize-1$ since the $\uttSize^\textrm{th}$ token is always the stop token \stoptok, which is never fed into the decoder input. } \]
 
-\paragraph{\violetbox{Bridge Layer}}
+%\paragraph{\violetbox{Bridge Layer}}
+\paragraph{{Bridge Layer}}
 We initialize the decoder hidden state with the final (i.e. $\mrSize$-th) state of the encoder GRU.
 In the case where $\encDim \ne \hidDim$, we need to project $\encHidState_\mrSize^{(l)}$ to $\hidDim$
 dimensions,
@@ -108,7 +113,8 @@ where $\weight{br}_l \in \reals^{\hidDim \times \encDim}$ and $\bias{br}_l \in \
 for $l \in \{1,\ldots,\numLayer\}$
 are the weight and bias parameters for the ``bridge layer'' between the encoder and decoder networks.
 
-\paragraph{\bluebox{Decoder GRU Layers}}
+%\paragraph{\bluebox{Decoder GRU Layers}}
+\paragraph{{Decoder GRU Layers}}
 The decoder GRU is then computed analogously to the uni-directional encoder GRU,
 \begin{align*}
     \decHidState_i^{(l)} & =\fgru\left(\decHidState_i^{(l - 1)}, \decHidState_{i-1}^{(l)}; \gruDecParams^{(l)}\right) & \forall i : i \in \{1,\ldots, \uttSize-1\},
@@ -117,7 +123,8 @@ where $\gruDecParams^{(l)}$ are the decoder GRU parameters and
 $ \decHidState_i^{(l)} \in \reals^{\hidDim}$ for $i \in \{1,\ldots,\uttSize-1\}$ and $l \in \{1,\ldots,\numLayer\}$.
 The decoder outputs, $\decHidState_1,\ldots,\decHidState_{\uttSize-1}$, are the decoder hidden states of the last decoder layer, i.e. $\decHidState_i = \decHidState^{(\numLayer)}_i \in \reals^{\decDim}$ where $\decDim=\hidDim$.
 
-\paragraph{\cyanbox{Attention Layer}}
+%\paragraph{\cyanbox{Attention Layer}}
+\paragraph{{Attention Layer}}
 
 As mentioned before, one drawback of the recurrent neural network design is that information
 from earlier states my not be preserved in later states. To ameliorate this, the attention
@@ -152,7 +159,8 @@ down to a scalar,\\
 
 
 
-\paragraph{\purplebox{Prediction Layer}}
+%\paragraph{\purplebox{Prediction Layer}}
+\paragraph{{Prediction Layer}}
 Finally, the attention output $\astate_i$ and decoder state $\decHidState_i$
 are run through a two~layer \feedforward~network to produce a distribution
 over the utterance token vocabulary $\uttvocab$,

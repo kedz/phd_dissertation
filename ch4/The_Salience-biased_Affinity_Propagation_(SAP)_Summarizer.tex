@@ -74,7 +74,8 @@ Once the system time $\systs_t$ exceeds the period of interest (i.e., $\systs_t
 > \poestop$), the summarizer returns collected set of updates $\updateSummary$
 as the summary of the event.
 
-\subsection{\colorbox{red!20!}{Salience Estimation}}
+%\subsection{\colorbox{red!20!}{Salience Estimation}}
+\subsection{{Salience Estimation}}
 \label{sec:salpred}
 
 \subsubsection{Model}
@@ -269,7 +270,8 @@ fixed and compute the difference in IDF. Large changes in IDF value indicate
 the sentence contains bursty terms.  We also use the time (in hours) since the
 event started as a feature.
 
-\subsection{\colorbox{green!20!}{Affinity Propagation Clustering}}
+%\subsection{\colorbox{green!20!}{Affinity Propagation Clustering}}
+\subsection{{Affinity Propagation Clustering}}
 \label{sec:exsel}
 
 Once we have predicted the salience for a batch of sentences, we must now
@@ -344,7 +346,8 @@ exemplars $\Exemplars_t = \apop(\sentstream_{\systs_\tmo:\systs_t},
 \spredsals_t)$. The exemplars $\Exemplars_t$ are then passed to a redundancy
 filtering stage which we describe next.
 
-\subsection{\colorbox{blue!20!}{Redundancy Filtering and Update Selection}}
+%\subsection{\colorbox{blue!20!}{Redundancy Filtering and Update Selection}}
+\subsection{{Redundancy Filtering and Update Selection}}
 \label{sec:upsel}
 
 The exemplar sentences from the exemplar selection stage are the most salient

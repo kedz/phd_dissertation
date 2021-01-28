@@ -206,7 +206,8 @@ uses some of the basic components defined in the previous subsection.
     where the processing layer is determined by the block type. For instance,
     let $\tfEncInput \in \reals^{\mrSize \times \embDim}$ be a
     matrix with its rows representing a sequence of $\mrSize$ vectors; the \feedforwardblock~is defined as \\
-    \purplebox{\centering \begin{minipage}{0.9\textwidth}
+    %\purplebox{\centering \begin{minipage}{0.9\textwidth}
+   {\centering \begin{minipage}{0.9\textwidth}
    \begin{align*}
       \textbf{Feed-Forward Block} & \\
        \textit{(Layer Normalization)} & & 
@@ -218,7 +219,8 @@ uses some of the basic components defined in the previous subsection.
 \end{minipage}}
 
 \noindent   The \selfattentionblock~and \maskedselfattentionblock s are similarly defined as,\\
-    \cyanbox{\centering \begin{minipage}{0.9\textwidth}
+    %\cyanbox{\centering \begin{minipage}{0.9\textwidth}
+   {\centering \begin{minipage}{0.9\textwidth}
    \begin{align*}
        \textbf{Self-Attention Block} & \\
        \textit{(Layer Normalization)} & & 
@@ -232,7 +234,8 @@ uses some of the basic components defined in the previous subsection.
 ~\\
 
          \noindent  and \\
-    \limebox{\centering \begin{minipage}{0.9\textwidth}
+    %\limebox{\centering \begin{minipage}{0.9\textwidth}
+   {\centering \begin{minipage}{0.9\textwidth}
          \begin{align*}
        \textbf{Masked Self-Attention Block} & \\
        \textit{(Layer Normalization)} & & 
@@ -247,7 +250,8 @@ uses some of the basic components defined in the previous subsection.
 
            \noindent Finally, let $\tfDecInput \in \reals^{\uttSize \times \embDim}$ be a sequence of $\uttSize$ embeddings. The \encoderattentionblock~is
            defined as,\\
-    \tealbox{\centering \begin{minipage}{0.9\textwidth}
+    %\tealbox{\centering \begin{minipage}{0.9\textwidth}
+    {\centering \begin{minipage}{0.9\textwidth}
    \begin{align*}
        \textbf{Encoder Attention Block} & \\
        \textit{(Layer Normalization)} & & 
@@ -267,7 +271,8 @@ using the blocks defined previously. We start first with the encoder
 and decoder input layers.
 
 
-\paragraph{\redbox{Encoder Embedding Layer} and \orangebox{Decoder Embedding Layer}}
+%\paragraph{\redbox{Encoder Embedding Layer} and \orangebox{Decoder Embedding Layer}}
+\paragraph{{Encoder Embedding Layer} and {Decoder Embedding Layer}}
            Let $\mrtoks = \left[ \mrtok_1,\ldots,\mrtok_\mrSize\right]$ and 
            $\utttoks = \left[\utttok_1,\ldots,\utttok_{\uttSize-1}\right]$ be 
            input and output sequences, with elements $\mrtok_i$ and $\utttok_i$
@@ -299,7 +304,8 @@ position embeddings are added,
 \vdots \\ \decEmbs_{\utttok_{\uttSize-1}} + \posEmb_{\uttSize-1} \end{array}\right].
 \]
 
-\paragraph{\greenbox{Transformer Encoder}}
+%\paragraph{\greenbox{Transformer Encoder}}
+\paragraph{{Transformer Encoder}}
 A transformer encoder layer consists of a \selfattentionblock~followed
     by a \feedforwardblock.
 %?  Unlike 
@@ -334,7 +340,8 @@ We indicate the final encoder output as $\tfEncInput =  \tfEncInput^{(\numLayer)
 
 
    
-\paragraph{\bluebox{Transformer Decoder}}
+%\paragraph{\bluebox{Transformer Decoder}}
+\paragraph{{Transformer Decoder}}
     A transformer deccoder layer consists of a \maskedselfattentionblock~followed
     by an \encoderattentionblock~and a \feedforwardblock. Note that the \maskedselfattentionblock~means that though we can compute all decoder states
     in parallel during training, it is equivalent to computing each decoder state sequentially (which we must do at test time). 
@@ -347,7 +354,8 @@ We indicate the final encoder output as $\tfEncInput =  \tfEncInput^{(\numLayer)
 \end{align*} for $l \in \{1,\ldots,\numLayer\}$.
 We indicate the final decoder output as $\tfDecInput =  \tfDecInput^{(\numLayer)}$.
 
-\paragraph{\violetbox{Prediction Layer}}
+%\paragraph{\violetbox{Prediction Layer}}
+\paragraph{{Prediction Layer}}
     Let $\tfDecInputRow_i$ be the $i$-th row of $\tfDecInput$ corresponding
 to the decoder representation of the $i$-th decoder state. The probability of 
   the next word is
